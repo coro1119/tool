@@ -1,14 +1,138 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hello World</title>
-  <link href='/style.css' rel='stylesheet'>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>금융 계산기 마스터 - All-in-One Financial Tools</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <h1>Hello, world!</h1>
-  <button onclick="console.log('hello');">Press me</button>
-  <script defer type="text/javascript" src="/main.js"></script>
+    <header>
+        <nav class="container">
+            <h1 class="logo">Finance<span>Calc</span></h1>
+            <ul class="nav-links">
+                <li><a href="#" class="active" data-page="home">홈</a></li>
+                <li class="dropdown">
+                    <a href="#">계산기 목록</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="#" data-calc="loan">대출 이자/상환</a></li>
+                        <li><a href="#" data-calc="tax-settlement">연말정산 환급</a></li>
+                        <li><a href="#" data-calc="rent-compare">전세 vs 월세</a></li>
+                        <li><a href="#" data-calc="capital-gain">양도소득세</a></li>
+                        <li><a href="#" data-calc="auto-insurance">자동차 보험료</a></li>
+                        <li><a href="#" data-calc="pension">연금보험 수익</a></li>
+                        <li><a href="#" data-calc="salary">실수령액</a></li>
+                        <li><a href="#" data-calc="real-estate">부동산 수익률</a></li>
+                        <li><a href="#" data-calc="property-tax">재산세/종부세</a></li>
+                        <li><a href="#" data-calc="rate-analysis">금리 변동 분석</a></li>
+                    </ul>
+                </li>
+            </ul>
+            <div class="theme-toggle">
+                <button id="theme-btn" title="테마 변경">🌓</button>
+            </div>
+        </nav>
+    </header>
+
+    <main id="app" class="container">
+        <!-- 메인 홈 화면 -->
+        <section id="home-view" class="view active">
+            <div class="hero">
+                <h2>당신을 위한 정밀한 금융 계산기</h2>
+                <p>복잡한 금융 계산을 쉽고 빠르게 처리하세요. 커스텀 기능을 지원합니다.</p>
+            </div>
+            
+            <div class="calc-grid">
+                <!-- 카드 1: 대출 이자/상환 -->
+                <div class="calc-card" data-calc="loan">
+                    <div class="icon">💰</div>
+                    <h3>대출 이자/상환</h3>
+                    <p>원리금균등, 원금균등, 만기일시상환 방식별 이자 계산</p>
+                </div>
+                <!-- 카드 2: 연말정산 -->
+                <div class="calc-card" data-calc="tax-settlement">
+                    <div class="icon">📑</div>
+                    <h3>연말정산 환급/추가납부</h3>
+                    <p>소득공제 및 세액공제를 반영한 예상 환급액 확인</p>
+                </div>
+                <!-- 카드 3: 전세 vs 월세 -->
+                <div class="calc-card" data-calc="rent-compare">
+                    <div class="icon">🏠</div>
+                    <h3>전세 vs 월세 비교</h3>
+                    <p>기회비용과 세금을 고려한 주거 비용 분석</p>
+                </div>
+                <!-- 카드 4: 양도소득세 -->
+                <div class="calc-card" data-calc="capital-gain">
+                    <div class="icon">📈</div>
+                    <h3>양도소득세</h3>
+                    <p>부동산 매도 시 발생하는 양도소득세 및 지방소득세 계산</p>
+                </div>
+                <!-- 카드 5: 자동차 보험료 -->
+                <div class="calc-card" data-calc="auto-insurance">
+                    <div class="icon">🚗</div>
+                    <h3>자동차 보험료 비교</h3>
+                    <p>나이, 경력, 사고유무에 따른 보험료 시뮬레이션</p>
+                </div>
+                <!-- 카드 6: 연금보험 -->
+                <div class="calc-card" data-calc="pension">
+                    <div class="icon">🏦</div>
+                    <h3>연금보험 수익</h3>
+                    <p>복리 이율과 비과세 혜택을 반영한 미래 연금액</p>
+                </div>
+                <!-- 카드 7: 근로소득 실수령액 -->
+                <div class="calc-card" data-calc="salary">
+                    <div class="icon">💵</div>
+                    <h3>근로소득 실수령액</h3>
+                    <p>4대 보험과 소득세를 제외한 실제 통장 수령액</p>
+                </div>
+                <!-- 카드 8: 부동산 수익률 -->
+                <div class="calc-card" data-calc="real-estate">
+                    <div class="icon">🏢</div>
+                    <h3>부동산 투자 수익률</h3>
+                    <p>수익형 부동산의 공실률, 취득세를 고려한 순수익률</p>
+                </div>
+                <!-- 카드 9: 재산세/종부세 -->
+                <div class="calc-card" data-calc="property-tax">
+                    <div class="icon">🏘️</div>
+                    <h3>재산세/종합부동산세</h3>
+                    <p>공시지가 기준 보유세 합계 계산</p>
+                </div>
+                <!-- 카드 10: 금리 변동 분석 -->
+                <div class="calc-card" data-calc="rate-analysis">
+                    <div class="icon">📉</div>
+                    <h3>대출 금리 변동 분석</h3>
+                    <p>금리 인상/인하 시 상환액 변화 시나리오 분석</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 계산기 상세 뷰 (동적 렌더링) -->
+        <section id="calc-view" class="view">
+            <div class="calc-header">
+                <button class="back-btn">← 돌아가기</button>
+                <h2 id="calc-title">계산기 이름</h2>
+            </div>
+            <div class="calc-container">
+                <div class="calc-inputs" id="calc-inputs">
+                    <!-- 입력 필드들이 여기에 들어감 -->
+                </div>
+                <div class="calc-results" id="calc-results">
+                    <!-- 결과가 여기에 들어감 -->
+                    <div class="placeholder-msg">정보를 입력하고 계산하기 버튼을 눌러주세요.</div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 FinanceCalc. 모든 계산 결과는 참고용이며 실제와 다를 수 있습니다.</p>
+        </div>
+    </footer>
+
+    <script src="main.js"></script>
 </body>
 </html>
