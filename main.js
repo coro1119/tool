@@ -51,6 +51,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderCalculatorUI(id) {
         const config = calculatorConfigs[id];
+        if (!config) {
+            alert('준비 중인 계산기입니다.');
+            showHome();
+            return;
+        }
         calcTitle.textContent = config.title;
         calcInputs.innerHTML = config.inputs.map(input => `
             <div class="input-group">
@@ -161,6 +166,55 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
             }
         },
+        'tax-settlement': {
+            title: '연말정산 환급/추가납부 계산기',
+            inputs: [
+                { id: 'income', label: '연 총급여액 (원)', type: 'number', value: 50000000 },
+                { id: 'prepaid', label: '기납부세액 (원)', type: 'number', value: 3000000 },
+                { id: 'spending', label: '신용/체크카드 사용액 (원)', type: 'number', value: 20000000 },
+                { id: 'insurance', label: '보장성 보험료 (원)', type: 'number', value: 1000000 }
+            ],
+            calculate: (data) => {
+                // 근로소득공제 (매우 간략화)
+                let deduction = 0;
+                if (data.income <= 15000000) deduction = data.income * 0.45;
+                else if (data.income <= 45000000) deduction = 6750000 + (data.income - 15000000) * 0.15;
+                else deduction = 11250000 + (data.income - 45000000) * 0.05;
+
+                // 카드 소득공제 (총급여 25% 초과분의 15%)
+                const cardDeduction = Math.max(0, data.spending - data.income * 0.25) * 0.15;
+                
+                // 과세표준 (간략화)
+                const taxBase = Math.max(0, data.income - deduction - cardDeduction - 1500000); // 150만은 본인공제
+                
+                // 산출세액 (2024년 세율 기준 간략화)
+                let tax = 0;
+                if (taxBase <= 14000000) tax = taxBase * 0.06;
+                else if (taxBase <= 50000000) tax = 840000 + (taxBase - 14000000) * 0.15;
+                else tax = 6240000 + (taxBase - 50000000) * 0.24;
+
+                // 세액공제 (보험료 12%)
+                const taxCredit = Math.min(120000, data.insurance * 0.12);
+                const finalTax = Math.max(0, tax - taxCredit);
+                
+                const result = data.prepaid - finalTax;
+                const status = result >= 0 ? '환급액' : '추가납부액';
+
+                return {
+                    results: [
+                        { label: '결정 세액', value: formatWon(Math.round(finalTax)) },
+                        { label: '기납부 세액', value: formatWon(data.prepaid) },
+                        { label: status, value: formatWon(Math.abs(Math.round(result))) }
+                    ],
+                    chart: {
+                        type: 'bar',
+                        labels: ['결정세액', '기납부세액'],
+                        data: [Math.round(finalTax), data.prepaid],
+                        colors: result >= 0 ? ['#10b981', '#3b82f6'] : ['#f87171', '#3b82f6']
+                    }
+                };
+            }
+        },
         'salary': {
             title: '근로소득 실수령액 계산기',
             inputs: [
@@ -252,6 +306,127 @@ document.addEventListener('DOMContentLoaded', () => {
                         type: 'bar',
                         labels: ['전세 (기회비용)', '월세 (총비용)'],
                         data: [Math.round(jeonseCost), Math.round(monthlyCost)],
+                        colors: ['#3b82f6', '#f87171']
+                    }
+                };
+            }
+        },
+        'capital-gain': {
+            title: '양도소득세 계산기',
+            inputs: [
+                { id: 'buy', label: '취득 가액 (원)', type: 'number', value: 500000000 },
+                { id: 'sell', label: '양도 가액 (원)', type: 'number', value: 700000000 },
+                { id: 'period', label: '보유 기간 (년)', type: 'number', value: 3 }
+            ],
+            calculate: (data) => {
+                const gain = data.sell - data.buy;
+                const tax = gain > 0 ? gain * 0.2 : 0; // 매우 간략화된 20%
+                return {
+                    results: [
+                        { label: '양도 차익', value: formatWon(gain) },
+                        { label: '예상 세액', value: formatWon(Math.round(tax)) }
+                    ],
+                    chart: {
+                        type: 'doughnut',
+                        labels: ['실수익', '세금'],
+                        data: [gain - tax, tax],
+                        colors: ['#10b981', '#f87171']
+                    }
+                };
+            }
+        },
+        'real-estate': {
+            title: '부동산 투자 수익률',
+            inputs: [
+                { id: 'price', label: '매매가 (원)', type: 'number', value: 300000000 },
+                { id: 'deposit', label: '보증금 (원)', type: 'number', value: 30000000 },
+                { id: 'monthly', label: '월세 (원)', type: 'number', value: 1200000 }
+            ],
+            calculate: (data) => {
+                const investment = data.price - data.deposit;
+                const annualRent = data.monthly * 12;
+                const yieldRate = (annualRent / investment) * 100;
+                return {
+                    results: [
+                        { label: '실 투자금', value: formatWon(investment) },
+                        { label: '연 수익률', value: yieldRate.toFixed(2) + '%' }
+                    ],
+                    chart: {
+                        type: 'bar',
+                        labels: ['매매가', '실투자금'],
+                        data: [data.price, investment],
+                        colors: ['#3b82f6', '#60a5fa']
+                    }
+                };
+            }
+        },
+        'property-tax': {
+            title: '재산세/종부세 계산기',
+            inputs: [
+                { id: 'value', label: '공시지가 합계 (원)', type: 'number', value: 1000000000 }
+            ],
+            calculate: (data) => {
+                const pTax = data.value * 0.002;
+                const jTax = Math.max(0, (data.value - 900000000) * 0.005);
+                return {
+                    results: [
+                        { label: '예상 재산세', value: formatWon(Math.round(pTax)) },
+                        { label: '예상 종부세', value: formatWon(Math.round(jTax)) },
+                        { label: '총 보유세', value: formatWon(Math.round(pTax + jTax)) }
+                    ],
+                    chart: {
+                        type: 'pie',
+                        labels: ['재산세', '종부세'],
+                        data: [Math.round(pTax), Math.round(jTax)],
+                        colors: ['#fbbf24', '#f87171']
+                    }
+                };
+            }
+        },
+        'auto-insurance': {
+            title: '자동차 보험료 시뮬레이션',
+            inputs: [
+                { id: 'base', label: '기본 보험료 (원)', type: 'number', value: 800000 },
+                { id: 'age', label: '연령 할증', type: 'select', options: [
+                    { value: '1.5', label: '20대 초반 (150%)' },
+                    { value: '1.0', label: '30대 이상 (100%)' }
+                ]}
+            ],
+            calculate: (data) => {
+                const total = data.base * parseFloat(data.age);
+                return {
+                    results: [
+                        { label: '최종 보험료', value: formatWon(Math.round(total)) }
+                    ],
+                    chart: {
+                        type: 'bar',
+                        labels: ['기본', '할증후'],
+                        data: [data.base, Math.round(total)],
+                        colors: ['#94a3b8', '#3b82f6']
+                    }
+                };
+            }
+        },
+        'rate-analysis': {
+            title: '금리 변동 분석',
+            inputs: [
+                { id: 'amount', label: '대출 잔액 (원)', type: 'number', value: 200000000 },
+                { id: 'cur_rate', label: '현재 금리 (%)', type: 'number', value: 4.0 },
+                { id: 'next_rate', label: '변동 후 금리 (%)', type: 'number', value: 5.0 }
+            ],
+            calculate: (data) => {
+                const cur = (data.amount * data.cur_rate / 100) / 12;
+                const next = (data.amount * data.next_rate / 100) / 12;
+                return {
+                    results: [
+                        { label: '현재 월 이자', value: formatWon(Math.round(cur)) },
+                        { label: '변동 후 월 이자', value: formatWon(Math.round(next)) },
+                        { label: '추가 부담액', value: formatWon(Math.round(next - cur)) }
+                    ],
+                    chart: {
+                        type: 'bar',
+                        labels: ['현재 이자', '변동 후 이자'],
+                        data: [Math.round(cur), Math.round(next)],
                         colors: ['#3b82f6', '#f87171']
                     }
                 };
