@@ -130,13 +130,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     label: '금액(원)',
                     data: c.data,
                     backgroundColor: [
-                        'rgba(37, 99, 235, 0.7)',
-                        'rgba(16, 185, 129, 0.7)',
-                        'rgba(251, 191, 36, 0.7)',
-                        'rgba(248, 113, 113, 0.7)',
-                        'rgba(99, 102, 241, 0.7)'
+                        '#2563eb', // Accent Blue
+                        '#0f172a', // Primary Dark
+                        '#10b981', // Success Green
+                        '#f59e0b', // Warning Orange
+                        '#6366f1'  // Indigo
                     ],
-                    borderColor: isDark ? '#334155' : '#ffffff',
+                    borderColor: isDark ? '#0f172a' : '#ffffff',
                     borderWidth: 2
                 }]
             },
