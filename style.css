@@ -139,6 +139,14 @@ nav {
 }
 
 .dropdown:hover .dropdown-menu { display: block; }
+.dropdown-menu::before {
+    content: '';
+    position: absolute;
+    top: -15px;
+    left: 0;
+    width: 100%;
+    height: 15px;
+}
 .dropdown-menu li a {
     padding: 0.6rem 1rem;
     border-radius: 8px;
