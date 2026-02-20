@@ -249,6 +249,24 @@ nav {
     background-color: var(--primary-hover);
 }
 
+#calc-results-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.chart-wrapper {
+    width: 100%;
+    margin-top: 1rem;
+    background-color: var(--bg-color);
+    padding: 1rem;
+    border-radius: 8px;
+    min-height: 250px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 .result-item {
     background-color: var(--bg-color);
     padding: 1rem;

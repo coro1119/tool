@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <header>
@@ -119,9 +120,13 @@
                 <div class="calc-inputs" id="calc-inputs">
                     <!-- 입력 필드들이 여기에 들어감 -->
                 </div>
-                <div class="calc-results" id="calc-results">
-                    <!-- 결과가 여기에 들어감 -->
-                    <div class="placeholder-msg">정보를 입력하고 계산하기 버튼을 눌러주세요.</div>
+                <div class="calc-results" id="calc-results-container">
+                    <div id="calc-results">
+                        <div class="placeholder-msg">정보를 입력하고 계산하기 버튼을 눌러주세요.</div>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="calc-chart"></canvas>
+                    </div>
                 </div>
             </div>
         </section>
