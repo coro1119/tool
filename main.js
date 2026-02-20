@@ -43,7 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
     backBtn.addEventListener('click', showHome);
 
     function showHome() {
-        // 홈으로 돌아갈 때 완전히 초기화
         clearCalculatorState();
         homeView.classList.add('active');
         calcView.classList.remove('active');
@@ -51,7 +50,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showCalculator(id) {
-        // 다른 계산기로 넘어가기 전 초기화
         clearCalculatorState();
         homeView.classList.remove('active');
         calcView.classList.add('active');
@@ -60,12 +58,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function clearCalculatorState() {
-        // 차트 파괴
         if (currentChart) {
             currentChart.destroy();
             currentChart = null;
         }
-        // UI 초기화
         calcInputs.innerHTML = '';
         calcResults.innerHTML = '';
         if (chartWrapper) chartWrapper.style.display = 'none';
@@ -81,7 +77,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         calcTitle.textContent = config.title;
         
-        // 입력 필드 생성
         const inputsHtml = config.inputs.map(input => `
             <div class="input-group">
                 <label for="${input.id}">${input.label}</label>
@@ -94,7 +89,6 @@ document.addEventListener('DOMContentLoaded', () => {
         calcInputs.innerHTML = inputsHtml + `<button class="calc-btn" id="run-calc">계산하기</button>`;
         calcResults.innerHTML = `<div class="placeholder-msg">정보를 입력하고 계산하기 버튼을 눌러주세요.</div>`;
 
-        // 새 버튼에 리스너 등록
         document.getElementById('run-calc').addEventListener('click', () => calculate(id));
     }
 
@@ -152,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 datasets: [{
                     label: chartConfig.datasetLabel || '금액',
                     data: chartConfig.data,
-                    backgroundColor: chartConfig.colors || ['#2563eb', '#3b82f6', '#60a5fa', '#93c5fd'],
+                    backgroundColor: chartConfig.colors || ['#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#f87171', '#fbbf24', '#10b981'],
                     borderWidth: 0
                 }]
             },
@@ -256,21 +250,35 @@ document.addEventListener('DOMContentLoaded', () => {
             calculate: (data) => {
                 const monthly = data.sal_salary / 12;
                 const taxable = monthly - data.sal_non_tax;
-                const pension = taxable * 0.045;
-                const health = taxable * 0.03545;
-                const employment = taxable * 0.009;
-                const incomeTax = taxable * 0.03;
-                const takeHome = monthly - (pension + health + employment + incomeTax);
+                
+                // 2024 요율 근사치
+                const pension = taxable * 0.045; // 국민연금
+                const health = taxable * 0.03545; // 건강보험
+                const longTerm = health * 0.1295; // 장기요양
+                const employment = taxable * 0.009; // 고용보험
+                const incomeTax = taxable * 0.03; // 소득세(간략화)
+                const localTax = incomeTax * 0.1; // 지방소득세
+                
+                const totalDeduction = pension + health + longTerm + employment + incomeTax + localTax;
+                const takeHome = monthly - totalDeduction;
+                
                 return {
                     results: [
                         { label: '월 세전 급여', value: formatWon(Math.round(monthly)) },
+                        { label: '공제액 합계', value: formatWon(Math.round(totalDeduction)) },
                         { label: '월 실수령액', value: formatWon(Math.round(takeHome)) }
                     ],
                     chart: {
                         type: 'pie',
-                        labels: ['실수령액', '공제항목'],
-                        data: [Math.round(takeHome), Math.round(monthly - takeHome)],
-                        colors: ['#10b981', '#f87171']
+                        labels: ['실수령액', '국민연금', '건강보험', '고용보험', '소득세/지방세'],
+                        data: [
+                            Math.round(takeHome), 
+                            Math.round(pension), 
+                            Math.round(health + longTerm), 
+                            Math.round(employment), 
+                            Math.round(incomeTax + localTax)
+                        ],
+                        colors: ['#10b981', '#3b82f6', '#60a5fa', '#93c5fd', '#f87171']
                     }
                 };
             }
@@ -286,23 +294,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 let total = 0;
                 let principal = 0;
                 const r = data.pen_rate / 100 / 12;
+                const timeline = [];
+                const dataPoints = [];
+                
                 for (let i = 1; i <= data.pen_years * 12; i++) {
                     principal += data.pen_monthly;
                     total = (total + data.pen_monthly) * (1 + r);
+                    if (i % 12 === 0) {
+                        timeline.push(`${i/12}년`);
+                        dataPoints.push(Math.round(total));
+                    }
                 }
                 return {
                     results: [
                         { label: '총 납입 원금', value: formatWon(principal) },
-                        { label: '예상 평가 금액', value: formatWon(Math.round(total)) }
+                        { label: '예상 평가 금액', value: formatWon(Math.round(total)) },
+                        { label: '누적 수익', value: formatWon(Math.round(total - principal)) }
                     ],
                     chart: {
                         type: 'line',
-                        labels: Array.from({length: data.pen_years}, (_, i) => `${i+1}년`),
-                        data: Array.from({length: data.pen_years}, (_, i) => {
-                            let t = 0;
-                            for(let j=1; j<=(i+1)*12; j++) t = (t + data.pen_monthly) * (1+r);
-                            return Math.round(t);
-                        })
+                        labels: timeline,
+                        data: dataPoints,
+                        datasetLabel: '자산 성장'
                     }
                 };
             }
@@ -321,11 +334,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 return {
                     results: [
                         { label: '전세 월 환산비용', value: formatWon(Math.round(jeonseCost)) },
-                        { label: '월세 월 총비용', value: formatWon(Math.round(monthlyCost)) }
+                        { label: '월세 월 총비용', value: formatWon(Math.round(monthlyCost)) },
+                        { label: '유리한 선택', value: jeonseCost < monthlyCost ? '전세' : '월세' }
                     ],
                     chart: {
                         type: 'bar',
-                        labels: ['전세', '월세'],
+                        labels: ['전세 (기회비용)', '월세 (총비용)'],
                         data: [Math.round(jeonseCost), Math.round(monthlyCost)],
                         colors: ['#3b82f6', '#f87171']
                     }
