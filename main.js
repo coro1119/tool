@@ -341,23 +341,70 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         },
         'part-time': {
-            title: '알바 주휴수당 계산기',
-            descTitle: '최저임금 및 수당 반영',
-            description: '주휴수당 포함 실제 받을 돈을 계산합니다.',
+            title: '알바 주휴수당 & 실수령액 감별기',
+            descTitle: '2026 최저임금 반영 & 세금 정밀 계산',
+            description: '주당 15시간 이상 근무 시 지급되는 주휴수당과 선택한 세금 요율을 반영하여, 통장에 찍히는 "진짜" 월급을 계산합니다.',
+            refName: '고용노동부 (주휴수당 제도 안내)',
+            refLink: 'https://www.moel.go.kr',
+            example: '시급 10,030원, 주 20시간, 세금 3.3% 공제',
             inputs: [
-                { id: 'p1', label: '시급', value: 10030 },
-                { id: 'p2', label: '주 근무시간', value: 20 }
+                { id: 'p1', label: '시급 (원)', value: 10030 },
+                { id: 'p2', label: '주 근무시간 (시간)', value: 20 },
+                { id: 'p3', label: '세금 종류', value: 0, type: 'select', options: [
+                    { label: '미공제 (전액 수령)', value: 0 },
+                    { label: '3.3% (사업소득세)', value: 3.3 },
+                    { label: '약 9.4% (4대보험)', value: 9.4 }
+                ]}
             ],
             run: function(d) {
-                var holiday = d.p2 >= 15 ? (d.p2 / 40) * 8 * d.p1 : 0;
-                var total = (d.p1 * d.p2 + holiday) * 4.345;
-                var comment = d.p2 < 15 ? "15시간 미만은 주휴수당 없어요 ㅠㅠ" : "주휴수당 챙기기 성공! 정당한 권리입니다.";
+                var hourly = d.p1;
+                var hours = d.p2;
+                var taxRate = d.p3;
+
+                // 주급 기본급
+                var weeklyBase = hourly * hours;
+                
+                // 주휴수당 계산 (15시간 이상일 때만)
+                // 공식: (주 근무시간 / 40시간) * 8 * 시급 (최대 40시간까지만 인정)
+                var holidayPay = 0;
+                if (hours >= 15) {
+                    var calcHours = Math.min(40, hours);
+                    holidayPay = Math.floor((calcHours / 40) * 8 * hourly);
+                }
+
+                var weeklyTotal = weeklyBase + holidayPay;
+                var monthlyGross = Math.floor(weeklyTotal * 4.345); // 한 달 평균 4.345주 적용
+                
+                var taxAmount = Math.floor(monthlyGross * (taxRate / 100));
+                var monthlyNet = monthlyGross - taxAmount;
+
+                var comment = "";
+                if (hours < 15) {
+                    comment = "앗... 15시간 미만이라 주휴수당이 없어요. 사장님이 웃고 계십니다.";
+                } else if (hours == 14.5 || hours == 14.9) {
+                    comment = "이건 100% 주휴수당 안 주려는 '쪼개기 계약' 스멜이 납니다. 조심하세요!";
+                } else if (monthlyNet >= 2090000) {
+                    comment = "이 정도면 알바가 아니라 부업 장인! 웬만한 직장인 부럽지 않네요.";
+                } else if (holidayPay > 0) {
+                    comment = "주휴수당이라는 소중한 보너스 확보! 떼이지 말고 꼭 챙기세요.";
+                } else {
+                    comment = "티끌 모아 태산! 알바비 모아서 부자 됩시다.";
+                }
+
                 return {
                     items: [
-                        { label: '월 예상 지급액', val: won(total) },
-                        { label: '한 줄 평', val: '<strong>' + comment + '</strong>' }
+                        { label: '주 기본급', val: won(weeklyBase) },
+                        { label: '주휴수당', val: holidayPay > 0 ? won(holidayPay) : '<span style="color:#94a3b8">0원 (대상아님)</span>' },
+                        { label: '월 세전 총액', val: won(monthlyGross) },
+                        { label: '공제 세금 (' + taxRate + '%)', val: won(taxAmount) },
+                        { label: '최종 실수령액', val: '<strong>' + won(monthlyNet) + '</strong>' },
+                        { label: '판독 결과', val: '<strong>' + comment + '</strong>' }
                     ],
-                    chart: { type: 'bar', labels: ['기본급', '주휴수당'], data: [d.p1 * d.p2, holiday] }
+                    chart: { 
+                        type: 'pie', 
+                        labels: ['기본급', '주휴수당', '세금'], 
+                        data: [weeklyBase * 4.345, holidayPay * 4.345, taxAmount] 
+                    }
                 };
             }
         },
