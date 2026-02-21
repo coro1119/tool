@@ -90,10 +90,15 @@ document.addEventListener('DOMContentLoaded', function() {
         
         calcTitle.textContent = cfg.title;
         
-        // 설명 및 주의사항 박스 채우기
+        // 설명 및 주의사항 박스 채우기 (공식 링크 추가)
         if (calcInfoBox) {
+            var refHtml = cfg.refLink ? 
+                '<p style="margin-top: 10px; font-size: 0.85rem;"><span class="example-tag" style="background: #e2e8f0; color: #475569;">공식 근거</span> ' +
+                '<a href="' + cfg.refLink + '" target="_blank" style="color: var(--accent); text-decoration: underline;">' + cfg.refName + ' 바로가기 ↗</a></p>' : '';
+
             calcInfoBox.innerHTML = '<h4>' + cfg.descTitle + '</h4>' +
                                     '<p>' + cfg.description + '</p>' +
+                                    refHtml +
                                     '<div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border);">' +
                                     '<p><span class="example-tag">예시</span> ' + cfg.example + '</p>' +
                                     '<p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px;">⚠️ ' + (cfg.disclaimer || '본 결과는 2026년 예상 세법 및 일반적인 금융 기준을 적용한 시뮬레이션입니다.') + '</p>' +
@@ -195,6 +200,8 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '2026 연봉 실수령액 계산기',
             descTitle: '2026년 최신 요율 반영 상세 계산',
             description: '국민연금 상한액 인상 및 건강보험 요율을 반영한 2026년형 실수령액 계산기입니다. 비과세 식대, 부양가족 수, 자녀 세액공제를 포함하여 더욱 정확한 월급을 확인하세요.',
+            refName: '국세청 홈택스 (간이세액표)',
+            refLink: 'https://www.hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index.xml',
             example: '연봉 6,000만원, 비과세 20만원, 부양가족 3명(자녀 1명 포함)',
             disclaimer: '본 계산은 근로소득 간이세액표를 기반으로 한 추정치이며, 실제 수령액은 개별 공제 항목에 따라 차이가 있을 수 있습니다.',
             inputs: [
@@ -269,6 +276,8 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '대출 이자 계산기 (DSR 미고려)',
             descTitle: '월 상환액 및 총 이자 비용',
             description: '원리금 균등 상환 방식을 기준으로 계산합니다. (거치 기간 없음)',
+            refName: '금융감독원 (금융상품 한눈에)',
+            refLink: 'https://finlife.fss.or.kr',
             example: '3억 대출, 금리 4.5%, 30년(360개월)',
             inputs: [
                 { id: 'l1', label: '대출금 (원)', value: 300000000 },
@@ -300,6 +309,8 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '연말정산 예상 (약식)',
             descTitle: '결정세액 vs 기납부세액',
             description: '총급여에 따른 근로소득공제와 인적공제(본인 150만) 및 표준세액공제(13만)만을 적용한 약식 계산입니다.',
+            refName: '국세청 (연말정산 안내)',
+            refLink: 'https://www.hometax.go.kr',
             example: '총급여 5,500만원, 기납부 300만원',
             inputs: [
                 { id: 't1', label: '총급여 (원)', value: 55000000 },
@@ -336,6 +347,8 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '전세 vs 월세 비교',
             descTitle: '주거 비용 효율 분석',
             description: '전세자금 대출 이자와 월세+보증금 기회비용(예금금리 3.5% 가정)을 비교합니다.',
+            refName: '국토교통부 (마이홈 포털)',
+            refLink: 'https://www.myhome.go.kr',
             example: '전세 3억(4%), 월세 3000/100',
             inputs: [
                 { id: 'r1', label: '전세 보증금 (원)', value: 300000000 },
@@ -361,6 +374,8 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '양도소득세 계산기 (2026)',
             descTitle: '양도세 및 장기보유혜택',
             description: '2026년 과세표준 구간과 장기보유특별공제(일반 부동산 기준, 연 2% 최대 30%)를 적용합니다. 1세대 1주택 비과세 요건은 고려하지 않았습니다.',
+            refName: '국세청 (양도소득세 안내)',
+            refLink: 'https://www.hometax.go.kr',
             example: '8억 매도, 5억 매수, 5년 보유',
             inputs: [
                 { id: 'c1', label: '양도가액 (원)', value: 800000000 },
@@ -397,6 +412,8 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '자동차 보험료 시뮬레이션',
             descTitle: '연령별 예상 보험료',
             description: '차량가액과 연령 요율을 기반으로 산출된 단순 견적입니다. 다이렉트 가입 시 약 15% 저렴할 수 있습니다.',
+            refName: '보험다모아 (공식 비교사이트)',
+            refLink: 'https://e-insmarket.or.kr',
             example: '차량가액 3,500만원, 만 30세',
             inputs: [
                 { id: 'a1', label: '차량가액 (원)', value: 35000000 },
@@ -419,6 +436,8 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '연금보험 수익률 계산기',
             descTitle: '복리 수익 및 세후 수령액',
             description: '일반 과세(15.4%)를 가정하여 계산합니다. 10년 이상 유지 시 비과세 요건을 충족하면 세금이 0원이 될 수 있습니다.',
+            refName: '금융감독원 (통합연금포털)',
+            refLink: 'https://100lifeplan.fss.or.kr',
             example: '월 100만원, 10년 납입, 연 4% 복리',
             inputs: [
                 { id: 'p1', label: '월 납입액 (원)', value: 1000000 },
@@ -452,6 +471,8 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '부동산 투자 수익률 (ROI)',
             descTitle: '취득세 포함 수익률 분석',
             description: '매입 시 취득세(4.6% 오피스텔/상가 기준 가정)를 포함한 총 투자비용 대비 순수익률을 계산합니다.',
+            refName: '한국부동산원 (부동산 통계)',
+            refLink: 'https://www.reb.or.kr',
             example: '매가 5억, 보증금 5천, 월세 200, 대출 2.5억(4.5%)',
             inputs: [
                 { id: 're1', label: '매입가 (원)', value: 500000000 },
@@ -485,6 +506,8 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '보유세 계산기 (2026)',
             descTitle: '재산세 및 종부세 추정',
             description: '공정시장가액비율(재산세 60%, 종부세 80% 가정) 및 1세대 1주택 종부세 공제(12억)를 적용합니다.',
+            refName: '위택스 (행안부 지방세 포털)',
+            refLink: 'https://www.wetax.go.kr',
             example: '공시지가 15억 (1주택 가정)',
             inputs: [
                 { id: 'pt1', label: '공시지가 (원)', value: 1500000000 }
@@ -520,6 +543,8 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '금리 변동 리스크 분석',
             descTitle: '금리 인상 시 상환 부담',
             description: '금리가 오르거나 내릴 때 월 원리금 상환액이 얼마나 달라지는지 확인하여 가계 재정 리스크를 점검하세요.',
+            refName: '한국은행 (기준금리 정보)',
+            refLink: 'https://www.bok.or.kr',
             example: '4억 대출, 4.0% -> 6.0% 인상 시',
             inputs: [
                 { id: 'ra1', label: '대출 원금 (원)', value: 400000000 },
