@@ -192,53 +192,75 @@ document.addEventListener('DOMContentLoaded', function() {
 
     var book = {
         'salary': {
-            title: '근로소득 실수령액 계산기 (2026)',
-            descTitle: '2026년 기준 4대보험/소득세 반영',
-            description: '2026년 예상 요율(국민연금 상한액 인상, 건강보험료율 반영)과 소득세 과세표준 구간을 적용하여 월 실수령액을 정밀하게 계산합니다.',
-            example: '연봉 5,000만원, 비과세 식대 월 20만원',
-            disclaimer: '부양가족 수 1인(본인) 기준이며, 실제 원천징수액은 기업별 공제 내역에 따라 다를 수 있습니다.',
+            title: '2026 연봉 실수령액 계산기',
+            descTitle: '2026년 최신 요율 반영 상세 계산',
+            description: '국민연금 상한액 인상 및 건강보험 요율을 반영한 2026년형 실수령액 계산기입니다. 비과세 식대, 부양가족 수, 자녀 세액공제를 포함하여 더욱 정확한 월급을 확인하세요.',
+            example: '연봉 6,000만원, 비과세 20만원, 부양가족 3명(자녀 1명 포함)',
+            disclaimer: '본 계산은 근로소득 간이세액표를 기반으로 한 추정치이며, 실제 수령액은 개별 공제 항목에 따라 차이가 있을 수 있습니다.',
             inputs: [
                 { id: 's1', label: '연봉 (원)', value: 50000000 },
-                { id: 's2', label: '비과세액 (월)', value: 200000 }
+                { id: 's2', label: '비과세액 (월/식대 등)', value: 200000 },
+                { id: 's3', label: '부양가족 수 (본인포함)', value: 1 },
+                { id: 's4', label: '20세 이하 자녀 수', value: 0 }
             ],
             run: function(d) {
-                var month = d.s1 / 12;
+                var month = Math.floor(d.s1 / 12);
                 var tax_target_month = Math.max(0, month - d.s2);
                 
                 // 2026 예상 요율
                 // 국민연금: 4.5% (상한액 월 617만원 가정 -> 최대 약 277,650원)
-                var pension = Math.min(tax_target_month, 6170000) * 0.045;
+                var pension = Math.floor(Math.min(tax_target_month, 6170000) * 0.045);
                 
                 // 건강보험: 3.545% (요율 인상 반영 가정)
                 // 장기요양: 건강보험료의 12.95%
-                var health = tax_target_month * 0.03545;
-                var care = health * 0.1295;
-                var totalHealth = health + care;
+                var health = Math.floor(tax_target_month * 0.03545);
+                var care = Math.floor(health * 0.1295);
                 
                 // 고용보험: 0.9%
-                var employment = tax_target_month * 0.009;
+                var employment = Math.floor(tax_target_month * 0.009);
                 
-                // 소득세 (간이세액표 대신 누진세율 약식 적용)
-                // 연간 소득공제 대략 1500만 가정 (본인공제+근로소득공제 등 표준)
-                var annual_tax_base = (tax_target_month * 12) - 15000000; 
-                var annual_tax = annual_tax_base > 0 ? calcProgressiveTax(annual_tax_base) : 0;
-                var incomeTax = annual_tax / 12;
-                var localTax = incomeTax * 0.1;
+                // 소득세 (간이세액표 로직 약식 구현)
+                // 연간 소득공제 (본인공제 150만 + 부양가족 1인당 150만 + 자녀공제 등 반영)
+                var family_deduction = (d.s3 * 1500000) + (d.s4 * 1500000); 
+                // 근로소득공제 대략적 산출
+                var annual_salary = d.s1;
+                var income_deduction = 0;
+                if (annual_salary <= 5000000) income_deduction = annual_salary * 0.7;
+                else if (annual_salary <= 15000000) income_deduction = 3500000 + (annual_salary - 5000000) * 0.4;
+                else if (annual_salary <= 45000000) income_deduction = 7500000 + (annual_salary - 15000000) * 0.15;
+                else if (annual_salary <= 100000000) income_deduction = 12000000 + (annual_salary - 45000000) * 0.05;
+                else income_deduction = 14750000 + (annual_salary - 100000000) * 0.02;
 
-                var totalDeduct = pension + totalHealth + employment + incomeTax + localTax;
+                var annual_tax_base = annual_salary - income_deduction - family_deduction;
+                var annual_tax = annual_tax_base > 0 ? calcProgressiveTax(annual_tax_base) : 0;
+                
+                // 자녀 세액공제 (1명 15만, 2명 30만, 3명 60만 가정)
+                var child_tax_credit = 0;
+                if (d.s4 == 1) child_tax_credit = 150000;
+                else if (d.s4 == 2) child_tax_credit = 300000;
+                else if (d.s4 >= 3) child_tax_credit = 300000 + (d.s4 - 2) * 300000;
+                
+                var incomeTax = Math.floor(Math.max(0, (annual_tax - child_tax_credit)) / 12);
+                var localTax = Math.floor(incomeTax * 0.1);
+
+                var totalDeduct = pension + health + care + employment + incomeTax + localTax;
                 var net = month - totalDeduct;
 
                 return {
                     items: [
                         { label: '월 세전 급여', val: won(month) },
-                        { label: '4대보험 합계', val: won(pension + totalHealth + employment) },
-                        { label: '소득세(지방세포함)', val: won(incomeTax + localTax) },
-                        { label: '월 실수령액', val: won(net) }
+                        { label: '국민연금', val: won(pension) },
+                        { label: '건강보험', val: won(health) },
+                        { label: '장기요양', val: won(care) },
+                        { label: '고용보험', val: won(employment) },
+                        { label: '근로소득세', val: won(incomeTax) },
+                        { label: '지방소득세', val: won(localTax) },
+                        { label: '월 실수령액', val: '<strong>' + won(net) + '</strong>' }
                     ],
                     chart: {
                         type: 'pie',
-                        labels: ['실수령액', '국민연금', '건강/요양', '고용보험', '세금'],
-                        data: [net, pension, totalHealth, employment, incomeTax + localTax]
+                        labels: ['실수령액', '국민연금', '건강보험', '장기요양', '고용보험', '소득세(합계)'],
+                        data: [net, pension, health, care, employment, incomeTax + localTax]
                     }
                 };
             }
