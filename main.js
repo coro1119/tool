@@ -322,21 +322,66 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         },
         'ott-dutch': {
-            title: 'OTT 파티원 정산기',
-            descTitle: '구독료 1/N 빵',
-            description: '파티원끼리 매달 정산할 금액을 계산합니다.',
+            title: 'OTT 파티원 정산기 (전용)',
+            descTitle: '주요 OTT 가격 & 정산 가이드',
+            description: '한국인이 가장 많이 쓰는 OTT들의 가격을 미리 세팅해두었습니다. 파티원 수만 넣어서 1/N 빵 금액과 호구 지수를 확인하세요.',
+            example: '넷플릭스 프리미엄, 4명 정산',
             inputs: [
-                { id: 'o1', label: '구독료 총액', value: 14900 },
-                { id: 'o2', label: '인원수', value: 4 }
+                { id: 'o1', label: 'OTT 서비스 선택', value: 'netflix', type: 'select', options: [
+                    { label: '넷플릭스 (프리미엄)', value: 'netflix' },
+                    { label: '유튜브 프리미엄', value: 'youtube' },
+                    { label: '디즈니+', value: 'disney' },
+                    { label: '티빙 (프리미엄)', value: 'tving' },
+                    { label: '웨이브 (프리미엄)', value: 'wavve' },
+                    { label: '쿠팡플레이 (와우)', value: 'coupang' },
+                    { label: '직접 입력', value: 'custom' }
+                ]},
+                { id: 'o2', label: '현재 파티원 수 (나 포함)', value: 4 },
+                { id: 'o3', label: '총 금액 (직접 입력시)', value: 0 }
             ],
             run: function(d) {
-                var per = Math.ceil(d.o1 / d.o2 / 10) * 10;
+                var ottData = {
+                    'netflix': { price: 17000, max: 4, name: '넷플릭스' },
+                    'youtube': { price: 14900, max: 1, name: '유튜브 프리미엄' }, // 공유 금지지만 정산은 하니깐
+                    'disney': { price: 13900, max: 4, name: '디즈니+' },
+                    'tving': { price: 17000, max: 4, name: '티빙' },
+                    'wavve': { price: 13900, max: 4, name: '웨이브' },
+                    'coupang': { price: 7890, max: 2, name: '쿠팡플레이' },
+                    'custom': { price: d.o3, max: 4, name: '기타 OTT' }
+                };
+
+                var selected = ottData[d.o1] || ottData['netflix'];
+                var totalPrice = (d.o1 === 'custom') ? d.o3 : selected.price;
+                var members = Math.max(1, d.o2);
+                var perPerson = Math.ceil(totalPrice / members / 10) * 10;
+                
+                var comment = "";
+                var diff = selected.max - members;
+
+                if (d.o1 === 'youtube') {
+                    comment = "유튜브는 공식 공유가 없지만... 뿜빠이 정신 응원합니다!";
+                } else if (diff > 0) {
+                    var saveMore = perPerson - (Math.ceil(totalPrice / selected.max / 10) * 10);
+                    comment = "잠깐! " + diff + "명 더 구하면 인당 " + won(saveMore) + " 더 아낄 수 있어요. 당장 당근마켓으로 가시죠!";
+                } else if (diff === 0) {
+                    comment = "완벽한 풀파티! 정산의 마스터이자 갓생러이시군요.";
+                } else {
+                    comment = "최대 인원을 넘겼어요! 동접 제한 때문에 싸움 날 수 있으니 주의하세요.";
+                }
+
                 return {
                     items: [
-                        { label: '1인당 금액', val: won(per) },
-                        { label: '한 줄 평', val: '<strong>갓생 절약 성공! 국밥 한 그릇 아꼈습니다.</strong>' }
+                        { label: selected.name + ' 총액', val: won(totalPrice) },
+                        { label: '인당 입금액', val: '<strong style="color:#2563eb">' + won(perPerson) + '</strong>' },
+                        { label: '최대 공유 인원', val: selected.max + '명' },
+                        { label: '한 줄 평', val: '<strong>' + comment + '</strong>' },
+                        { label: '카톡 복사용', val: '<small>매달 ' + perPerson.toLocaleString() + '원! 늦지 않게 입금 부탁드려요~</small>' }
                     ],
-                    chart: { type: 'pie', labels: ['나', '나머지'], data: [per, d.o1 - per] }
+                    chart: { 
+                        type: 'doughnut', 
+                        labels: ['나의 부담', '파티원 총합'], 
+                        data: [perPerson, totalPrice - perPerson] 
+                    }
                 };
             }
         },
