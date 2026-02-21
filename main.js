@@ -131,7 +131,16 @@ document.addEventListener('DOMContentLoaded', function() {
         var html = '';
         cfg.inputs.forEach(function(i) {
             html += '<div class="input-group"><label>' + i.label + '</label>';
-            html += '<input type="number" id="' + i.id + '" value="' + i.value + '"></div>';
+            if (i.type === 'select') {
+                html += '<select id="' + i.id + '">';
+                i.options.forEach(function(opt) {
+                    html += '<option value="' + opt.value + '"' + (opt.value == i.value ? ' selected' : '') + '>' + opt.label + '</option>';
+                });
+                html += '</select>';
+            } else {
+                html += '<input type="number" id="' + i.id + '" value="' + i.value + '">';
+            }
+            html += '</div>';
         });
         calcInputs.innerHTML = html + '<button class="calc-btn" id="run">계산하기</button>';
 
@@ -222,22 +231,36 @@ document.addEventListener('DOMContentLoaded', function() {
         'crypto-fomo': {
             title: '비트코인 타임머신 ("그때 샀더라면")',
             descTitle: '과거의 나를 반성하는 시간',
-            description: '5년 전 오늘 비트코인을 샀다면 지금 자산이 어떻게 변했을지 시뮬레이션합니다. (현실 부정 금지)',
+            description: '비트코인을 과거 특정 시점에 샀을 때, 현재 자산 가치를 시뮬레이션합니다. 15년 전을 선택할 땐 마음의 준비를 하세요.',
             refName: '업비트 (비트코인 시세)',
             refLink: 'https://upbit.com/exchange?code=CRIX.UPBIT.KRW-BTC',
-            example: '5년 전 1,000만원 투자 시',
-            inputs: [{ id: 'f1', label: '투자금액 (원)', value: 10000000 }],
+            example: '10년 전 100만원 투자 시',
+            inputs: [
+                { id: 'f1', label: '투자금액 (원)', value: 1000000 },
+                { id: 'f2', label: '투자 시점', value: 5, type: 'select', options: [
+                    { label: '5년 전 (2021년)', value: 5 },
+                    { label: '10년 전 (2016년)', value: 10 },
+                    { label: '15년 전 (2011년)', value: 15 }
+                ]}
+            ],
             run: function(d) {
-                // 5년 전(2021.02) 약 5,500만원 -> 2026.02 약 1억 5,000만원 가정 (성장률 270%)
-                var growth = 2.72; 
-                var current = d.f1 * growth;
+                // 수익률 맵 (2026.02 시세 1.5억 가정)
+                // 5년전(2021): 5500만 -> 1.5억 (약 2.72배)
+                // 10년전(2016): 50만 -> 1.5억 (약 300배)
+                // 15년전(2011): 1000원 -> 1.5억 (약 150,000배)
+                var multiplier = 2.72;
+                if (d.f2 == 10) multiplier = 300;
+                if (d.f2 == 15) multiplier = 150000;
+
+                var current = d.f1 * multiplier;
                 var diff = current - d.f1;
                 return {
                     items: [
                         { label: '투자 원금', val: won(d.f1) },
                         { label: '현재 가치 (추정)', val: won(current) },
-                        { label: '수익금', val: '<span style="color:#ef4444">+' + won(diff) + '</span>' },
-                        { label: '수익률', val: '<span style="color:#ef4444">272%</span>' }
+                        { label: '예상 수익', val: '<span style="color:#ef4444">+' + won(diff) + '</span>' },
+                        { label: '상승률', val: '<span style="color:#ef4444">' + (multiplier * 100).toLocaleString() + '%</span>' },
+                        { label: '한 줄 평', val: d.f2 == 15 ? '지구 정복도 가능했겠네요...' : '지금이라도 늦지 않았을까요?' }
                     ],
                     chart: { type: 'bar', labels: ['원금', '현재가치'], data: [d.f1, current] }
                 };
