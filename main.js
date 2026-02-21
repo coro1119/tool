@@ -140,6 +140,28 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         calcInputs.innerHTML = html + '<button class="calc-btn" id="run">계산하기</button>';
 
+        // OTT 정산기 전용 실시간 가격 연동 로직
+        if (id === 'ott-dutch') {
+            var serviceSelect = document.getElementById('o1');
+            var priceInput = document.getElementById('o3');
+            var updatePrice = function() {
+                var prices = {
+                    'netflix': 17000,
+                    'youtube': 14900,
+                    'disney': 13900,
+                    'tving': 17000,
+                    'wavve': 13900,
+                    'coupang': 7890,
+                    'custom': 0
+                };
+                if (serviceSelect.value !== 'custom') {
+                    priceInput.value = prices[serviceSelect.value];
+                }
+            };
+            serviceSelect.addEventListener('change', updatePrice);
+            updatePrice(); // 초기 로드 시 가격 설정
+        }
+
         document.getElementById('run').addEventListener('click', function() {
             var vals = {};
             cfg.inputs.forEach(function(i) {
