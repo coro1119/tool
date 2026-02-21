@@ -219,6 +219,195 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     var book = {
+        'crypto-fomo': {
+            title: '비트코인 타임머신 ("그때 샀더라면")',
+            descTitle: '과거의 나를 반성하는 시간',
+            description: '5년 전 오늘 비트코인을 샀다면 지금 자산이 어떻게 변했을지 시뮬레이션합니다. (현실 부정 금지)',
+            refName: '업비트 (비트코인 시세)',
+            refLink: 'https://upbit.com/exchange?code=CRIX.UPBIT.KRW-BTC',
+            example: '5년 전 1,000만원 투자 시',
+            inputs: [{ id: 'f1', label: '투자금액 (원)', value: 10000000 }],
+            run: function(d) {
+                // 5년 전(2021.02) 약 5,500만원 -> 2026.02 약 1억 5,000만원 가정 (성장률 270%)
+                var growth = 2.72; 
+                var current = d.f1 * growth;
+                var diff = current - d.f1;
+                return {
+                    items: [
+                        { label: '투자 원금', val: won(d.f1) },
+                        { label: '현재 가치 (추정)', val: won(current) },
+                        { label: '수익금', val: '<span style="color:#ef4444">+' + won(diff) + '</span>' },
+                        { label: '수익률', val: '<span style="color:#ef4444">272%</span>' }
+                    ],
+                    chart: { type: 'bar', labels: ['원금', '현재가치'], data: [d.f1, current] }
+                };
+            }
+        },
+        'coffee-tesla': {
+            title: '커피값 vs 테슬라(TSLA)',
+            descTitle: '스벅 아아 한 잔의 기회비용',
+            description: '매일 마시는 커피값(4,500원)을 아껴서 테슬라 주식을 샀다면? 5년간의 꾸준한 적립식 투자를 가정합니다.',
+            refName: '야후 파이낸스 (TSLA)',
+            refLink: 'https://finance.yahoo.com/quote/TSLA',
+            example: '매일 4,500원씩 5년 적립 시',
+            inputs: [{ id: 't1', label: '일일 커피값 (원)', value: 4500 }],
+            run: function(d) {
+                var daily = d.t1;
+                var totalCoffee = daily * 365 * 5;
+                // 테슬라 5년 연평균 수익률 대략 25% 가정 (복리)
+                var monthly = daily * 30;
+                var rate = 0.25 / 12;
+                var months = 60;
+                var futureValue = monthly * ((Math.pow(1 + rate, months) - 1) / rate) * (1 + rate);
+                
+                return {
+                    items: [
+                        { label: '5년 총 커피값', val: won(totalCoffee) },
+                        { label: '테슬라 주식 가치', val: won(futureValue) },
+                        { label: '반전 수익금', val: '<span style="color:#2563eb">+' + won(futureValue - totalCoffee) + '</span>' }
+                    ],
+                    chart: { type: 'doughnut', labels: ['커피로 소비', '주식으로 이득'], data: [totalCoffee, futureValue - totalCoffee] }
+                };
+            }
+        },
+        'breath-apartment': {
+            title: '숨참고 한강뷰 다이브',
+            descTitle: '서울 아파트 내 집 마련 시뮬레이션',
+            description: '내 연봉을 한 푼도 안 쓰고 숨만 쉬며 모았을 때, 한강뷰 아파트를 사기까지 며칠(또는 몇 년)이 걸리는지 계산합니다.',
+            refName: 'KB부동산 (서울 주택 가격)',
+            refLink: 'https://kbland.kr',
+            example: '연봉 5,000만원, 아파트 25억 기준',
+            inputs: [
+                { id: 'b1', label: '세후 연봉 (원)', value: 50000000 },
+                { id: 'b2', label: '목표 아파트가 (원)', value: 2500000000 }
+            ],
+            run: function(d) {
+                var years = d.b2 / d.b1;
+                var days = Math.floor(years * 365);
+                return {
+                    items: [
+                        { label: '소요 기간', val: years.toFixed(1) + ' 년' },
+                        { label: '숨 참아야 할 기간', val: days.toLocaleString() + ' 일' },
+                        { label: '한 줄 평', val: days > 10000 ? '이번 생은 글렀습니다...' : '열심히 모으면 가능합니다!' }
+                    ],
+                    chart: { type: 'pie', labels: ['현재 연봉', '부족한 금액'], data: [d.b1, d.b2 - d.b1] }
+                };
+            }
+        },
+        'youtube-adsense': {
+            title: '유튜브 애드센스 수익기',
+            descTitle: '조회수당 예상 달러 수익',
+            description: '조회수와 채널 카테고리(금융, 일상, 게임 등)에 따른 예상 광고 수익을 계산합니다. (한국 평균 CPM 기준)',
+            refName: '유튜브 스튜디오 도움말',
+            refLink: 'https://support.google.com/youtube/answer/72857',
+            example: '조회수 100만 회, 금융 카테고리',
+            inputs: [
+                { id: 'y1', label: '월 평균 조회수', value: 1000000 },
+                { id: 'y2', label: '조회수당 단가(원)', value: 3 }
+            ],
+            run: function(d) {
+                var profit = d.y1 * d.y2;
+                return {
+                    items: [
+                        { label: '예상 월 수익', val: won(profit) },
+                        { label: '연 환산 수익', val: won(profit * 12) },
+                        { label: '유튜버 등급', val: d.y1 > 1000000 ? '골드 버튼급' : (d.y1 > 100000 ? '실버 버튼급' : '꿈나무') }
+                    ],
+                    chart: { type: 'bar', labels: ['월 수익', '연 수익/10'], data: [profit, (profit * 12) / 10] }
+                };
+            }
+        },
+        'influencer-price': {
+            title: '인플루언서 협찬 단가',
+            descTitle: '인스타/틱톡 원고료 정산',
+            description: '팔로워 수와 게시물당 반응률을 기반으로 한 시장 평균 협찬 단가를 추천합니다.',
+            example: '팔로워 5만 명, 반응률 2%',
+            inputs: [
+                { id: 'i1', label: '팔로워 수', value: 50000 },
+                { id: 'i2', label: '평균 반응률 (%)', value: 2.5 }
+            ],
+            run: function(d) {
+                var base = d.i1 * 10; // 팔로워당 10원 기본
+                var bonus = base * (d.i2 / 100) * 2;
+                var total = base + bonus;
+                return {
+                    items: [
+                        { label: '추천 원고료', val: won(total) },
+                        { label: '게시물 가치', val: won(total * 1.5) },
+                        { label: '협상 가이드', val: '반응률이 높아 상향 조정 가능' }
+                    ],
+                    chart: { type: 'doughnut', labels: ['기본단가', '반응률보너스'], data: [base, bonus] }
+                };
+            }
+        },
+        'ott-dutch': {
+            title: 'OTT 파티원 정산기',
+            descTitle: '넷플릭스/유튜브 프리미엄 1/N',
+            description: '복잡한 OTT 구독료를 파티원끼리 매달 얼마씩 주고받아야 하는지 계산해 드립니다.',
+            example: '유튜브 프리미엄 14,900원, 4명 정산',
+            inputs: [
+                { id: 'o1', label: '구독료 총액 (원)', value: 14900 },
+                { id: 'o2', label: '파티원 수 (본인포함)', value: 4 }
+            ],
+            run: function(d) {
+                var perPerson = Math.ceil(d.o1 / d.o2 / 10) * 10;
+                return {
+                    items: [
+                        { label: '1인당 부담액', val: won(perPerson) },
+                        { label: '총 정산금액', val: won(perPerson * d.o2) },
+                        { label: '카톡 공지용', val: '매달 ' + perPerson.toLocaleString() + '원 입금 부탁드려요!' }
+                    ],
+                    chart: { type: 'pie', labels: ['내 부담', '파티원들'], data: [perPerson, d.o1 - perPerson] }
+                };
+            }
+        },
+        'part-time': {
+            title: '알바 주휴수당 계산기',
+            descTitle: '2026 최저임금 반영 실지급액',
+            description: '주당 근무 시간과 시급을 입력하면 주휴수당을 포함한 실제 수령액을 계산합니다.',
+            refName: '고용노동부 (주휴수당 안내)',
+            refLink: 'https://www.moel.go.kr',
+            example: '시급 10,030원, 주 20시간 근무',
+            inputs: [
+                { id: 'pt1', label: '시급 (원)', value: 10030 },
+                { id: 'pt2', label: '주간 근무시간', value: 20 }
+            ],
+            run: function(d) {
+                var base = d.pt1 * d.pt2;
+                var holiday = d.pt2 >= 15 ? (d.pt2 / 40) * 8 * d.pt1 : 0;
+                var monthly = (base + holiday) * 4.345;
+                return {
+                    items: [
+                        { label: '주 기본급', val: won(base) },
+                        { label: '주휴수당', val: won(holiday) },
+                        { label: '월 예상 지급액', val: '<strong>' + won(monthly) + '</strong>' }
+                    ],
+                    chart: { type: 'bar', labels: ['기본급', '주휴수당'], data: [base, holiday] }
+                };
+            }
+        },
+        'travel-currency': {
+            title: '유럽 축구 직관 물가 체감',
+            descTitle: '유로/파운드 -> 국밥 환산기',
+            description: '해외 여행지 물가를 한국인에게 가장 익숙한 단위인 "국밥"으로 환산해 드립니다.',
+            example: '유럽 축구 티켓 150유로',
+            inputs: [
+                { id: 'tc1', label: '현지 금액', value: 150 },
+                { id: 'tc2', label: '환율 (1유로당)', value: 1500 }
+            ],
+            run: function(d) {
+                var totalWon = d.tc1 * d.tc2;
+                var gukbap = Math.floor(totalWon / 10000);
+                return {
+                    items: [
+                        { label: '한화 환산액', val: won(totalWon) },
+                        { label: '국밥 환산', val: gukbap + ' 그릇' },
+                        { label: '체감 물가', val: gukbap > 20 ? '심각하게 비쌈' : '적당한 사치' }
+                    ],
+                    chart: { type: 'bar', labels: ['여행 지출', '국밥 10그릇'], data: [totalWon, 100000] }
+                };
+            }
+        },
         'salary': {
             title: '2026 연봉 실수령액 계산기',
             descTitle: '2026년 최신 요율 반영 상세 계산',
