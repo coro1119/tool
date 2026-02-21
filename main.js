@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var navLinks = document.querySelectorAll('.nav-links a, .dropdown-menu a, .calc-card');
     
     var currentChart = null;
+    var baseTitle = "금융 계산기 마스터";
 
     // Helper: 2026년 기준 소득세율 (누진세율) 계산
     function calcProgressiveTax(taxBase) {
@@ -51,6 +52,10 @@ document.addEventListener('DOMContentLoaded', function() {
             homeView.classList.add('active');
             calcView.classList.remove('active');
             document.querySelector('[data-page="home"]').classList.add('active');
+            document.title = "2026 연봉 실수령액 & 금융 계산기 마스터 | FinanceCalculator";
+            if (window.location.hash) {
+                history.pushState("", document.title, window.location.pathname + window.location.search);
+            }
         } else {
             homeView.classList.remove('active');
             calcView.classList.add('active');
@@ -64,14 +69,31 @@ document.addEventListener('DOMContentLoaded', function() {
             var cid = link.getAttribute('data-calc');
             if (cid) {
                 e.preventDefault();
-                goTo('calc');
-                startUI(cid);
+                window.location.hash = cid;
             } else if (link.getAttribute('data-page') === 'home') {
                 e.preventDefault();
                 goTo('home');
             }
         });
     });
+
+    // 해시 변경 감지 라우팅
+    window.addEventListener('hashchange', function() {
+        var hash = window.location.hash.substring(1);
+        if (hash && book[hash]) {
+            goTo('calc');
+            startUI(hash);
+        } else {
+            goTo('home');
+        }
+    });
+
+    // 초기 로드 처리
+    var initialHash = window.location.hash.substring(1);
+    if (initialHash && book[initialHash]) {
+        goTo('calc');
+        startUI(initialHash);
+    }
 
     if (backBtn) backBtn.addEventListener('click', function() { goTo('home'); });
 
@@ -89,6 +111,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         calcTitle.textContent = cfg.title;
+        document.title = cfg.title + " - " + baseTitle;
         
         // 설명 및 주의사항 박스 채우기 (공식 링크 추가)
         if (calcInfoBox) {
