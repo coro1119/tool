@@ -418,6 +418,56 @@ canvas#calc-chart {
     max-height: 100% !important;
 }
 
+/* Share Actions */
+.share-container {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+    text-align: center;
+}
+
+.share-label {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+}
+
+.share-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.share-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.8rem 1.5rem;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: 0.2s;
+    border: none;
+}
+
+.share-btn.kakao {
+    background-color: #fee500;
+    color: #3c1e1e;
+}
+
+.share-btn.link {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    border: 1px solid var(--border);
+}
+
+.share-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
 /* Footer */
 footer {
     padding: 3rem 0;

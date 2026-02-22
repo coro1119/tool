@@ -26,6 +26,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.0/kakao.min.js"></script>
 </head>
 <body>
     <header>
@@ -262,6 +263,18 @@
                     </div>
                     <div class="chart-wrapper">
                         <canvas id="calc-chart"></canvas>
+                    </div>
+                    <!-- 공유 버튼 영역 -->
+                    <div id="share-area" class="share-container" style="display: none;">
+                        <p class="share-label">결과 공유하기</p>
+                        <div class="share-buttons">
+                            <button id="kakao-share-btn" class="share-btn kakao">
+                                <span class="share-icon">💬</span> 카카오톡 공유
+                            </button>
+                            <button id="copy-link-btn" class="share-btn link">
+                                <span class="share-icon">🔗</span> 링크 복사
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

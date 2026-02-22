@@ -8,9 +8,17 @@ document.addEventListener('DOMContentLoaded', function() {
     var calcResults = document.getElementById('calc-results');
     var chartWrapper = document.querySelector('.chart-wrapper');
     var backBtn = document.querySelector('.back-btn');
+    var shareArea = document.getElementById('share-area');
     
     var currentChart = null;
     var baseTitle = "머니마스터 (MoneyMaster)";
+
+    // Kakao Init (Placeholder - user should replace with real key)
+    try {
+        if (window.Kakao && !Kakao.isInitialized()) {
+            Kakao.init('YOUR_KAKAO_APP_KEY'); // Replace with actual JavaScript Key
+        }
+    } catch (e) { console.warn('Kakao SDK init failed', e); }
 
     // --- Helper: won formatter ---
     var won = function(v) { 
@@ -514,7 +522,7 @@ document.addEventListener('DOMContentLoaded', function() {
             example: '연봉 5,000만원 전액 저축 시 20억 아파트 매수 소요 시간',
             inputs: [
                 { id: 'b1', label: '세후 연봉 (원)', value: 50000000 },
-                { id: 'b2', label: '목표 아파트가 (원)', value: 2000000000 }
+                { id: 'b2', label: '목표 아파트가 (원)', value: 2500000000 }
             ],
             run: function(d) {
                 var years = d.b2 / d.b1;
@@ -644,8 +652,7 @@ document.addEventListener('DOMContentLoaded', function() {
         calcResults.innerHTML = '<div class="placeholder-msg">정보를 입력하고 계산하기 버튼을 눌러주세요.</div>';
         if (chartWrapper) chartWrapper.style.display = 'none';
         if (calcInfoBox) calcInfoBox.innerHTML = '';
-        var shareBox = document.querySelector('.embed-share-box');
-        if (shareBox) shareBox.remove();
+        if (shareArea) shareArea.style.display = 'none';
     }
 
     function startUI(id, initialData) {
@@ -713,10 +720,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
         document.getElementById('run').addEventListener('click', function() {
             var vals = {};
+            var params = new URLSearchParams();
+            params.set('calc', id);
+
             cfg.inputs.forEach(function(i) {
-                vals[i.id] = parseFloat(document.getElementById(i.id).value) || 0;
+                var v = document.getElementById(i.id).value;
+                vals[i.id] = parseFloat(v) || 0;
+                params.set(i.id, v);
             });
             
+            // Update URL without refresh
+            history.replaceState(null, '', '?' + params.toString());
+
             try {
                 var out = cfg.run(vals);
                 var resHtml = '';
@@ -726,6 +741,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
                 calcResults.innerHTML = resHtml;
                 if (out.chart) draw(out.chart);
+                if (shareArea) shareArea.style.display = 'block';
             } catch (err) {
                 console.error(err);
                 calcResults.innerHTML = '<p style="color:red">계산 중 에러가 발생했습니다.</p>';
@@ -734,6 +750,40 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (initialData || targetCalc === id) { document.getElementById('run').click(); }
     }
+
+    // Share Logic
+    document.getElementById('copy-link-btn').addEventListener('click', function() {
+        var url = window.location.href;
+        navigator.clipboard.writeText(url).then(function() {
+            alert('공유 링크가 복사되었습니다! 결과값이 포함되어 있습니다.');
+        });
+    });
+
+    document.getElementById('kakao-share-btn').addEventListener('click', function() {
+        if (!window.Kakao) return;
+        var title = calcTitle.textContent;
+        Kakao.Share.sendDefault({
+            objectType: 'feed',
+            content: {
+                title: '[머니마스터] ' + title + ' 결과 확인하기',
+                description: '나의 금융 성적표는? 머니마스터에서 바로 확인해보세요.',
+                imageUrl: 'https://financecalculator.cloud/og-image.png',
+                link: {
+                    mobileWebUrl: window.location.href,
+                    webUrl: window.location.href,
+                },
+            },
+            buttons: [
+                {
+                    title: '결과 보기',
+                    link: {
+                        mobileWebUrl: window.location.href,
+                        webUrl: window.location.href,
+                    },
+                },
+            ],
+        });
+    });
 
     document.body.addEventListener('click', function(e) {
         var calcTarget = e.target.closest('[data-calc]');
