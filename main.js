@@ -328,6 +328,7 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '인플루언서 협찬 단가',
             descTitle: '광고 원고료 정산',
             description: '팔로워 수 기준 추천 협찬 단가를 제안합니다.',
+            example: '팔로워 5만 명 기준',
             inputs: [
                 { id: 'i1', label: '팔로워 수', value: 50000 }
             ],
@@ -479,6 +480,7 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '유럽 축구 직관 물가 체감',
             descTitle: '현지 금액 -> 국밥 환산',
             description: '유럽 물가를 국밥 개수로 체감해봅니다.',
+            example: '150유로, 환율 1,500원 적용 시',
             inputs: [
                 { id: 'tc1', label: '현지 금액', value: 150 },
                 { id: 'tc2', label: '환율', value: 1500 }
@@ -503,6 +505,7 @@ document.addEventListener('DOMContentLoaded', function() {
             description: '국민연금 상한액 인상 및 건강보험 요율을 반영한 2026년형 실수령액 계산기입니다.',
             refName: '국세청 홈택스',
             refLink: 'https://www.hometax.go.kr',
+            example: '연봉 5,000만원, 부양가족 1명',
             inputs: [
                 { id: 's1', label: '연봉 (원)', value: 50000000 },
                 { id: 's2', label: '비과세 (월)', value: 200000 },
@@ -535,6 +538,7 @@ document.addEventListener('DOMContentLoaded', function() {
             description: '원리금 균등 상환 기준입니다.',
             refName: '금융감독원',
             refLink: 'https://finlife.fss.or.kr',
+            example: '3억원 대출, 금리 4.5%, 30년 상환',
             inputs: [
                 { id: 'l1', label: '대출금', value: 300000000 },
                 { id: 'l2', label: '금리(%)', value: 4.5 },
@@ -559,6 +563,7 @@ document.addEventListener('DOMContentLoaded', function() {
             description: '약식 계산기를 통해 올해 환급액을 예상해봅니다.',
             refName: '국세청 홈택스',
             refLink: 'https://www.hometax.go.kr',
+            example: '총급여 5,500만원, 기납부세액 300만원',
             inputs: [
                 { id: 'ts1', label: '총급여', value: 55000000 },
                 { id: 'ts2', label: '기납부세액', value: 3000000 }
@@ -579,6 +584,7 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '전세 vs 월세 비교',
             descTitle: '어디가 더 유리할까?',
             description: '전세 대출 이자와 월세 비용을 비교합니다.',
+            example: '전세 3억(4.0%) vs 월세 100만원',
             inputs: [
                 { id: 'rc1', label: '전세금', value: 300000000 },
                 { id: 'rc2', label: '대출금리(%)', value: 4.0 },
@@ -600,6 +606,7 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '양도소득세 계산기',
             descTitle: '부동산 매도 시 세금',
             description: '양도차익에 따른 세금을 계산합니다.',
+            example: '양도가 8억, 취득가 5억',
             inputs: [
                 { id: 'cg1', label: '양도가액', value: 800000000 },
                 { id: 'cg2', label: '취득가액', value: 500000000 }
@@ -620,6 +627,7 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '연금보험 수익률',
             descTitle: '미래 수령액 계산',
             description: '복리 수익을 계산합니다.',
+            example: '월 100만원, 10년 납입',
             inputs: [
                 { id: 'pe1', label: '월 납입액', value: 1000000 },
                 { id: 'pe2', label: '기간(년)', value: 10 }
@@ -639,6 +647,7 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '부동산 투자 수익률',
             descTitle: '수익형 부동산 ROI',
             description: '월세 수익률을 분석합니다.',
+            example: '매입 5억, 월세 200만원',
             inputs: [
                 { id: 're1', label: '매입가', value: 500000000 },
                 { id: 're2', label: '월세', value: 2000000 }
@@ -657,6 +666,8 @@ document.addEventListener('DOMContentLoaded', function() {
         'property-tax': {
             title: '재산세/종부세 계산',
             descTitle: '보유세 추정',
+            description: '공시지가 기준 보유세를 약식으로 계산합니다.',
+            example: '공시지가 15억원',
             inputs: [{ id: 'pt1', label: '공시지가', value: 1500000000 }],
             run: function(d) {
                 var tax = d.pt1 * 0.003; // 매우 약식
@@ -669,6 +680,8 @@ document.addEventListener('DOMContentLoaded', function() {
         'rate-analysis': {
             title: '대출 금리 분석',
             descTitle: '금리 인상 리스크',
+            description: '금리 인상 시 월 상환액 변화를 분석합니다.',
+            example: '4억 대출, 금리 4.0% -> 6.0% 인상 시',
             inputs: [
                 { id: 'ra1', label: '대출금', value: 400000000 },
                 { id: 'ra2', label: '현재금리', value: 4.0 },
