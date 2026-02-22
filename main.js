@@ -141,21 +141,33 @@ document.addEventListener('DOMContentLoaded', function() {
         window.scrollTo(0, 0);
     }
 
-    navLinks.forEach(function(link) {
-        link.addEventListener('click', function(e) {
-            var cid = link.getAttribute('data-calc');
-            if (cid) {
-                e.preventDefault();
-                // 해시 대신 쿼리 파라미터 사용 권장 (pSEO 대응)
-                // window.location.hash = cid; 
+    // Event Delegation for Navigation & Calculators
+    document.body.addEventListener('click', function(e) {
+        // 1. Handle Calculator Cards & Links
+        var calcTarget = e.target.closest('[data-calc]');
+        if (calcTarget) {
+            e.preventDefault();
+            var cid = calcTarget.getAttribute('data-calc');
+            if (cid && book[cid]) {
                 goTo('calc');
                 startUI(cid);
-            } else if (link.getAttribute('data-page') === 'home') {
-                e.preventDefault();
-                goTo('home');
+            } else {
+                console.error('Calculator not found or ID mismatch:', cid);
             }
-        });
+            return;
+        }
+
+        // 2. Handle Home Link
+        var homeTarget = e.target.closest('[data-page="home"]');
+        if (homeTarget) {
+            e.preventDefault();
+            goTo('home');
+            return;
+        }
     });
+
+    // Remove old navLinks logic
+    // var navLinks = document.querySelectorAll(...);
 
     // 뒤로가기 버튼 로직
     if (backBtn) backBtn.addEventListener('click', function() { 
