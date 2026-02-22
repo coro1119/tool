@@ -10,51 +10,21 @@
 
     <!-- SEO & Metadata -->
     <title>2026 연봉 실수령액 & 금융 계산기 마스터 | FinanceCalculator</title>
-    <meta name="description" content="2026년 최신 요율 반영! 연봉 실수령액, 대출 이자, 연말정산 환급금, 양도소득세, 부동산 수익률까지 모든 금융 계산을 한 번에 해결하세요.">
-    <meta name="keywords" content="2026 연봉 실수령액, 연봉계산기, 대출이자계산기, 연말정산계산기, 양도세계산기, 부동산수익률, 금융계산기">
+    <meta name="description" content="2026년 최신 요율 반영! 연봉 실수령액, 코인 과세, 테슬라 유지비, 유튜브 수익 등 돈과 관련된 모든 계산을 한 번에 해결하세요.">
+    <meta name="keywords" content="2026 연봉 실수령액, 코인 세금 계산기, 테슬라 유지비, 유튜브 수익 계산기, 연말정산 미리보기, 금융계산기">
     <link rel="canonical" href="https://financecalculator.cloud/">
     
-    <!-- Open Graph (Facebook, Kakao, Daum) -->
+    <!-- Open Graph -->
     <meta property="og:type" content="website">
-    <meta property="og:title" content="2026 연봉 실수령액 & 금융 계산기 마스터">
-    <meta property="og:description" content="내 월급부터 대출 이자까지, 2026년 최신 세법으로 정확하게 계산해 보세요.">
+    <meta property="og:title" content="2026 금융 계산기 마스터 - 돈의 모든 것">
+    <meta property="og:description" content="내 월급, 코인 세금, 테슬라 유지비까지. 2026년 최신 기준으로 현실적인 답을 드립니다.">
     <meta property="og:image" content="https://financecalculator.cloud/og-image.png">
     <meta property="og:url" content="https://financecalculator.cloud/">
     
-    <!-- Twitter -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="2026 연봉 실수령액 & 금융 계산기 마스터">
-    <meta name="twitter:description" content="2026년형 금융 계산기 - 연봉, 세금, 대출을 정밀하게 분석하세요.">
-
-    <!-- RSS Feed -->
-    <link rel="alternate" type="application/rss+xml" title="2026 연봉 실수령액 & 금융 계산기 마스터 RSS" href="https://financecalculator.cloud/rss.xml" />
-
-    <!-- Structured Data (JSON-LD) for Google -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "SoftwareApplication",
-      "name": "금융 계산기 마스터",
-      "operatingSystem": "Web",
-      "applicationCategory": "FinanceApplication",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "KRW"
-      },
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": "4.9",
-        "ratingCount": "1024"
-      },
-      "description": "연봉 실수령액, 대출 이자, 양도소득세 등 2026년 최신 기준 금융 계산기 세트"
-    }
-    </script>
-
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -63,24 +33,8 @@
             <h1 class="logo">Finance<span>Calculator</span></h1>
             <ul class="nav-links">
                 <li><a href="#" class="active" data-page="home">홈</a></li>
-                <li class="dropdown">
-                    <a href="#">계산기 목록</a>
-                    <ul class="dropdown-menu">
-                        <li><a href="#" data-calc="loan">대출 이자/상환</a></li>
-                        <li><a href="#" data-calc="tax-settlement">연말정산 환급</a></li>
-                        <li><a href="#" data-calc="rent-compare">전세 vs 월세</a></li>
-                        <li><a href="#" data-calc="capital-gain">양도소득세</a></li>
-                        <li><a href="#" data-calc="auto-insurance">자동차 보험료</a></li>
-                        <li><a href="#" data-calc="pension">연금보험 수익</a></li>
-                        <li><a href="#" data-calc="salary">실수령액</a></li>
-                        <li><a href="#" data-calc="real-estate">부동산 수익률</a></li>
-                        <li><a href="#" data-calc="property-tax">재산세/종부세</a></li>
-                        <li><a href="#" data-calc="rate-analysis">금리 변동 분석</a></li>
-                        <li><a href="#" data-calc="coin-tax">코인 과세(22%)</a></li>
-                        <li><a href="#" data-calc="son-salary">손흥민 vs 내 연봉</a></li>
-                        <li><a href="#" data-calc="delivery-travel">배달비로 해외여행</a></li>
-                    </ul>
-                </li>
+                <!-- 카테고리 링크는 칩 필터로 대체하므로 헤더에서는 심플하게 유지 -->
+                <li><a href="https://github.com/coro1119/tool" target="_blank">개발자 문의</a></li>
             </ul>
             <div class="theme-toggle">
                 <button id="theme-btn" title="테마 변경">🌓</button>
@@ -89,123 +43,202 @@
     </header>
 
     <main id="app" class="container">
-        <!-- 메인 홈 화면 -->
+        <!-- 메인 홈 화면 (개편) -->
         <section id="home-view" class="view active">
-            <div class="hero">
-                <h2>당신을 위한 정밀한 금융 계산기</h2>
-                <p>복잡한 금융 계산을 쉽고 빠르게 처리하세요. 커스텀 기능을 지원합니다.</p>
+            <!-- 1. Omnibar & Hero -->
+            <div class="main-hero">
+                <h2>무엇을 계산하고 싶으신가요?</h2>
+                <div class="search-wrapper">
+                    <input type="text" id="omnibar" placeholder="예: 연봉, 코인 세금, 테슬라, 유튜브..." autocomplete="off">
+                    <span class="search-icon">🔍</span>
+                </div>
             </div>
-            
-            <div class="calc-grid">
-                <!-- 기존 카드들 유지 -->
-                <div class="calc-card" data-calc="salary">
-                    <div class="icon">💵</div>
-                    <h3>2026 연봉 실수령액</h3>
-                    <p>4대 보험과 소득세를 제외한 2026년 실제 통장 수령액</p>
-                </div>
-                <div class="calc-card" data-calc="loan">
-                    <div class="icon">💰</div>
-                    <h3>대출 이자/상환</h3>
-                    <p>원리금균등, 원금균등, 만기일시상환 방식별 이자 계산</p>
-                </div>
 
-                <!-- 신규: 밈 & FOMO 섹션 -->
-                <div class="calc-card" data-calc="coin-tax" style="border: 2px solid #ef4444;">
-                    <div class="icon">😱</div>
-                    <h3>2026 코인 과세 멘붕기</h3>
-                    <p>수익의 22% 세금 떼면 얼마나 남을까? (공포 체험)</p>
-                </div>
-                <div class="calc-card" data-calc="son-salary" style="border: 2px solid #3b82f6;">
-                    <div class="icon">⚽</div>
-                    <h3>손흥민 주급 vs 내 연봉</h3>
-                    <p>흥민이 형이 숨만 쉬어도 버는 돈, 난 며칠 일해야 할까?</p>
-                </div>
-                <div class="calc-card" data-calc="delivery-travel" style="border: 2px solid #10b981;">
-                    <div class="icon">✈️</div>
-                    <h3>배달비 모아 해외여행</h3>
-                    <p>1년 동안 배달 안 시키면 어디까지 갈 수 있을까?</p>
-                </div>
+            <!-- 2. Filter Chips -->
+            <div class="filter-container">
+                <button class="chip active" data-filter="all">#전체</button>
+                <button class="chip" data-filter="protect">#🛡️ 돈 지키기</button>
+                <button class="chip" data-filter="grow">#🚀 돈 굴리기</button>
+                <button class="chip" data-filter="biz">#💸 N잡·비즈니스</button>
+                <button class="chip" data-filter="fun">#🤪 현타·유희</button>
+            </div>
 
-                <div class="calc-card" data-calc="crypto-fomo" style="border: 2px solid #f59e0b;">
-                    <div class="icon">🚀</div>
-                    <h3>비트코인 타임머신</h3>
-                    <p>"5년 전에 샀더라면..." 과거의 나를 원망해봅시다.</p>
+            <!-- 3. HOT & NEW Section (고정) -->
+            <div id="hot-section" class="hot-section">
+                <div class="section-title">
+                    <h3>🔥 지금 가장 핫한 계산기</h3>
+                    <span class="badge">HOT</span>
                 </div>
-                <div class="calc-card" data-calc="coffee-tesla" style="border: 2px solid #3b82f6;">
-                    <div class="icon">☕</div>
-                    <h3>커피값 vs 테슬라</h3>
-                    <p>스벅 아아 대신 주식을 샀을 때의 반전 결과</p>
+                <div class="hot-grid">
+                    <!-- 인기 아이템 복제 -->
+                    <div class="calc-card featured" data-calc="coin-tax">
+                        <div class="icon">😱</div>
+                        <h3>2026 코인 과세 멘붕기</h3>
+                        <p>수익의 22% 세금 떼면 얼마 남을까?</p>
+                    </div>
+                    <div class="calc-card featured" data-calc="son-salary">
+                        <div class="icon">⚽</div>
+                        <h3>손흥민 주급 vs 내 연봉</h3>
+                        <p>월클이 숨만 쉬어도 버는 돈 비교</p>
+                    </div>
+                    <div class="calc-card featured" data-calc="salary">
+                        <div class="icon">💵</div>
+                        <h3>2026 연봉 실수령액</h3>
+                        <p>2026년 최신 요율 반영 실수령액</p>
+                    </div>
                 </div>
-                <div class="calc-card" data-calc="breath-apartment" style="border: 2px solid #ef4444;">
-                    <div class="icon">😮‍💨</div>
-                    <h3>숨참고 한강뷰 다이브</h3>
-                    <p>내 연봉으로 한강뷰 아파트 사려면 며칠 숨 참아야 할까?</p>
-                </div>
+            </div>
 
-                <!-- 신규: 크리에이터 & N잡러 -->
-                <div class="calc-card" data-calc="youtube-adsense">
-                    <div class="icon">📺</div>
-                    <h3>유튜브 수익 계산기</h3>
-                    <p>조회수당 예상 애드센스 수익 및 등급 확인</p>
+            <!-- 4. Main Grid (All Calculators) -->
+            <div id="main-grid-container">
+                <div class="section-title main-list-title">
+                    <h3>📚 전체 계산기 모음</h3>
                 </div>
-                <div class="calc-card" data-calc="influencer-price">
-                    <div class="icon">📸</div>
-                    <h3>인플루언서 단가</h3>
-                    <p>팔로워 수 기준 인스타/틱톡 협찬 광고 단가 측정</p>
-                </div>
+                <div class="calc-grid" id="main-grid">
+                    
+                    <!-- 🛡️ 돈 지키기 (Protect) -->
+                    <div class="calc-card" data-calc="salary" data-category="protect" data-keywords="월급 연봉 급여 실수령액 세금 4대보험">
+                        <div class="icon">💵</div>
+                        <h3>2026 연봉 실수령액</h3>
+                        <p>2026년 최신 요율 반영 월급 계산</p>
+                    </div>
+                    <div class="calc-card" data-calc="tax-settlement" data-category="protect" data-keywords="연말정산 환급 세금 토해내기 13월의월급">
+                        <div class="icon">📑</div>
+                        <h3>연말정산 환급 예상</h3>
+                        <p>나는 받을까 토해낼까? 미리보기</p>
+                    </div>
+                    <div class="calc-card" data-calc="freelancer-tax" data-category="protect" data-keywords="프리랜서 3.3 종소세 종합소득세 환급 삼쩜삼">
+                        <div class="icon">🛡️</div>
+                        <h3>프리랜서 종소세 방어</h3>
+                        <p>3.3% 떼인 돈 환급받기 프로젝트</p>
+                    </div>
+                    <div class="calc-card" data-calc="rent-compare" data-category="protect" data-keywords="전세 월세 비교 대출이자 주거비">
+                        <div class="icon">🏠</div>
+                        <h3>전세 vs 월세 비교</h3>
+                        <p>대출 이자 vs 월세, 무엇이 이득일까?</p>
+                    </div>
+                    <div class="calc-card" data-calc="loan" data-category="protect" data-keywords="대출 이자 상환 원리금 할부">
+                        <div class="icon">💰</div>
+                        <h3>대출 이자 계산기</h3>
+                        <p>매달 갚아야 할 원금과 이자 확인</p>
+                    </div>
+                    <div class="calc-card" data-calc="savings-vs-bitcoin" data-category="protect" data-keywords="적금 예금 비트코인 청년도약계좌 저축">
+                        <div class="icon">🆚</div>
+                        <h3>청년도약계좌 vs 비트코인</h3>
+                        <p>정부 적금 vs 코인 적립, 승자는?</p>
+                    </div>
+                    <div class="calc-card" data-calc="property-tax" data-category="protect" data-keywords="재산세 종부세 보유세 부동산 세금">
+                        <div class="icon">🏘️</div>
+                        <h3>재산세/종부세 계산</h3>
+                        <p>집 가진 죄? 보유세 미리 알아보기</p>
+                    </div>
+                    <div class="calc-card" data-calc="auto-insurance" data-category="protect" data-keywords="자동차 보험료 차 유지비">
+                        <div class="icon">🚗</div>
+                        <h3>자동차 보험료 계산</h3>
+                        <p>내 차 보험료 대략적인 견적</p>
+                    </div>
 
-                <!-- 신규: 일상 생존 -->
-                <div class="calc-card" data-calc="ott-dutch">
-                    <div class="icon">🎬</div>
-                    <h3>OTT 파티원 정산</h3>
-                    <p>넷플릭스, 유튜브 프리미엄 1/N 빵 깔끔 정산</p>
-                </div>
-                <div class="calc-card" data-calc="part-time">
-                    <div class="icon">🏪</div>
-                    <h3>알바 주휴수당</h3>
-                    <p>최저시급과 주휴수당 포함 실제 받을 돈 계산</p>
-                </div>
-                <div class="calc-card" data-calc="travel-currency">
-                    <div class="icon">⚽</div>
-                    <h3>유럽 축구 직관 물가</h3>
-                    <p>유로/파운드 체감 물가 (국밥 몇 그릇일까?)</p>
-                </div>
+                    <!-- 🚀 돈 굴리기 (Grow) -->
+                    <div class="calc-card" data-calc="coin-tax" data-category="grow" data-keywords="코인 비트코인 세금 과세 가상자산 22%">
+                        <div class="icon">😱</div>
+                        <h3>2026 코인 과세 멘붕기</h3>
+                        <p>수익의 22% 세금, 실제 내 손엔 얼마?</p>
+                    </div>
+                    <div class="calc-card" data-calc="omakase-snp500" data-category="grow" data-keywords="오마카세 스시 주식 복리 S&P500 미국주식">
+                        <div class="icon">🍣</div>
+                        <h3>오마카세 vs S&P500</h3>
+                        <p>이 돈 아껴서 주식 샀으면 얼마?</p>
+                    </div>
+                    <div class="calc-card" data-calc="capital-gain" data-category="grow" data-keywords="양도세 양도소득세 부동산 아파트 매도 세금">
+                        <div class="icon">📈</div>
+                        <h3>양도소득세 계산기</h3>
+                        <p>집 팔 때 세금 얼마나 낼까?</p>
+                    </div>
+                    <div class="calc-card" data-calc="real-estate" data-category="grow" data-keywords="부동산 수익률 월세 임대수익 갭투자">
+                        <div class="icon">🏢</div>
+                        <h3>부동산 수익률</h3>
+                        <p>월세 받을 때 진짜 수익률 계산</p>
+                    </div>
+                    <div class="calc-card" data-calc="pension" data-category="grow" data-keywords="연금 보험 노후 복리 저축">
+                        <div class="icon">🏦</div>
+                        <h3>연금보험 수익률</h3>
+                        <p>복리의 마법으로 불어나는 노후 자금</p>
+                    </div>
+                    <div class="calc-card" data-calc="rate-analysis" data-category="grow" data-keywords="금리 인상 변동 대출 이자 리스크">
+                        <div class="icon">📉</div>
+                        <h3>금리 변동 분석</h3>
+                        <p>금리 오르면 내 이자는 얼마나 오를까?</p>
+                    </div>
 
-                <!-- 나머지 기존 카드들 -->
-                <div class="calc-card" data-calc="tax-settlement">
-                    <div class="icon">📑</div>
-                    <h3>연말정산 환급</h3>
-                    <p>소득공제 및 세액공제를 반영한 예상 환급액 확인</p>
-                </div>
-                <div class="calc-card" data-calc="rent-compare">
-                    <div class="icon">🏠</div>
-                    <h3>전세 vs 월세 비교</h3>
-                    <p>기회비용과 세금을 고려한 주거 비용 분석</p>
-                </div>
-                <div class="calc-card" data-calc="capital-gain">
-                    <div class="icon">📈</div>
-                    <h3>양도소득세</h3>
-                    <p>부동산 매도 시 발생하는 양도소득세 계산</p>
-                </div>
-                <div class="calc-card" data-calc="pension">
-                    <div class="icon">🏦</div>
-                    <h3>연금보험 수익</h3>
-                    <p>복리 이율과 비과세 혜택을 반영한 미래 연금액</p>
-                </div>
-                <div class="calc-card" data-calc="real-estate">
-                    <div class="icon">🏢</div>
-                    <h3>부동산 수익률</h3>
-                    <p>수익형 부동산의 공실률, 취득세를 고려한 순수익률</p>
-                </div>
-                <div class="calc-card" data-calc="property-tax">
-                    <div class="icon">🏘️</div>
-                    <h3>재산세/종부세</h3>
-                    <p>공시지가 기준 보유세 합계 계산</p>
-                </div>
-                <div class="calc-card" data-calc="rate-analysis">
-                    <div class="icon">📉</div>
-                    <h3>대출 금리 분석</h3>
-                    <p>금리 인상/인하 시 상환액 변화 시나리오 분석</p>
+                    <!-- 💸 N잡 & 비즈니스 (Biz) -->
+                    <div class="calc-card" data-calc="shorts-income" data-category="biz" data-keywords="유튜브 쇼츠 틱톡 수익 조회수 크리에이터">
+                        <div class="icon">📱</div>
+                        <h3>쇼츠/틱톡 수익 계산</h3>
+                        <p>조회수 100만 찍으면 얼마 벌까?</p>
+                    </div>
+                    <div class="calc-card" data-calc="influencer-price" data-category="biz" data-keywords="인스타 광고 협찬 단가 원고료">
+                        <div class="icon">📸</div>
+                        <h3>인플루언서 단가</h3>
+                        <p>내 팔로워 수로 받을 수 있는 광고비</p>
+                    </div>
+                    <div class="calc-card" data-calc="ai-subscription" data-category="biz" data-keywords="AI ChatGPT 챗GPT 구독료 비용">
+                        <div class="icon">🤖</div>
+                        <h3>AI 구독료 계산기</h3>
+                        <p>숨만 쉬어도 나가는 AI 툴 비용 합계</p>
+                    </div>
+                    <div class="calc-card" data-calc="part-time" data-category="biz" data-keywords="알바 주휴수당 시급 월급 아르바이트">
+                        <div class="icon">🏪</div>
+                        <h3>알바 주휴수당</h3>
+                        <p>주휴수당 포함된 진짜 알바비 계산</p>
+                    </div>
+                    <div class="calc-card" data-calc="youtube-adsense" data-category="biz" data-keywords="유튜브 수익 애드센스 조회수">
+                        <div class="icon">📺</div>
+                        <h3>유튜브 롱폼 수익</h3>
+                        <p>일반 영상 조회수 수익 예측</p>
+                    </div>
+
+                    <!-- 🤪 현타 & 유희 (Fun) -->
+                    <div class="calc-card" data-calc="car-vs-taxi" data-category="fun" data-keywords="테슬라 택시 차 유지비 뚜벅이 할부">
+                        <div class="icon">🚖</div>
+                        <h3>테슬라 풀할부 vs 택시</h3>
+                        <p>차 안 사고 평생 택시 타면 이득일까?</p>
+                    </div>
+                    <div class="calc-card" data-calc="son-salary" data-category="fun" data-keywords="손흥민 이강인 주급 연봉 비교 현타">
+                        <div class="icon">⚽</div>
+                        <h3>손흥민 vs 내 연봉</h3>
+                        <p>월클이 숨만 쉬어도 버는 돈 vs 나</p>
+                    </div>
+                    <div class="calc-card" data-calc="delivery-travel" data-category="fun" data-keywords="배달비 치킨 여행 해외여행 절약">
+                        <div class="icon">✈️</div>
+                        <h3>배달비 모아 해외여행</h3>
+                        <p>배달 끊으면 어디까지 갈 수 있을까?</p>
+                    </div>
+                    <div class="calc-card" data-calc="crypto-fomo" data-category="fun" data-keywords="비트코인 껄무새 후회 타임머신">
+                        <div class="icon">🚀</div>
+                        <h3>비트코인 타임머신</h3>
+                        <p>그때 샀더라면... 과거의 나 반성하기</p>
+                    </div>
+                    <div class="calc-card" data-calc="coffee-tesla" data-category="fun" data-keywords="커피 스타벅스 주식 테슬라 적립">
+                        <div class="icon">☕</div>
+                        <h3>커피값 vs 테슬라</h3>
+                        <p>커피 대신 주식 샀으면 지금 얼마?</p>
+                    </div>
+                    <div class="calc-card" data-calc="breath-apartment" data-category="fun" data-keywords="아파트 내집마련 연봉 저축 한강뷰">
+                        <div class="icon">😮‍💨</div>
+                        <h3>숨참고 한강뷰 다이브</h3>
+                        <p>숨만 쉬고 돈 모아서 아파트 사기</p>
+                    </div>
+                    <div class="calc-card" data-calc="ott-dutch" data-category="fun" data-keywords="넷플릭스 왓챠 디즈니 유튜브 프리미엄 N빵">
+                        <div class="icon">🎬</div>
+                        <h3>OTT N빵 최적화</h3>
+                        <p>파티원 모을 때 내 진짜 부담금</p>
+                    </div>
+                    <div class="calc-card" data-calc="travel-currency" data-category="fun" data-keywords="환율 유럽 여행 물가 국밥">
+                        <div class="icon">🍔</div>
+                        <h3>유럽 물가 국밥 환산</h3>
+                        <p>이 돈이면 국밥이 몇 그릇이야?</p>
+                    </div>
+
                 </div>
             </div>
         </section>
@@ -213,7 +246,7 @@
         <!-- 계산기 상세 뷰 (동적 렌더링) -->
         <section id="calc-view" class="view">
             <div class="calc-header">
-                <button class="back-btn">← 돌아가기</button>
+                <button class="back-btn">← 다른 계산기 찾기</button>
                 <h2 id="calc-title">계산기 이름</h2>
             </div>
             <div id="calc-info-box" class="calc-info-box">

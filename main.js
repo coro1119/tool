@@ -13,6 +13,71 @@ document.addEventListener('DOMContentLoaded', function() {
     var currentChart = null;
     var baseTitle = "금융 계산기 마스터";
 
+    // --- UI Logic: Search & Filtering ---
+    var omnibar = document.getElementById('omnibar');
+    var chips = document.querySelectorAll('.chip');
+    var hotSection = document.getElementById('hot-section');
+    var mainGridCards = document.querySelectorAll('#main-grid .calc-card');
+
+    // 1. Chip Filtering
+    chips.forEach(function(chip) {
+        chip.addEventListener('click', function() {
+            // Active State Toggle
+            chips.forEach(c => c.classList.remove('active'));
+            this.classList.add('active');
+
+            var filter = this.getAttribute('data-filter');
+            omnibar.value = ''; // Clear search when filtering
+
+            if (filter === 'all') {
+                if (hotSection) hotSection.style.display = 'block';
+                mainGridCards.forEach(card => card.style.display = 'flex');
+            } else {
+                if (hotSection) hotSection.style.display = 'none';
+                mainGridCards.forEach(card => {
+                    if (card.dataset.category === filter) {
+                        card.style.display = 'flex';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            }
+        });
+    });
+
+    // 2. Omnibar Search
+    if (omnibar) {
+        omnibar.addEventListener('input', function(e) {
+            var query = e.target.value.toLowerCase().trim();
+
+            // Reset chips visual state
+            chips.forEach(c => c.classList.remove('active'));
+            
+            if (query === '') {
+                // Restore "All" state
+                document.querySelector('.chip[data-filter="all"]').classList.add('active');
+                if (hotSection) hotSection.style.display = 'block';
+                mainGridCards.forEach(card => card.style.display = 'flex');
+                return;
+            }
+
+            // Hide HOT section during search
+            if (hotSection) hotSection.style.display = 'none';
+
+            mainGridCards.forEach(card => {
+                var title = card.querySelector('h3').textContent.toLowerCase();
+                var keywords = card.dataset.keywords ? card.dataset.keywords.toLowerCase() : '';
+                
+                if (title.includes(query) || keywords.includes(query)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    }
+    // ------------------------------------
+
     // URL 파라미터 파싱 (pSEO & Embed 지원)
     var urlParams = new URLSearchParams(window.location.search);
     var targetCalc = urlParams.get('calc');
