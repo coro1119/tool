@@ -751,38 +751,49 @@ document.addEventListener('DOMContentLoaded', function() {
         if (initialData || targetCalc === id) { document.getElementById('run').click(); }
     }
 
-    // Share Logic
-    document.getElementById('copy-link-btn').addEventListener('click', function() {
+    // --- Share Logic ---
+    function shareResult() {
+        var title = "[머니마스터] " + calcTitle.textContent;
+        var text = "나의 금융 성적표를 확인해보세요! 💰";
         var url = window.location.href;
+
+        // 모바일 네이티브 공유 (카카오톡, 문자 등 모든 앱 지원)
+        if (navigator.share) {
+            navigator.share({
+                title: title,
+                text: text,
+                url: url
+            }).then(() => console.log('공유 성공'))
+              .catch((error) => console.log('공유 실패', error));
+        } else {
+            // 데스크탑 또는 미지원 브라우저: 클립보드 복사 유도
+            copyToClipboard(url);
+        }
+    }
+
+    function copyToClipboard(url) {
         navigator.clipboard.writeText(url).then(function() {
-            alert('공유 링크가 복사되었습니다! 결과값이 포함되어 있습니다.');
+            // 버튼 텍스트 일시적 변경 피드백
+            var btn = document.getElementById('copy-link-btn');
+            var originalText = btn.innerHTML;
+            btn.innerHTML = "✅ 복사 완료!";
+            btn.style.borderColor = "#10b981";
+            btn.style.color = "#10b981";
+            
+            setTimeout(function() {
+                btn.innerHTML = originalText;
+                btn.style.borderColor = "";
+                btn.style.color = "";
+            }, 2000);
         });
+    }
+
+    document.getElementById('copy-link-btn').addEventListener('click', function() {
+        copyToClipboard(window.location.href);
     });
 
     document.getElementById('kakao-share-btn').addEventListener('click', function() {
-        if (!window.Kakao) return;
-        var title = calcTitle.textContent;
-        Kakao.Share.sendDefault({
-            objectType: 'feed',
-            content: {
-                title: '[머니마스터] ' + title + ' 결과 확인하기',
-                description: '나의 금융 성적표는? 머니마스터에서 바로 확인해보세요.',
-                imageUrl: 'https://financecalculator.cloud/og-image.png',
-                link: {
-                    mobileWebUrl: window.location.href,
-                    webUrl: window.location.href,
-                },
-            },
-            buttons: [
-                {
-                    title: '결과 보기',
-                    link: {
-                        mobileWebUrl: window.location.href,
-                        webUrl: window.location.href,
-                    },
-                },
-            ],
-        });
+        shareResult();
     });
 
     document.body.addEventListener('click', function(e) {
