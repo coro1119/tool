@@ -951,6 +951,56 @@ document.addEventListener('DOMContentLoaded', function() {
                 };
             }
         },
+        'auto-insurance': {
+            title: '자동차 보험료 계산기',
+            descTitle: '내 차 보험료 견적',
+            description: '나이와 차량 가액을 기준으로 대략적인 연간 보험료를 추산합니다. (다이렉트 기준)',
+            example: '만 30세, 차량가 3,000만원',
+            inputs: [
+                { id: 'ai1', label: '만 나이', value: 30 },
+                { id: 'ai2', label: '차량 가액 (원)', value: 30000000 },
+                { id: 'ai3', label: '운전 경력', value: 'new', type: 'select', options: [
+                    { label: '신규 (첫 차)', value: 'new' },
+                    { label: '3년 이상 (무사고)', value: 'exp' }
+                ]}
+            ],
+            run: function(d) {
+                var age = d.ai1;
+                var carValue = d.ai2;
+                var exp = d.ai3;
+                
+                // 기본료 100만원
+                var base = 1000000;
+                
+                // 나이 할증/할인
+                if (age < 26) base += 800000; // 20대 초반 비쌈
+                else if (age < 30) base += 300000;
+                else base -= 100000; // 30대 이상 할인
+                
+                // 차량 가액 반영 (2%)
+                base += carValue * 0.02;
+                
+                // 경력 할인
+                if (exp === 'exp') base *= 0.7; // 30% 할인
+                
+                // 최소 50만원 하한선
+                var finalPremium = Math.max(500000, Math.floor(base));
+                
+                var comment = "";
+                if (finalPremium > 2000000) comment = "헉! 보험료가 꽤 세네요. 부모님 명의 찬스 고려해보세요.";
+                else if (finalPremium < 700000) comment = "베스트 드라이버시군요! 아주 저렴합니다.";
+                else comment = "평균적인 수준입니다. 안전운전 하세요!";
+
+                return {
+                    items: [
+                        { label: '차량 요율 반영', val: won(carValue * 0.02) },
+                        { label: '연간 예상 보험료', val: '<strong style="color:#2563eb">' + won(finalPremium) + '</strong>' },
+                        { label: '한 줄 평', val: '<strong>' + comment + '</strong>' }
+                    ],
+                    chart: { type: 'pie', labels: ['보험료', '기타유지비(예상)'], data: [finalPremium, finalPremium * 1.5] }
+                };
+            }
+        },
         'rate-analysis': {
             title: '대출 금리 분석',
             descTitle: '금리 인상 리스크',
