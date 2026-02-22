@@ -330,6 +330,107 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     var book = {
+        'coin-tax': {
+            title: '2026 코인/가상자산 과세 시뮬레이터',
+            descTitle: '내 코인 수익, 세금 떼면 얼마?',
+            description: '2026년 시행 예정인 가상자산 과세(기본 공제 250만원, 세율 22%)를 적용해봅니다.',
+            refName: '기획재정부 (가상자산 과세 유예안)',
+            refLink: 'https://www.moef.go.kr',
+            example: '수익 1억원 달성 시',
+            inputs: [
+                { id: 'c1', label: '가상자산 총 수익 (원)', value: 100000000 },
+                { id: 'c2', label: '기본 공제액 (원)', value: 2500000 }
+            ],
+            run: function(d) {
+                var profit = d.c1;
+                var deduction = d.c2;
+                var taxable = Math.max(0, profit - deduction);
+                var tax = Math.floor(taxable * 0.22);
+                var net = profit - tax;
+                
+                var comment = "";
+                if (tax <= 0) comment = "축하합니다(응?) 세금 낼 돈도 못 버셨군요... 공제액 미만입니다.";
+                else if (tax > 100000000) comment = "세금만 1억! 국세청장님 표창장 받으시겠어요.";
+                else if (tax > 10000000) comment = "차 한 대 값이 세금으로 증발! 멘탈 꽉 잡으세요.";
+                else comment = "22%... 생각보다 쎄죠? 이게 현실입니다.";
+
+                return {
+                    items: [
+                        { label: '과세 대상 금액', val: won(taxable) },
+                        { label: '예상 납부 세액 (22%)', val: won(tax) },
+                        { label: '세후 실수령액', val: '<strong>' + won(net) + '</strong>' },
+                        { label: '한 줄 평', val: '<strong>' + comment + '</strong>' }
+                    ],
+                    chart: { type: 'pie', labels: ['내 돈(실수령)', '나라 돈(세금)'], data: [net, tax] }
+                };
+            }
+        },
+        'son-salary': {
+            title: '손흥민 주급 vs 내 연봉 체감',
+            descTitle: '월드클래스와 나의 거리 측정',
+            description: '손흥민 선수의 추정 주급(약 3.4억 원)과 내 연봉을 비교해봅니다. (현타 주의)',
+            example: '내 연봉 4,000만원일 때',
+            inputs: [
+                { id: 'ss1', label: '내 세전 연봉 (원)', value: 40000000 }
+            ],
+            run: function(d) {
+                var sonWeekly = 340000000; // 약 19만 파운드
+                var myAnnual = d.ss1;
+                
+                // 손흥민이 내 연봉 버는 데 걸리는 시간
+                var sonEarnsMyYear = (myAnnual / sonWeekly) * 7 * 24; // 시간 단위
+                var sonDays = Math.floor(sonEarnsMyYear / 24);
+                var sonHours = Math.floor(sonEarnsMyYear % 24);
+                
+                // 내가 손흥민 주급 버는 데 걸리는 시간
+                var iEarnSonWeek = sonWeekly / myAnnual;
+                
+                var comment = "";
+                if (iEarnSonWeek > 50) comment = "환생이 더 빠를 수도 있습니다...";
+                else if (iEarnSonWeek > 10) comment = "10년이면 강산도 변한다는데, 주급 한 번 받기 힘드네요.";
+                else comment = "오! 그래도 꽤 능력자이십니다. 희망을 가지세요!";
+
+                return {
+                    items: [
+                        { label: '손흥민이 내 연봉 버는 시간', val: sonDays + '일 ' + sonHours + '시간' },
+                        { label: '내가 쏜 주급 버는 기간', val: iEarnSonWeek.toFixed(1) + '년' },
+                        { label: '한 줄 평', val: '<strong>' + comment + '</strong>' }
+                    ],
+                    chart: { type: 'bar', labels: ['내 연봉', '손흥민 주급'], data: [myAnnual, sonWeekly] }
+                };
+            }
+        },
+        'delivery-travel': {
+            title: '배달비 모아 해외여행',
+            descTitle: '치킨 참으면 어디까지 갈 수 있을까?',
+            description: '습관적인 배달 주문을 끊었을 때 모을 수 있는 돈으로 갈 수 있는 여행지를 추천합니다.',
+            example: '주 3회, 건당 배달비 4,000원',
+            inputs: [
+                { id: 'dt1', label: '주당 배달 횟수', value: 3 },
+                { id: 'dt2', label: '건당 평균 배달비 (원)', value: 4000 },
+                { id: 'dt3', label: '건당 평균 음식값 (원)', value: 25000 }
+            ],
+            run: function(d) {
+                var weekCost = (d.dt2 + d.dt3) * d.dt1;
+                var yearCost = weekCost * 52;
+                
+                var dest = "";
+                if (yearCost >= 5000000) dest = "🇫🇷 유럽 / 🇺🇸 미국 (비즈니스석 가능?)";
+                else if (yearCost >= 3000000) dest = "🇺🇸 하와이 / 🇦🇺 호주";
+                else if (yearCost >= 1500000) dest = "🇹🇭 방콕 / 🇻🇳 다낭 풀빌라";
+                else if (yearCost >= 500000) dest = "🇯🇵 일본 / 🇹🇼 대만";
+                else dest = "🇰🇷 제주도 / 🏖️ 국내 호캉스";
+
+                return {
+                    items: [
+                        { label: '1년 총 배달 지출액', val: won(yearCost) },
+                        { label: '배달비만 따져도', val: won(d.dt2 * d.dt1 * 52) },
+                        { label: '갈 수 있는 여행지', val: '<strong style="color:#e11d48">' + dest + '</strong>' }
+                    ],
+                    chart: { type: 'doughnut', labels: ['음식값', '배달비'], data: [d.dt3 * d.dt1 * 52, d.dt2 * d.dt1 * 52] }
+                };
+            }
+        },
         'crypto-fomo': {
             title: '비트코인 타임머신 ("그때 샀더라면")',
             descTitle: '과거의 나를 반성하는 시간',
