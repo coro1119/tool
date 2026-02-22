@@ -302,7 +302,7 @@ nav {
 
 .calc-container {
     display: grid;
-    grid-template-columns: 400px 1fr;
+    grid-template-columns: 380px 1fr;
     gap: 3rem;
     background-color: var(--bg-surface);
     border: 1px solid var(--border);
@@ -310,6 +310,13 @@ nav {
     padding: 3rem;
     box-shadow: var(--shadow-md);
     margin-bottom: 6rem;
+    align-items: start;
+}
+
+.calc-results-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
 }
 
 .calc-info-box {
@@ -320,62 +327,95 @@ nav {
     border: 1px solid var(--border);
 }
 
+.input-group {
+    margin-bottom: 1.5rem;
+}
+
 .input-group label {
     font-weight: 700;
     font-size: 0.9rem;
     margin-bottom: 0.5rem;
     display: block;
+    color: var(--text-muted);
 }
 
 .input-group input, .input-group select {
     width: 100%;
     padding: 1rem;
     border: 2px solid var(--border);
-    border-radius: 12px;
+    border-radius: 14px;
     background-color: var(--bg-surface);
-    font-size: 1rem;
+    color: var(--text-main);
+    font-size: 1.1rem;
+    font-weight: 600;
     transition: 0.2s;
 }
 
 .input-group input:focus, .input-group select:focus {
     outline: none;
     border-color: var(--accent);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
 }
 
 .calc-btn {
     width: 100%;
-    padding: 1rem;
+    padding: 1.1rem;
     background-color: var(--accent);
     color: white;
     border: none;
-    border-radius: 12px;
+    border-radius: 14px;
     font-weight: 700;
     font-size: 1.1rem;
     cursor: pointer;
     transition: 0.2s;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
 }
 
 .calc-btn:hover {
     background-color: var(--accent-hover);
     transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
 }
 
 .result-item {
     display: flex;
     justify-content: space-between;
-    padding: 1rem;
-    border-bottom: 1px solid var(--border);
+    align-items: center;
+    padding: 1.2rem 1.5rem;
+    background-color: var(--bg-main);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    transition: all 0.2s;
+}
+
+.result-label {
+    font-weight: 600;
+    color: var(--text-muted);
+    font-size: 0.95rem;
 }
 
 .result-value {
     font-weight: 800;
-    font-size: 1.2rem;
+    font-size: 1.3rem;
     color: var(--accent);
 }
 
 .chart-wrapper {
-    margin-top: 2rem;
-    height: 300px;
+    margin-top: 1rem;
+    background-color: var(--bg-main);
+    border-radius: 20px;
+    padding: 2rem;
+    min-height: 380px;
+    height: 100%;
+    display: none; /* Initially hidden */
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border);
+}
+
+canvas#calc-chart {
+    max-width: 100% !important;
+    max-height: 100% !important;
 }
 
 /* Footer */

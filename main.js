@@ -681,20 +681,95 @@ document.addEventListener('DOMContentLoaded', function() {
     if (backBtn) backBtn.addEventListener('click', function() { goTo('home'); });
 
     function draw(c) {
+        if (!c || !c.data || c.data.length === 0) return;
+        
+        var chartWrapper = document.querySelector('.chart-wrapper');
         if (chartWrapper) chartWrapper.style.display = 'flex';
+        
         var ctx = document.getElementById('calc-chart').getContext('2d');
         if (currentChart) currentChart.destroy();
+        
+        var isDark = document.body.getAttribute('data-theme') === 'dark';
+        var textColor = isDark ? '#94a3b8' : '#64748b';
+        var gridColor = isDark ? '#1e293b' : '#e2e8f0';
+
+        // Vibrant color palette
+        var colors = [
+            '#2563eb', // blue
+            '#10b981', // green
+            '#f59e0b', // amber
+            '#ef4444', // red
+            '#8b5cf6', // violet
+            '#ec4899', // pink
+            '#06b6d4'  // cyan
+        ];
+
         currentChart = new Chart(ctx, {
-            type: c.type,
+            type: c.type || 'bar',
             data: {
                 labels: c.labels,
                 datasets: [{
+                    label: '금액',
                     data: c.data,
-                    backgroundColor: ['#2563eb', '#0f172a', '#10b981', '#f59e0b', '#ef4444'],
-                    borderWidth: 0
+                    backgroundColor: colors,
+                    borderRadius: 8,
+                    borderWidth: 0,
+                    hoverOffset: 15
                 }]
             },
-            options: { responsive: true, maintainAspectRatio: false }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: {
+                    padding: 20
+                },
+                plugins: {
+                    legend: {
+                        display: c.type === 'pie' || c.type === 'doughnut',
+                        position: 'bottom',
+                        labels: {
+                            color: textColor,
+                            padding: 20,
+                            font: { family: 'Pretendard', size: 12, weight: '600' },
+                            usePointStyle: true
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: isDark ? '#1e293b' : '#ffffff',
+                        titleColor: isDark ? '#f1f5f9' : '#0f172a',
+                        bodyColor: isDark ? '#cbd5e1' : '#475569',
+                        borderColor: gridColor,
+                        borderWidth: 1,
+                        padding: 12,
+                        cornerRadius: 10,
+                        displayColors: true,
+                        callbacks: {
+                            label: function(context) {
+                                return ' ' + context.label + ': ' + won(context.parsed.y || context.parsed);
+                            }
+                        }
+                    }
+                },
+                scales: c.type === 'pie' || c.type === 'doughnut' ? {} : {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: gridColor, drawBorder: false },
+                        ticks: { 
+                            color: textColor,
+                            font: { family: 'Pretendard' },
+                            callback: function(value) {
+                                if (value >= 100000000) return (value / 100000000).toFixed(1) + '억';
+                                if (value >= 10000) return (value / 10000).toFixed(0) + '만';
+                                return value;
+                            }
+                        }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: textColor, font: { family: 'Pretendard', weight: '600' } }
+                    }
+                }
+            }
         });
     }
 
