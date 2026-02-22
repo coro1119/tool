@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var backBtn = document.querySelector('.back-btn');
     
     var currentChart = null;
-    var baseTitle = "금융 계산기 마스터";
+    var baseTitle = "머니마스터 (MoneyMaster)";
 
     // --- Helper: won formatter ---
     var won = function(v) { 
