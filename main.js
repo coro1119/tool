@@ -539,27 +539,30 @@ document.addEventListener('DOMContentLoaded', function() {
                     { label: '직접 입력', value: 'custom' }
                 ]},
                 { id: 'o2', label: '현재 파티원 수 (나 포함)', value: 4 },
-                { id: 'o3', label: '총 금액 (직접 입력시)', value: 0 }
+                { id: 'o3', label: '총 금액 (원)', value: 17000 }
             ],
             run: function(d) {
-                var ottData = {
-                    'netflix': { price: 17000, max: 4, name: '넷플릭스' },
-                    'youtube': { price: 14900, max: 1, name: '유튜브 프리미엄' },
-                    'disney': { price: 13900, max: 4, name: '디즈니+' },
-                    'tving': { price: 17000, max: 4, name: '티빙' },
-                    'wavve': { price: 13900, max: 4, name: '웨이브' },
-                    'coupang': { price: 7890, max: 2, name: '쿠팡플레이' },
-                    'custom': { price: d.o3, max: 4, name: '기타 OTT' }
+                var ottNames = {
+                    'netflix': '넷플릭스',
+                    'youtube': '유튜브',
+                    'disney': '디즈니+',
+                    'tving': '티빙',
+                    'wavve': '웨이브',
+                    'coupang': '쿠팡플레이',
+                    'custom': 'OTT'
                 };
-                var selected = ottData[d.o1] || ottData['netflix'];
-                var totalPrice = (d.o1 === 'custom') ? d.o3 : selected.price;
-                var perPerson = Math.ceil(totalPrice / Math.max(1, d.o2) / 10) * 10;
+                var serviceName = ottNames[document.getElementById('o1').value] || 'OTT';
+                var totalPrice = d.o3;
+                var members = Math.max(1, d.o2);
+                var perPerson = Math.ceil(totalPrice / members / 10) * 10;
+                
                 return {
                     items: [
-                        { label: selected.name + ' 총액', val: won(totalPrice) },
-                        { label: '인당 입금액', val: won(perPerson) }
+                        { label: serviceName + ' 총액', val: won(totalPrice) },
+                        { label: '인당 입금액 (1/N)', val: '<strong>' + won(perPerson) + '</strong>' },
+                        { label: '한 줄 평', val: members > 1 ? "절약의 신!" : "혼자 보시나요? 파티원을 구해보세요." }
                     ],
-                    chart: { type: 'pie', labels: ['내부담', '타인부담'], data: [perPerson, totalPrice - perPerson] }
+                    chart: { type: 'pie', labels: ['내 부담', '파티원 부담'], data: [perPerson, Math.max(0, totalPrice - perPerson)] }
                 };
             }
         },
