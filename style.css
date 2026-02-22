@@ -436,6 +436,82 @@ footer p { color: var(--text-muted); font-size: 0.95rem; }
     .chart-wrapper { padding: 1rem; min-height: 300px; }
 }
 
-@media (max-width: 480px) {
-    .hero h2 { font-size: 1.75rem; }
+/* Embed Mode Optimization */
+body.embed-mode {
+    background-color: transparent;
+    overflow-y: auto; /* Allow scrolling within iframe */
+}
+
+body.embed-mode header,
+body.embed-mode footer,
+body.embed-mode .back-btn,
+body.embed-mode .hero,
+body.embed-mode #home-view {
+    display: none !important;
+}
+
+body.embed-mode .container {
+    padding: 0;
+    max-width: 100%;
+}
+
+body.embed-mode .calc-container {
+    box-shadow: none;
+    border: none;
+    border-radius: 0;
+    margin: 0;
+    padding: 1rem;
+    background-color: var(--bg-surface);
+    min-height: 100vh;
+    grid-template-columns: 1fr; /* Force stack layout in embed */
+}
+
+body.embed-mode .calc-info-box {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+}
+
+body.embed-mode .calc-header {
+    margin: 1rem 0;
+}
+
+/* Embed Share Section */
+.embed-share-box {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: var(--bg-main);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    text-align: center;
+}
+
+.embed-code-area {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.embed-code-area input {
+    flex: 1;
+    padding: 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    background: var(--bg-surface);
+}
+
+.copy-btn {
+    background: var(--text-main);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.copy-btn:hover {
+    background: var(--accent);
 }

@@ -13,6 +13,16 @@ document.addEventListener('DOMContentLoaded', function() {
     var currentChart = null;
     var baseTitle = "금융 계산기 마스터";
 
+    // URL 파라미터 파싱 (pSEO & Embed 지원)
+    var urlParams = new URLSearchParams(window.location.search);
+    var targetCalc = urlParams.get('calc');
+    var isEmbed = urlParams.get('embed') === 'true';
+
+    // Embed 모드 스타일 적용
+    if (isEmbed) {
+        document.body.classList.add('embed-mode');
+    }
+
     function calcProgressiveTax(taxBase) {
         if (taxBase <= 14000000) return taxBase * 0.06;
         if (taxBase <= 50000000) return taxBase * 0.15 - 1260000;
@@ -43,6 +53,9 @@ document.addEventListener('DOMContentLoaded', function() {
         calcResults.innerHTML = '<div class="placeholder-msg">정보를 입력하고 계산하기 버튼을 눌러주세요.</div>';
         if (chartWrapper) chartWrapper.style.display = 'none';
         if (calcInfoBox) calcInfoBox.innerHTML = '';
+        // 임베드 공유 박스 제거
+        var shareBox = document.querySelector('.embed-share-box');
+        if (shareBox) shareBox.remove();
     }
 
     function goTo(viewName) {
@@ -68,7 +81,10 @@ document.addEventListener('DOMContentLoaded', function() {
             var cid = link.getAttribute('data-calc');
             if (cid) {
                 e.preventDefault();
-                window.location.hash = cid;
+                // 해시 대신 쿼리 파라미터 사용 권장 (pSEO 대응)
+                // window.location.hash = cid; 
+                goTo('calc');
+                startUI(cid);
             } else if (link.getAttribute('data-page') === 'home') {
                 e.preventDefault();
                 goTo('home');
@@ -76,30 +92,18 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    window.addEventListener('hashchange', function() {
-        var hash = window.location.hash.substring(1);
-        if (hash && book[hash]) {
-            goTo('calc');
-            startUI(hash);
-        } else {
-            goTo('home');
-        }
+    // 뒤로가기 버튼 로직
+    if (backBtn) backBtn.addEventListener('click', function() { 
+        if (isEmbed) return; // 임베드 모드에서는 동작 안함
+        goTo('home'); 
     });
-
-    var initialHash = window.location.hash.substring(1);
-    if (initialHash && book[initialHash]) {
-        goTo('calc');
-        startUI(initialHash);
-    }
-
-    if (backBtn) backBtn.addEventListener('click', function() { goTo('home'); });
 
     var won = function(v) { 
         if (isNaN(v)) return '0원';
         return new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW' }).format(Math.round(v)); 
     };
 
-    function startUI(id) {
+    function startUI(id, initialData) {
         var cfg = book[id];
         if (!cfg) {
             console.error('Calculator not found:', id);
@@ -108,6 +112,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         calcTitle.textContent = cfg.title;
+        // 기본 타이틀 설정
         document.title = cfg.title + " - " + baseTitle;
         
         if (calcInfoBox) {
@@ -126,19 +131,33 @@ document.addEventListener('DOMContentLoaded', function() {
 
         var html = '';
         cfg.inputs.forEach(function(i) {
+            // URL 파라미터가 있으면 우선 사용, 없으면 기본값
+            var val = (initialData && initialData[i.id]) ? initialData[i.id] : i.value;
+            
             html += '<div class="input-group"><label>' + i.label + '</label>';
             if (i.type === 'select') {
                 html += '<select id="' + i.id + '">';
                 i.options.forEach(function(opt) {
-                    html += '<option value="' + opt.value + '"' + (opt.value == i.value ? ' selected' : '') + '>' + opt.label + '</option>';
+                    html += '<option value="' + opt.value + '"' + (opt.value == val ? ' selected' : '') + '>' + opt.label + '</option>';
                 });
                 html += '</select>';
             } else {
-                html += '<input type="number" id="' + i.id + '" value="' + i.value + '">';
+                html += '<input type="number" id="' + i.id + '" value="' + val + '">';
             }
             html += '</div>';
         });
-        calcInputs.innerHTML = html + '<button class="calc-btn" id="run">계산하기</button>';
+        
+        // 버튼 영역
+        html += '<div style="display:flex; gap:10px; flex-wrap:wrap;">';
+        html += '<button class="calc-btn" id="run" style="flex:2;">계산하기</button>';
+        
+        // 임베드 모드가 아닐 때만 공유 버튼 표시
+        if (!isEmbed) {
+            html += '<button class="calc-btn" id="share-btn" style="flex:1; background-color: var(--text-main); font-size: 0.95rem;">퍼가기</button>';
+        }
+        html += '</div>';
+
+        calcInputs.innerHTML = html;
 
         // OTT 정산기 전용 실시간 가격 연동 로직
         if (id === 'ott-dutch') {
@@ -154,18 +173,36 @@ document.addEventListener('DOMContentLoaded', function() {
                     'coupang': 7890,
                     'custom': 0
                 };
+                // 사용자 입력값이 custom이 아닐 때만 자동 업데이트
                 if (serviceSelect.value !== 'custom') {
                     priceInput.value = prices[serviceSelect.value];
                 }
             };
             serviceSelect.addEventListener('change', updatePrice);
-            updatePrice(); // 초기 로드 시 가격 설정
+            // 초기 데이터가 없을 때만 업데이트 (pSEO 값 유지 위해)
+            if (!initialData) updatePrice(); 
         }
 
+        // 계산 실행 핸들러
         document.getElementById('run').addEventListener('click', function() {
             var vals = {};
+            var titleParts = []; // SEO 타이틀용
             cfg.inputs.forEach(function(i) {
-                vals[i.id] = parseFloat(document.getElementById(i.id).value) || 0;
+                var el = document.getElementById(i.id);
+                var v = parseFloat(el.value) || 0;
+                vals[i.id] = v;
+                
+                // SEO: 주요 입력값을 타이틀에 반영 (첫 2개 정도)
+                if (titleParts.length < 2 && v > 0) {
+                    var displayVal = v;
+                    if (v > 10000) displayVal = Math.round(v/10000) + '만원'; 
+                    // select인 경우 라벨 텍스트 사용
+                    if (i.type === 'select') {
+                        var sel = document.getElementById(i.id);
+                        displayVal = sel.options[sel.selectedIndex].text;
+                    }
+                    titleParts.push(i.label + ' ' + displayVal);
+                }
             });
             
             try {
@@ -177,13 +214,84 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
                 calcResults.innerHTML = resHtml;
                 if (out.chart) draw(out.chart);
+
+                // pSEO: 동적 타이틀 업데이트 (결과가 나온 후)
+                if (titleParts.length > 0) {
+                    document.title = titleParts.join(', ') + " 결과 - " + cfg.title;
+                }
+
             } catch (err) {
                 console.error(err);
                 calcResults.innerHTML = '<p style="color:red">계산 중 에러가 발생했습니다.</p>';
             }
         });
 
-        document.getElementById('run').click();
+        // 퍼가기(Share) 버튼 핸들러
+        var shareBtn = document.getElementById('share-btn');
+        if (shareBtn) {
+            shareBtn.addEventListener('click', function() {
+                var currentParams = new URLSearchParams();
+                currentParams.set('calc', id);
+                currentParams.set('embed', 'true');
+                
+                cfg.inputs.forEach(function(i) {
+                    var el = document.getElementById(i.id);
+                    currentParams.set(i.id, el.value);
+                });
+
+                var fullUrl = window.location.origin + window.location.pathname + '?' + currentParams.toString();
+                var iframeCode = '<iframe src="' + fullUrl + '" width="100%" height="600" frameborder="0" style="border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1);"></iframe>';
+
+                // 기존 박스 있으면 제거
+                var oldBox = document.querySelector('.embed-share-box');
+                if (oldBox) oldBox.remove();
+
+                var shareDiv = document.createElement('div');
+                shareDiv.className = 'embed-share-box';
+                shareDiv.innerHTML = '<p>👇 아래 코드를 블로그나 카페에 복사해서 붙여넣으세요.</p>' +
+                                     '<div class="embed-code-area">' +
+                                     '<input type="text" readonly value=\'' + iframeCode + '\'>' +
+                                     '<button class="copy-btn">복사</button>' +
+                                     '</div>';
+                
+                document.querySelector('.calc-container').after(shareDiv);
+
+                shareDiv.querySelector('.copy-btn').addEventListener('click', function() {
+                    var input = shareDiv.querySelector('input');
+                    input.select();
+                    document.execCommand('copy'); // 구형 브라우저 호환
+                    // navigator.clipboard.writeText(input.value); // 신형
+                    this.textContent = '완료!';
+                    setTimeout(() => { this.textContent = '복사'; }, 2000);
+                });
+            });
+        }
+
+        // 초기 데이터가 있거나 URL로 진입했을 경우 자동 실행
+        if (initialData || targetCalc === id) {
+            document.getElementById('run').click();
+        }
+    }
+
+    // 초기 로드 시 라우팅 로직
+    if (targetCalc && book[targetCalc]) {
+        // 1. 쿼리 파라미터가 있는 경우 (pSEO)
+        var initData = {};
+        for (var pair of urlParams.entries()) {
+            initData[pair[0]] = pair[1];
+        }
+        goTo('calc');
+        startUI(targetCalc, initData);
+    } else {
+        // 2. 해시가 있는 경우 (기존 방식 호환)
+        var hash = window.location.hash.substring(1);
+        if (hash && book[hash]) {
+            goTo('calc');
+            startUI(hash);
+        } else {
+            // 기본 홈
+            if (!isEmbed) goTo('home');
+        }
     }
 
     function draw(c) {
