@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '2026 연봉 실수령액',
             descTitle: '2026년 최신 세법 및 4대보험 반영',
             description: '국민연금 상한액 인상 및 건강보험 요율을 반영한 2026년형 실제 통장 수령액입니다.',
-            example: '연봉 5,000만원, 부양가족 1명(본인) 기준',
+            example: '연봉 5,000만원, 비과세 식대 20만원 기준',
             refName: '국세청 홈택스',
             refLink: 'https://www.hometax.go.kr',
             disclaimer: '실제 부양가족 및 공제 항목에 따라 차이가 발생할 수 있습니다.',
@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '2026 코인 과세 멘붕기',
             descTitle: '가상자산 수익 22% 과세 현실화',
             description: '2026년 시행 예정인 코인 과세(공제 250만원 초과분 22%)를 미리 시뮬레이션합니다.',
-            example: '비트코인으로 1억 벌었을 때 내야 할 세금은?',
+            example: '수익 1억원 달성 시, 기본공제 250만원 적용',
             refName: '기획재정부 세법개정안',
             refLink: 'https://www.moef.go.kr',
             disclaimer: '정부 정책에 따라 과세 유예 및 공제 한도가 변경될 수 있습니다.',
@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '손흥민 vs 내 연봉',
             descTitle: '월클과 나의 현실적인 거리',
             description: '손흥민 선수의 추정 주급(약 3.4억 원)과 내 연봉을 비교하여 현타를 선사합니다.',
-            example: '내 연봉 4,000만원이면 쏘니는 몇 분 만에 벌까요?',
+            example: '내 연봉이 4,000만원일 때 쏘니는 몇 분 만에 벌까요?',
             inputs: [{ id: 'ss1', label: '내 세전 연봉 (원)', value: 40000000 }],
             run: function(d) {
                 var sonWeekly = 340000000;
@@ -120,10 +120,10 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '테슬라 vs 택시 VIP',
             descTitle: '카푸어 탈출 지능 지수 테스트',
             description: '차량 유지비로 평생 택시만 타는 것이 이득인지 비교해 드립니다.',
-            example: '모델Y 할부금 + 보험료 vs 매일 택시 타기',
+            example: '6천만원 차량 풀할부(60개월) vs 매일 택시 타기',
             inputs: [
                 { id: 'ct1', label: '차량 가격 (원)', value: 60000000 },
-                { id: 'ct2', label: '월 유지비/보험료 (원)', value: 200000 }
+                { id: 'ct2', label: '월 유지비/보험료 (원)', value: 300000 }
             ],
             run: function(d) {
                 var monthlyInstallment = Math.floor(d.ct1 / 60); 
@@ -143,7 +143,7 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '알바 주휴수당',
             descTitle: '2026년 최저임금 10,030원 반영',
             description: '주당 15시간 이상 근무 시 반드시 받아야 할 주휴수당을 계산합니다.',
-            example: '편의점 알바 주 20시간 하면 실제 월급은?',
+            example: '2026년 최저시급으로 주 20시간 편의점 알바 시',
             refName: '고용노동부',
             refLink: 'https://www.moel.go.kr',
             inputs: [
@@ -168,7 +168,7 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '청년도약계좌 vs 비트코인',
             descTitle: '정부 지원금 vs 야수의 심장',
             description: '연 6% 고금리 적금과 비트코인 적립식 투자의 예상 수익을 비교합니다.',
-            example: '월 70만원씩 5년 모으면?',
+            example: '월 70만원 풀납입 5년 만기 vs 비트코인 매달 적립',
             refName: '서민금융진흥원',
             refLink: 'https://www.kinfa.or.kr',
             inputs: [
@@ -194,7 +194,7 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '오마카세 vs S&P500',
             descTitle: '한 끼의 사치 vs 노후의 평안',
             description: '오늘 먹은 15만원 오마카세 대신 미국 주식을 샀다면 20년 뒤 얼마가 될지 계산합니다.',
-            example: '월 1회 오마카세 비용을 S&P500에 투자하면?',
+            example: '한 달에 한 번 오마카세(15만원) 대신 S&P500에 투자하면?',
             inputs: [
                 { id: 'os1', label: '오마카세 비용 (원)', value: 150000 },
                 { id: 'os2', label: '투자 기간 (년)', value: 20 }
@@ -216,13 +216,14 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '프리랜서 종소세 방어',
             descTitle: '3.3% 환급받기 시뮬레이터',
             description: '미리 떼인 3.3% 세금을 5월 종합소득세 신고 때 얼마나 돌려받을 수 있는지 추정합니다.',
+            example: '연 수입 3,000만원 프리랜서가 5월에 돌려받을 세금은?',
             refName: '국세청 홈택스',
             refLink: 'https://www.hometax.go.kr',
-            inputs: [{ id: 'ft1', label: '연간 총 수입 (원)', value: 20000000 }],
+            inputs: [{ id: 'ft1', label: '연간 총 수입 (원)', value: 30000000 }],
             run: function(d) {
                 var income = d.ft1;
                 var paidTax = income * 0.033;
-                var taxableIncome = income * 0.35; // 단순경비율 가정
+                var taxableIncome = income * 0.35; 
                 var calcTax = calcProgressiveTax(taxableIncome - 1500000); 
                 var diff = paidTax - calcTax;
                 return {
@@ -238,8 +239,9 @@ document.addEventListener('DOMContentLoaded', function() {
             title: 'AI 구독료 합계',
             descTitle: '숨만 쉬어도 나가는 AI 비용',
             description: 'ChatGPT, Claude 등 다양한 AI 툴의 구독료를 합산하여 연간 지출을 확인합니다.',
+            example: 'ChatGPT Plus + Claude Pro + 미드저니 사용 시',
             inputs: [
-                { id: 'as1', label: '구독 툴 개수', value: 2 },
+                { id: 'as1', label: '구독 툴 개수', value: 3 },
                 { id: 'as2', label: '평균 구독료 ($)', value: 20 }
             ],
             run: function(d) {
@@ -258,6 +260,7 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '쇼츠/틱톡 수익 계산',
             descTitle: '조회수 100만 찍으면 얼마 벌까?',
             description: '플랫폼별 조회수당 단가를 적용하여 예상 애드센스/크리에이터 수익을 계산합니다.',
+            example: '조회수 100만 회 달성 시 예상 수익은?',
             inputs: [
                 { id: 'si1', label: '월 조회수', value: 1000000 },
                 { id: 'si2', label: '조회수당 단가 (원)', value: 0.2 }
@@ -277,6 +280,7 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '대출 이자 계산기',
             descTitle: '원리금 균등 상환 방식',
             description: '은행 대출의 매달 상환액과 총 이자를 계산합니다.',
+            example: '3억원 주택담보대출, 금리 4.5%, 30년 상환 기준',
             refName: '금융감독원',
             refLink: 'https://finlife.fss.or.kr',
             inputs: [
@@ -302,6 +306,7 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '연말정산 환급 예상',
             descTitle: '13월의 월급 시뮬레이터',
             description: '결정세액과 기납부세액을 비교하여 환급 여부를 미리 확인합니다.',
+            example: '연봉 5,500만원 직장인이 이미 300만원의 세금을 냈다면?',
             refName: '국세청 홈택스',
             refLink: 'https://www.hometax.go.kr',
             inputs: [
@@ -324,6 +329,7 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '전세 vs 월세 비교',
             descTitle: '주거 비용 최적화',
             description: '전세 대출 이자와 월세를 비교하여 어떤 주거 방식이 더 경제적인지 분석합니다.',
+            example: '전세 3억(대출금리 4%) vs 월세 100만원 비교 시',
             inputs: [
                 { id: 'rc1', label: '전세금 (원)', value: 300000000 },
                 { id: 'rc2', label: '대출금리 (%)', value: 4.0 },
@@ -345,6 +351,7 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '양도소득세 계산기',
             descTitle: '부동산 매도 시 세금',
             description: '양도차익에 따른 양도소득세와 지방소득세를 추산합니다.',
+            example: '5억원에 매수한 아파트를 8억원에 매도했을 때 양도세는?',
             refName: '국세청 홈택스',
             refLink: 'https://www.hometax.go.kr',
             inputs: [
@@ -367,6 +374,7 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '연금보험 수익률',
             descTitle: '노후를 위한 복리 투자',
             description: '연금보험 납입 시 미래에 받을 수 있는 연금 총액을 시뮬레이션합니다.',
+            example: '매달 100만원씩 10년 저축 시 노후 자금 규모는?',
             inputs: [{ id: 'pe1', label: '월 납입액', value: 1000000 }, { id: 'pe2', label: '기간 (년)', value: 10 }],
             run: function(d) {
                 var total = d.pe1 * d.pe2 * 12 * 1.25;
@@ -380,6 +388,7 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '부동산 수익률',
             descTitle: '수익형 부동산 ROI 분석',
             description: '매입가와 임대료를 기준으로 부동산 투자 수익률을 계산합니다.',
+            example: '5억원 상가 매입 후 월세 200만원을 받는다면?',
             inputs: [{ id: 're1', label: '매입가', value: 500000000 }, { id: 're2', label: '월세', value: 2000000 }],
             run: function(d) {
                 var roi = (d.re2 * 12 / d.re1) * 100;
@@ -393,6 +402,7 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '재산세/종부세 계산',
             descTitle: '부동산 보유세 추정',
             description: '공시지가 기준 연간 보유세를 대략적으로 계산합니다.',
+            example: '공시가격 15억원 아파트의 연간 보유세 시뮬레이션',
             refName: '부동산공시가격 알리미',
             refLink: 'https://www.realtyprice.kr',
             inputs: [{ id: 'pt1', label: '공시지가 (원)', value: 1500000000 }],
@@ -408,6 +418,7 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '자동차 보험료 계산',
             descTitle: '연간 자동차 보험료 추산',
             description: '차량가액과 연령을 기준으로 평균적인 보험료를 계산합니다.',
+            example: '3,000만원 상당의 신차 가입 시 예상 보험료는?',
             inputs: [{ id: 'ai1', label: '차량가액 (원)', value: 30000000 }],
             run: function(d) {
                 var tax = 1000000 + d.ai1 * 0.02;
@@ -421,6 +432,7 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '금리 변동 분석',
             descTitle: '금리 상승 시 위험 진단',
             description: '금리 인상에 따른 추가 이자 부담액을 분석합니다.',
+            example: '4억원 대출 금리가 4%에서 6%로 올랐을 때 이자 차이는?',
             inputs: [{ id: 'ra1', label: '대출잔액 (원)', value: 400000000 }, { id: 'ra2', label: '현재금리 (%)', value: 4.0 }, { id: 'ra3', label: '인상금리 (%)', value: 6.0 }],
             run: function(d) {
                 var diff = d.ra1 * (d.ra3 - d.ra2) / 100 / 12;
@@ -434,6 +446,7 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '배달비 모아 해외여행',
             descTitle: '치킨 참으면 비행기표가 나온다',
             description: '평소 지출하는 배달 비용을 아껴 갈 수 있는 해외 여행지를 알려드립니다.',
+            example: '일주일에 3번 치킨(2.5만원) 참으면 어디까지 갈 수 있을까?',
             inputs: [
                 { id: 'dt1', label: '주당 배달 횟수', value: 3 },
                 { id: 'dt2', label: '건당 배달비 (원)', value: 4000 },
@@ -455,6 +468,7 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '비트코인 타임머신',
             descTitle: '과거의 나를 반성하는 시간',
             description: '비트코인을 과거 특정 시점에 샀을 때의 수익률을 계산합니다.',
+            example: '10년 전 비트코인을 100만원어치 샀다면 지금 서울 아파트 몇 채?',
             inputs: [
                 { id: 'f1', label: '투자금액 (원)', value: 1000000 },
                 { id: 'f2', label: '투자 시점', value: 5, type: 'select', options: [
@@ -479,6 +493,7 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '커피값 vs 테슬라',
             descTitle: '스벅 아아 한 잔의 기회비용',
             description: '매일 커피값 4,500원을 아껴 테슬라 주식을 샀을 때의 가치를 계산합니다.',
+            example: '매일 마시는 스타벅스(4,500원) 대신 테슬라 주식을 샀다면?',
             inputs: [{ id: 't1', label: '일일 커피값 (원)', value: 4500 }],
             run: function(d) {
                 var totalCoffee = d.t1 * 365 * 5;
@@ -496,9 +511,10 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '숨참고 한강뷰 다이브',
             descTitle: '내 집 마련 소요 기간',
             description: '내 연봉으로 한강뷰 아파트를 사기 위해 숨만 쉬고 돈을 모아야 하는 기간을 계산합니다.',
+            example: '연봉 5,000만원 전액 저축 시 20억 아파트 매수 소요 시간',
             inputs: [
                 { id: 'b1', label: '세후 연봉 (원)', value: 50000000 },
-                { id: 'b2', label: '목표 아파트가 (원)', value: 2500000000 }
+                { id: 'b2', label: '목표 아파트가 (원)', value: 2000000000 }
             ],
             run: function(d) {
                 var years = d.b2 / d.b1;
@@ -512,6 +528,7 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '유튜브 롱폼 수익',
             descTitle: '조회수당 예상 수익',
             description: '조회수에 따른 예상 광고 수익을 계산합니다.',
+            example: '조회수 100만 회, CPM 3,000원 기준 광고 수익',
             inputs: [
                 { id: 'y1', label: '월 조회수', value: 1000000 },
                 { id: 'y2', label: 'CPM(원)', value: 3000 }
@@ -528,6 +545,7 @@ document.addEventListener('DOMContentLoaded', function() {
             title: 'OTT N빵 최적화',
             descTitle: '주요 OTT 가격 & 정산 가이드',
             description: '넷플릭스, 유튜브 등 주요 OTT의 파티원 수별 1인당 최적 분담금을 계산합니다.',
+            example: '넷플릭스 프리미엄(17,000원)을 4명이서 정산한다면?',
             inputs: [
                 { id: 'o1', label: 'OTT 서비스 선택', value: 'netflix', type: 'select', options: [
                     { label: '넷플릭스 (프리미엄)', value: 'netflix' },
@@ -570,8 +588,9 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '유럽 물가 국밥 환산',
             descTitle: '현지 금액 -> 국밥 환산',
             description: '유럽 물가를 국밥 개수로 체감해봅니다.',
+            example: '100유로 쇼핑 시, 한국 국밥으로 환산하면 몇 그릇?',
             inputs: [
-                { id: 'tc1', label: '현지 금액 (유로/파운드)', value: 150 },
+                { id: 'tc1', label: '현지 금액 (유로/파운드)', value: 100 },
                 { id: 'tc2', label: '환율', value: 1500 }
             ],
             run: function(d) {
@@ -590,6 +609,7 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '인플루언서 단가',
             descTitle: '광고 원고료 정산',
             description: '팔로워 수 기준 추천 협찬 단가를 제안합니다.',
+            example: '팔로워 5만 명 인플루언서의 광고 원고료 적정가는?',
             inputs: [{ id: 'i1', label: '팔로워 수', value: 50000 }],
             run: function(d) {
                 var price = d.i1 * 15;
@@ -607,7 +627,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (viewName === 'home') {
             homeView.classList.add('active');
             calcView.classList.remove('active');
-            document.title = "2026 연봉 실수령액 & 금융 계산기 마스터 | FinanceCalculator";
+            document.title = "머니마스터 (MoneyMaster) — 2026 금융 계산기의 모든 것";
             if (window.location.hash) {
                 history.pushState("", document.title, window.location.pathname + window.location.search);
             }
