@@ -31,246 +31,420 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // --- Calculator Data (book) ---
-    // Moved to the top to avoid TDZ and undefined errors
     var book = {
-        'car-vs-taxi': {
-            title: '테슬라 풀할부 vs 택시 VIP',
-            descTitle: '카푸어 vs 뚜벅이 대결',
-            description: '테슬라 모델Y를 풀할부로 샀을 때의 월 유지비와, 그 돈으로 택시를 탔을 때 몇 번 탈 수 있는지 비교합니다.',
-            example: '차량가 6천만원, 할부 60개월',
+        'salary': {
+            title: '2026 연봉 실수령액',
+            descTitle: '2026년 최신 세법 및 4대보험 반영',
+            description: '국민연금 상한액 인상 및 건강보험 요율을 반영한 2026년형 실제 통장 수령액입니다.',
+            example: '연봉 5,000만원, 부양가족 1명(본인) 기준',
+            refName: '국세청 홈택스',
+            refLink: 'https://www.hometax.go.kr',
+            disclaimer: '실제 부양가족 및 공제 항목에 따라 차이가 발생할 수 있습니다.',
             inputs: [
-                { id: 'ct1', label: '차량 가격 (원)', value: 60000000 },
-                { id: 'ct2', label: '할부 금리 (%)', value: 5.5 },
-                { id: 'ct3', label: '월 보험/유지비 (원)', value: 150000 }
+                { id: 's1', label: '세전 연봉 (원)', value: 50000000 },
+                { id: 's2', label: '비과세 식대 (월)', value: 200000 }
             ],
             run: function(d) {
-                var price = d.ct1;
-                var rate = (d.ct2 / 100) / 12;
-                var months = 60;
-                var monthlyPayment = Math.floor(price * rate * Math.pow(1+rate, months) / (Math.pow(1+rate, months)-1));
-                var totalMonthly = monthlyPayment + d.ct3;
-                var taxiRides = Math.floor(totalMonthly / 15000);
-                var comment = taxiRides >= 100 ? "매일 3번씩 택시 타도 돈이 남습니다. 기사님 개인 고용 가능?" : (taxiRides >= 60 ? "하루 2번 출퇴근 택시로 가능! 주차 스트레스도 없죠." : "이 정도면 차 사는 게 낫겠네요. 자유를 얻으세요!");
+                var month = Math.floor(d.s1 / 12);
+                var tax_target = Math.max(0, month - d.s2);
+                var pension = Math.floor(Math.min(tax_target, 6170000) * 0.045);
+                var health = Math.floor(tax_target * 0.03545);
+                var care = Math.floor(health * 0.1295);
+                var employment = Math.floor(tax_target * 0.009);
+                var tax_base = (d.s1 - 15000000 - 1500000); 
+                var incomeTax = Math.floor((tax_base > 0 ? calcProgressiveTax(tax_base) : 0) / 12);
+                var localTax = Math.floor(incomeTax * 0.1);
+                var net = month - (pension + health + care + employment + incomeTax + localTax);
                 return {
                     items: [
-                        { label: '월 차량 유지비', val: won(totalMonthly) },
-                        { label: '택시 환산 (건당 1.5만원)', val: taxiRides + '회 탑승 가능' },
-                        { label: '한 줄 평', val: '<strong>' + comment + '</strong>' }
+                        { label: '월 세전 급여', val: won(month) },
+                        { label: '공제액 합계 (4대보험+세금)', val: won(month - net) },
+                        { label: '월 예상 실수령액', val: '<strong>' + won(net) + '</strong>' }
                     ],
-                    chart: { type: 'bar', labels: ['월 할부금', '월 유지비'], data: [monthlyPayment, d.ct3] }
-                };
-            }
-        },
-        'shorts-income': {
-            title: '쇼츠/틱톡 수익 계산기',
-            descTitle: '조회수 100만 뷰의 가치',
-            description: '유튜브 쇼츠와 틱톡의 평균 단가를 적용해 예상 수익을 계산합니다. (쇼츠 0.1~0.3원, 틱톡 0.01~0.05원)',
-            example: '조회수 100만 회',
-            inputs: [
-                { id: 'si1', label: '조회수 (회)', value: 1000000 },
-                { id: 'si2', label: '플랫폼', value: 'shorts', type: 'select', options: [
-                    { label: '유튜브 쇼츠 (Shorts)', value: 'shorts' },
-                    { label: '틱톡 (TikTok)', value: 'tiktok' }
-                ]}
-            ],
-            run: function(d) {
-                var views = d.si1;
-                var minRate = d.si2 === 'shorts' ? 0.1 : 0.01;
-                var maxRate = d.si2 === 'shorts' ? 0.3 : 0.05;
-                var minIncome = Math.floor(views * minRate);
-                var maxIncome = Math.floor(views * maxRate);
-                var avgIncome = Math.floor((minIncome + maxIncome) / 2);
-                var comment = avgIncome < 100000 ? "치킨 몇 마리 값이네요. 취미로 하시는 거죠?" : (avgIncome < 1000000 ? "오, 쏠쏠한 부업! 꾸준히 하면 월급 넘겠는데요?" : "전업 크리에이터 각! 알고리즘의 선택을 받으셨군요.");
-                return {
-                    items: [
-                        { label: '예상 수익 (최소)', val: won(minIncome) },
-                        { label: '예상 수익 (최대)', val: won(maxIncome) },
-                        { label: '한 줄 평', val: '<strong>' + comment + '</strong>' }
-                    ],
-                    chart: { type: 'bar', labels: ['최소수익', '최대수익'], data: [minIncome, maxIncome] }
-                };
-            }
-        },
-        'ai-subscription': {
-            title: 'AI 구독료 계산기',
-            descTitle: '숨만 쉬어도 나가는 AI 봇 비용',
-            description: 'ChatGPT, Claude, Midjourney 등 구독 중인 AI 서비스들의 연간 지출액을 확인하세요.',
-            example: '챗GPT + 미드저니 사용 시',
-            inputs: [
-                { id: 'as1', label: 'ChatGPT Plus ($20)', value: 1, type: 'select', options: [{label: '구독함', value: 1}, {label: '안함', value: 0}] },
-                { id: 'as2', label: 'Claude Pro ($20)', value: 0, type: 'select', options: [{label: '구독함', value: 1}, {label: '안함', value: 0}] },
-                { id: 'as3', label: 'Midjourney ($30)', value: 0, type: 'select', options: [{label: '구독함', value: 1}, {label: '안함', value: 0}] },
-                { id: 'as4', label: '기타 구독료 합계 ($)', value: 0 }
-            ],
-            run: function(d) {
-                var totalMonthlyUsd = (d.as1 * 20) + (d.as2 * 20) + (d.as3 * 30) + d.as4;
-                var exchangeRate = 1450;
-                var totalMonthlyKrw = totalMonthlyUsd * exchangeRate;
-                var totalYearlyKrw = totalMonthlyKrw * 12;
-                var comment = totalYearlyKrw > 1000000 ? "연 100만원 넘게 태우시네요! AI로 그 이상 벌고 계시죠?" : (totalYearlyKrw > 0 ? "생산성을 위한 투자! 아깝지 않으실 겁니다." : "무료 버전만 쓰시는 알뜰파!");
-                return {
-                    items: [
-                        { label: '월 구독료 합계', val: won(totalMonthlyKrw) },
-                        { label: '연간 지출액', val: won(totalYearlyKrw) },
-                        { label: '한 줄 평', val: '<strong>' + comment + '</strong>' }
-                    ],
-                    chart: { type: 'pie', labels: ['AI 구독료', '기타 여유자금'], data: [totalYearlyKrw, Math.max(0, 5000000 - totalYearlyKrw)] }
-                };
-            }
-        },
-        'omakase-snp500': {
-            title: '오마카세 vs S&P500 복리',
-            descTitle: '한 끼의 식사 vs 20년 뒤의 자산',
-            description: '오마카세(약 15만원)를 포기하고 연평균 10% 수익률의 S&P500 ETF에 투자했을 때의 미래 가치를 계산합니다.',
-            example: '월 1회 15만원 절약, 20년 투자',
-            inputs: [
-                { id: 'os1', label: '절약 금액 (원/월)', value: 150000 },
-                { id: 'os2', label: '투자 기간 (년)', value: 20 }
-            ],
-            run: function(d) {
-                var monthly = d.os1;
-                var years = d.os2;
-                var rate = 0.10 / 12;
-                var months = years * 12;
-                var futureValue = monthly * (Math.pow(1 + rate, months) - 1) / rate * (1 + rate);
-                var totalInvested = monthly * months;
-                var interest = futureValue - totalInvested;
-                return {
-                    items: [
-                        { label: '총 절약 원금', val: won(totalInvested) },
-                        { label: '복리 수익', val: won(interest) },
-                        { label: '미래 자산 가치', val: '<strong style="color:#2563eb">' + won(futureValue) + '</strong>' }
-                    ],
-                    chart: { type: 'line', labels: ['원금', '미래가치'], data: [totalInvested, futureValue] }
-                };
-            }
-        },
-        'freelancer-tax': {
-            title: '3.3% 프리랜서 종소세 방어',
-            descTitle: '토해낼까? 돌려받을까?',
-            description: '단순경비율을 적용하여 5월 종합소득세 환급액을 추정합니다.',
-            example: '연수입 2,000만원',
-            inputs: [{ id: 'ft1', label: '연간 총 수입 (원)', value: 20000000 }],
-            run: function(d) {
-                var income = d.ft1;
-                var expenseRate = 0.641;
-                var incomeAmount = income - (income * expenseRate);
-                var taxBase = Math.max(0, incomeAmount - 1500000);
-                var calcTax = taxBase * 0.06;
-                var paidTax = income * 0.033;
-                var finalTax = calcTax - paidTax;
-                var resultText = finalTax < 0 ? "환급 예상! (치킨 드세요)" : "납부 예상 (미리 모으세요)";
-                return {
-                    items: [
-                        { label: '기납부 세금 (3.3%)', val: won(paidTax) },
-                        { label: '결정 세액 (추정)', val: won(calcTax) },
-                        { label: '결과', val: '<strong>' + resultText + ' ' + won(Math.abs(finalTax)) + '</strong>' }
-                    ],
-                    chart: { type: 'bar', labels: ['낸 세금', '낼 세금'], data: [paidTax, calcTax] }
-                };
-            }
-        },
-        'savings-vs-bitcoin': {
-            title: '청년도약계좌 vs 비트코인 적립',
-            descTitle: '안정성 vs 수익성 대결',
-            description: '정부지원금 포함 연 6% 적금과 비트코인 연평균 성장률을 비교합니다.',
-            example: '월 70만원, 5년 만기',
-            inputs: [
-                { id: 'sb1', label: '월 납입액 (원)', value: 700000 },
-                { id: 'sb2', label: '기간 (년)', value: 5 }
-            ],
-            run: function(d) {
-                var monthly = d.sb1;
-                var years = d.sb2;
-                var months = years * 12;
-                var savingsInterest = monthly * months * (0.06 * (years + 1) / 2);
-                var govContribution = 24000 * months;
-                var savingsTotal = (monthly * months) + savingsInterest + govContribution;
-                var btcRate = 0.20 / 12;
-                var btcTotal = monthly * (Math.pow(1 + btcRate, months) - 1) / btcRate * (1 + btcRate);
-                var diff = btcTotal - savingsTotal;
-                var comment = diff > 0 ? "비트코인이 " + won(diff) + " 더 벌었을 수도?" : "적금 승리!";
-                return {
-                    items: [
-                        { label: '청년도약계좌 만기액', val: won(savingsTotal) },
-                        { label: '비트코인 적립 예상액', val: won(btcTotal) },
-                        { label: '한 줄 평', val: '<strong>' + comment + '</strong>' }
-                    ],
-                    chart: { type: 'line', labels: ['원금', '적금', '코인'], data: [monthly*months, savingsTotal, btcTotal] }
+                    chart: { type: 'pie', labels: ['실수령', '공제'], data: [net, month - net] }
                 };
             }
         },
         'coin-tax': {
-            title: '2026 코인/가상자산 과세 시뮬레이터',
-            descTitle: '내 코인 수익, 세금 떼면 얼마?',
-            description: '2026년 시행 예정인 가상자산 과세(기본 공제 250만원, 세율 22%)를 적용해봅니다.',
-            refName: '기획재정부 (가상자산 과세 유예안)',
+            title: '2026 코인 과세 멘붕기',
+            descTitle: '가상자산 수익 22% 과세 현실화',
+            description: '2026년 시행 예정인 코인 과세(공제 250만원 초과분 22%)를 미리 시뮬레이션합니다.',
+            example: '비트코인으로 1억 벌었을 때 내야 할 세금은?',
+            refName: '기획재정부 세법개정안',
             refLink: 'https://www.moef.go.kr',
-            example: '수익 1억원 달성 시',
+            disclaimer: '정부 정책에 따라 과세 유예 및 공제 한도가 변경될 수 있습니다.',
             inputs: [
                 { id: 'c1', label: '가상자산 총 수익 (원)', value: 100000000 },
                 { id: 'c2', label: '기본 공제액 (원)', value: 2500000 }
             ],
             run: function(d) {
                 var profit = d.c1;
-                var deduction = d.c2;
-                var taxable = Math.max(0, profit - deduction);
+                var taxable = Math.max(0, profit - d.c2);
                 var tax = Math.floor(taxable * 0.22);
                 var net = profit - tax;
-                var comment = tax > 10000000 ? "차 한 대 값이 세금으로 증발! 멘탈 꽉 잡으세요." : "22%... 생각보다 쎄죠? 이게 현실입니다.";
+                var comment = tax > 10000000 ? "차 한 대 값이 세금으로! 멘탈 잡으세요." : "이 정도면 세금 낼 만 하네요!";
                 return {
                     items: [
-                        { label: '과세 대상 금액', val: won(taxable) },
+                        { label: '과세 대상 수익', val: won(taxable) },
                         { label: '예상 납부 세액 (22%)', val: won(tax) },
                         { label: '세후 실수령액', val: '<strong>' + won(net) + '</strong>' },
-                        { label: '한 줄 평', val: '<strong>' + comment + '</strong>' }
+                        { label: '멘붕 코멘트', val: '<strong>' + comment + '</strong>' }
                     ],
-                    chart: { type: 'pie', labels: ['실수령', '세금'], data: [net, tax] }
+                    chart: { type: 'doughnut', labels: ['내 돈', '나라 돈'], data: [net, tax] }
                 };
             }
         },
         'son-salary': {
-            title: '손흥민 주급 vs 내 연봉 체감',
-            descTitle: '월드클래스와 나의 거리 측정',
-            description: '손흥민 선수의 추정 주급(약 3.4억 원)과 내 연봉을 비교해봅니다.',
-            example: '내 연봉 4,000만원일 때',
+            title: '손흥민 vs 내 연봉',
+            descTitle: '월클과 나의 현실적인 거리',
+            description: '손흥민 선수의 추정 주급(약 3.4억 원)과 내 연봉을 비교하여 현타를 선사합니다.',
+            example: '내 연봉 4,000만원이면 쏘니는 몇 분 만에 벌까요?',
             inputs: [{ id: 'ss1', label: '내 세전 연봉 (원)', value: 40000000 }],
             run: function(d) {
                 var sonWeekly = 340000000;
+                var sonHourly = sonWeekly / (7 * 24);
                 var myAnnual = d.ss1;
-                var sonEarnsMyYear = (myAnnual / sonWeekly) * 7 * 24;
-                var sonDays = Math.floor(sonEarnsMyYear / 24);
-                var sonHours = Math.floor(sonEarnsMyYear % 24);
-                var iEarnSonWeek = sonWeekly / myAnnual;
-                var comment = iEarnSonWeek > 50 ? "환생이 더 빠를 수도 있습니다..." : "오! 그래도 꽤 능력자이십니다.";
+                var timeToEarnMySalary = (myAnnual / sonHourly); 
+                var comment = timeToEarnMySalary > 24 ? "흥민이 형이 하루 꼬박 일하면 내 연봉!" : "흥민이 형은 점심 먹고 오면 내 연봉 벌었네요.";
                 return {
                     items: [
-                        { label: '손흥민이 내 연봉 버는 시간', val: sonDays + '일 ' + sonHours + '시간' },
-                        { label: '내가 쏜 주급 버는 기간', val: iEarnSonWeek.toFixed(1) + '년' },
+                        { label: '손흥민이 내 연봉 버는 시간', val: timeToEarnMySalary.toFixed(1) + ' 시간' },
+                        { label: '내가 쏜 주급 버는 기간', val: (sonWeekly / myAnnual).toFixed(1) + ' 년' },
                         { label: '한 줄 평', val: '<strong>' + comment + '</strong>' }
                     ],
                     chart: { type: 'bar', labels: ['내 연봉', '손흥민 주급'], data: [myAnnual, sonWeekly] }
                 };
             }
         },
-        'delivery-travel': {
-            title: '배달비 모아 해외여행',
-            descTitle: '치킨 참으면 어디까지 갈 수 있을까?',
-            description: '습관적인 배달 주문을 끊었을 때 모을 수 있는 돈으로 갈 수 있는 여행지를 추천합니다.',
-            example: '주 3회, 건당 배달비 4,000원',
+        'car-vs-taxi': {
+            title: '테슬라 vs 택시 VIP',
+            descTitle: '카푸어 탈출 지능 지수 테스트',
+            description: '차량 유지비로 평생 택시만 타는 것이 이득인지 비교해 드립니다.',
+            example: '모델Y 할부금 + 보험료 vs 매일 택시 타기',
             inputs: [
-                { id: 'dt1', label: '주당 배달 횟수', value: 3 },
-                { id: 'dt2', label: '건당 평균 배달비 (원)', value: 4000 },
-                { id: 'dt3', label: '건당 평균 음식값 (원)', value: 25000 }
+                { id: 'ct1', label: '차량 가격 (원)', value: 60000000 },
+                { id: 'ct2', label: '월 유지비/보험료 (원)', value: 200000 }
             ],
             run: function(d) {
-                var weekCost = (d.dt2 + d.dt3) * d.dt1;
-                var yearCost = weekCost * 52;
+                var monthlyInstallment = Math.floor(d.ct1 / 60); 
+                var totalMonthly = monthlyInstallment + d.ct2;
+                var rides = Math.floor(totalMonthly / 15000); 
+                return {
+                    items: [
+                        { label: '월 예상 유지비', val: won(totalMonthly) },
+                        { label: '택시 탑승 가능 횟수', val: rides + ' 회 (건당 1.5만원)' },
+                        { label: '결론', val: rides > 60 ? '<strong>택시 타는게 개이득</strong>' : '차 사세요.' }
+                    ],
+                    chart: { type: 'bar', labels: ['월 유지비', '택시 60회 비용'], data: [totalMonthly, 900000] }
+                };
+            }
+        },
+        'part-time': {
+            title: '알바 주휴수당',
+            descTitle: '2026년 최저임금 10,030원 반영',
+            description: '주당 15시간 이상 근무 시 반드시 받아야 할 주휴수당을 계산합니다.',
+            example: '편의점 알바 주 20시간 하면 실제 월급은?',
+            refName: '고용노동부',
+            refLink: 'https://www.moel.go.kr',
+            inputs: [
+                { id: 'p1', label: '시급 (원)', value: 10030 },
+                { id: 'p2', label: '주 근무시간', value: 20 }
+            ],
+            run: function(d) {
+                var base = d.p1 * d.p2;
+                var holiday = d.p2 >= 15 ? (d.p2 / 40) * 8 * d.p1 : 0;
+                var total = (base + holiday) * 4.345;
+                return {
+                    items: [
+                        { label: '주 기본급', val: won(base) },
+                        { label: '주 주휴수당', val: won(holiday) },
+                        { label: '월 예상 총액', val: '<strong>' + won(total) + '</strong>' }
+                    ],
+                    chart: { type: 'pie', labels: ['기본급', '주휴수당'], data: [base, holiday] }
+                };
+            }
+        },
+        'savings-vs-bitcoin': {
+            title: '청년도약계좌 vs 비트코인',
+            descTitle: '정부 지원금 vs 야수의 심장',
+            description: '연 6% 고금리 적금과 비트코인 적립식 투자의 예상 수익을 비교합니다.',
+            example: '월 70만원씩 5년 모으면?',
+            refName: '서민금융진흥원',
+            refLink: 'https://www.kinfa.or.kr',
+            inputs: [
+                { id: 'sb1', label: '월 납입액 (원)', value: 700000 },
+                { id: 'sb2', label: '기간 (년)', value: 5 }
+            ],
+            run: function(d) {
+                var monthly = d.sb1;
+                var months = d.sb2 * 12;
+                var savings = (monthly * months) + (monthly * months * 0.06 * (d.sb2 + 1) / 2) + (24000 * months);
+                var btc = monthly * (Math.pow(1 + 0.015, months) - 1) / 0.015 * 1.015; 
+                return {
+                    items: [
+                        { label: '청년도약계좌 만기액', val: won(savings) },
+                        { label: '비트코인 적립 예상액', val: won(btc) },
+                        { label: '수익 차이', val: won(btc - savings) }
+                    ],
+                    chart: { type: 'line', labels: ['원금', '적금', '코인'], data: [monthly*months, savings, btc] }
+                };
+            }
+        },
+        'omakase-snp500': {
+            title: '오마카세 vs S&P500',
+            descTitle: '한 끼의 사치 vs 노후의 평안',
+            description: '오늘 먹은 15만원 오마카세 대신 미국 주식을 샀다면 20년 뒤 얼마가 될지 계산합니다.',
+            example: '월 1회 오마카세 비용을 S&P500에 투자하면?',
+            inputs: [
+                { id: 'os1', label: '오마카세 비용 (원)', value: 150000 },
+                { id: 'os2', label: '투자 기간 (년)', value: 20 }
+            ],
+            run: function(d) {
+                var rate = 0.10 / 12;
+                var months = d.os2 * 12;
+                var futureValue = d.os1 * (Math.pow(1 + rate, months) - 1) / rate * (1 + rate);
+                return {
+                    items: [
+                        { label: '20년 총 투자 원금', val: won(d.os1 * months) },
+                        { label: '미래 자산 가치 (연 10%)', val: '<strong>' + won(futureValue) + '</strong>' }
+                    ],
+                    chart: { type: 'line', labels: ['원금', '미래가치'], data: [d.os1 * months, futureValue] }
+                };
+            }
+        },
+        'freelancer-tax': {
+            title: '프리랜서 종소세 방어',
+            descTitle: '3.3% 환급받기 시뮬레이터',
+            description: '미리 떼인 3.3% 세금을 5월 종합소득세 신고 때 얼마나 돌려받을 수 있는지 추정합니다.',
+            refName: '국세청 홈택스',
+            refLink: 'https://www.hometax.go.kr',
+            inputs: [{ id: 'ft1', label: '연간 총 수입 (원)', value: 20000000 }],
+            run: function(d) {
+                var income = d.ft1;
+                var paidTax = income * 0.033;
+                var taxableIncome = income * 0.35; // 단순경비율 가정
+                var calcTax = calcProgressiveTax(taxableIncome - 1500000); 
+                var diff = paidTax - calcTax;
+                return {
+                    items: [
+                        { label: '이미 낸 세금 (3.3%)', val: won(paidTax) },
+                        { label: '예상 환급액', val: '<strong>' + won(Math.max(0, diff)) + '</strong>' }
+                    ],
+                    chart: { type: 'bar', labels: ['낸 세금', '결정 세액'], data: [paidTax, calcTax] }
+                };
+            }
+        },
+        'ai-subscription': {
+            title: 'AI 구독료 합계',
+            descTitle: '숨만 쉬어도 나가는 AI 비용',
+            description: 'ChatGPT, Claude 등 다양한 AI 툴의 구독료를 합산하여 연간 지출을 확인합니다.',
+            inputs: [
+                { id: 'as1', label: '구독 툴 개수', value: 2 },
+                { id: 'as2', label: '평균 구독료 ($)', value: 20 }
+            ],
+            run: function(d) {
+                var monthly = d.as1 * d.as2 * 1450;
+                var yearly = monthly * 12;
+                return {
+                    items: [
+                        { label: '월 총 구독료', val: won(monthly) },
+                        { label: '연간 총 지출', val: '<strong>' + won(yearly) + '</strong>' }
+                    ],
+                    chart: { type: 'pie', labels: ['구독료', '기타여유'], data: [yearly, 5000000] }
+                };
+            }
+        },
+        'shorts-income': {
+            title: '쇼츠/틱톡 수익 계산',
+            descTitle: '조회수 100만 찍으면 얼마 벌까?',
+            description: '플랫폼별 조회수당 단가를 적용하여 예상 애드센스/크리에이터 수익을 계산합니다.',
+            inputs: [
+                { id: 'si1', label: '월 조회수', value: 1000000 },
+                { id: 'si2', label: '조회수당 단가 (원)', value: 0.2 }
+            ],
+            run: function(d) {
+                var profit = d.si1 * d.si2;
+                return {
+                    items: [
+                        { label: '예상 월 수익', val: '<strong>' + won(profit) + '</strong>' },
+                        { label: '한 줄 평', val: profit > 1000000 ? "퇴사 준비 가능!" : "부업으로 쏠쏠하네요." }
+                    ],
+                    chart: { type: 'bar', labels: ['수익', '목표'], data: [profit, 2000000] }
+                };
+            }
+        },
+        'loan': {
+            title: '대출 이자 계산기',
+            descTitle: '원리금 균등 상환 방식',
+            description: '은행 대출의 매달 상환액과 총 이자를 계산합니다.',
+            refName: '금융감독원',
+            refLink: 'https://finlife.fss.or.kr',
+            inputs: [
+                { id: 'l1', label: '대출금 (원)', value: 300000000 },
+                { id: 'l2', label: '금리 (%)', value: 4.5 },
+                { id: 'l3', label: '기간 (개월)', value: 360 }
+            ],
+            run: function(d) {
+                var r = (d.l2/100)/12;
+                var n = d.l3;
+                var m = d.l1 * r * Math.pow(1+r, n) / (Math.pow(1+r, n)-1);
+                var totalInterest = m * n - d.l1;
+                return {
+                    items: [
+                        { label: '월 상환금', val: won(m) },
+                        { label: '총 이자 합계', val: won(totalInterest) }
+                    ],
+                    chart: { type: 'doughnut', labels: ['원금', '이자'], data: [d.l1, totalInterest] }
+                };
+            }
+        },
+        'tax-settlement': {
+            title: '연말정산 환급 예상',
+            descTitle: '13월의 월급 시뮬레이터',
+            description: '결정세액과 기납부세액을 비교하여 환급 여부를 미리 확인합니다.',
+            refName: '국세청 홈택스',
+            refLink: 'https://www.hometax.go.kr',
+            inputs: [
+                { id: 'ts1', label: '총급여 (원)', value: 55000000 },
+                { id: 'ts2', label: '기납부세액 (원)', value: 3000000 }
+            ],
+            run: function(d) {
+                var tax = d.ts1 * 0.1;
+                var diff = d.ts2 - tax;
+                return {
+                    items: [
+                        { label: '예상 결정세액', val: won(tax) },
+                        { label: diff > 0 ? '예상 환급액' : '추가 납부액', val: '<strong>' + won(Math.abs(diff)) + '</strong>' }
+                    ],
+                    chart: { type: 'bar', labels: ['기납부', '결정세액'], data: [d.ts2, tax] }
+                };
+            }
+        },
+        'rent-compare': {
+            title: '전세 vs 월세 비교',
+            descTitle: '주거 비용 최적화',
+            description: '전세 대출 이자와 월세를 비교하여 어떤 주거 방식이 더 경제적인지 분석합니다.',
+            inputs: [
+                { id: 'rc1', label: '전세금 (원)', value: 300000000 },
+                { id: 'rc2', label: '대출금리 (%)', value: 4.0 },
+                { id: 'rc3', label: '월세액 (원)', value: 1000000 }
+            ],
+            run: function(d) {
+                var j = (d.rc1 * (d.rc2/100)) / 12;
+                return {
+                    items: [
+                        { label: '전세 월 대출이자', val: won(j) },
+                        { label: '현재 월세', val: won(d.rc3) },
+                        { label: '유불리', val: j < d.rc3 ? '전세가 유리' : '월세가 유리' }
+                    ],
+                    chart: { type: 'bar', labels: ['전세이자', '월세'], data: [j, d.rc3] }
+                };
+            }
+        },
+        'capital-gain': {
+            title: '양도소득세 계산기',
+            descTitle: '부동산 매도 시 세금',
+            description: '양도차익에 따른 양도소득세와 지방소득세를 추산합니다.',
+            refName: '국세청 홈택스',
+            refLink: 'https://www.hometax.go.kr',
+            inputs: [
+                { id: 'cg1', label: '양도가액 (원)', value: 800000000 },
+                { id: 'cg2', label: '취득가액 (원)', value: 500000000 }
+            ],
+            run: function(d) {
+                var gain = d.cg1 - d.cg2;
+                var tax = calcProgressiveTax(gain);
+                return {
+                    items: [
+                        { label: '양도차익', val: won(gain) },
+                        { label: '예상 세금', val: won(tax) }
+                    ],
+                    chart: { type: 'pie', labels: ['실수익', '세금'], data: [gain - tax, tax] }
+                };
+            }
+        },
+        'pension': {
+            title: '연금보험 수익률',
+            descTitle: '노후를 위한 복리 투자',
+            description: '연금보험 납입 시 미래에 받을 수 있는 연금 총액을 시뮬레이션합니다.',
+            inputs: [{ id: 'pe1', label: '월 납입액', value: 1000000 }, { id: 'pe2', label: '기간 (년)', value: 10 }],
+            run: function(d) {
+                var total = d.pe1 * d.pe2 * 12 * 1.25;
+                return {
+                    items: [{ label: '예상 수령액', val: won(total) }],
+                    chart: { type: 'doughnut', labels: ['원금', '수익'], data: [d.pe1*d.pe2*12, total*0.2] }
+                };
+            }
+        },
+        'real-estate': {
+            title: '부동산 수익률',
+            descTitle: '수익형 부동산 ROI 분석',
+            description: '매입가와 임대료를 기준으로 부동산 투자 수익률을 계산합니다.',
+            inputs: [{ id: 're1', label: '매입가', value: 500000000 }, { id: 're2', label: '월세', value: 2000000 }],
+            run: function(d) {
+                var roi = (d.re2 * 12 / d.re1) * 100;
+                return {
+                    items: [{ label: '수익률(ROI)', val: roi.toFixed(2) + '%' }],
+                    chart: { type: 'bar', labels: ['매입가', '1년수익'], data: [d.re1, d.re2*12] }
+                };
+            }
+        },
+        'property-tax': {
+            title: '재산세/종부세 계산',
+            descTitle: '부동산 보유세 추정',
+            description: '공시지가 기준 연간 보유세를 대략적으로 계산합니다.',
+            refName: '부동산공시가격 알리미',
+            refLink: 'https://www.realtyprice.kr',
+            inputs: [{ id: 'pt1', label: '공시지가 (원)', value: 1500000000 }],
+            run: function(d) {
+                var tax = d.pt1 * 0.0035;
+                return {
+                    items: [{ label: '예상 보유세', val: won(tax) }],
+                    chart: { type: 'pie', labels: ['지가', '세금'], data: [d.pt1, tax] }
+                };
+            }
+        },
+        'auto-insurance': {
+            title: '자동차 보험료 계산',
+            descTitle: '연간 자동차 보험료 추산',
+            description: '차량가액과 연령을 기준으로 평균적인 보험료를 계산합니다.',
+            inputs: [{ id: 'ai1', label: '차량가액 (원)', value: 30000000 }],
+            run: function(d) {
+                var tax = 1000000 + d.ai1 * 0.02;
+                return {
+                    items: [{ label: '예상 보험료', val: won(tax) }],
+                    chart: { type: 'pie', labels: ['보험료', '기타'], data: [tax, tax*0.5] }
+                };
+            }
+        },
+        'rate-analysis': {
+            title: '금리 변동 분석',
+            descTitle: '금리 상승 시 위험 진단',
+            description: '금리 인상에 따른 추가 이자 부담액을 분석합니다.',
+            inputs: [{ id: 'ra1', label: '대출잔액 (원)', value: 400000000 }, { id: 'ra2', label: '현재금리 (%)', value: 4.0 }, { id: 'ra3', label: '인상금리 (%)', value: 6.0 }],
+            run: function(d) {
+                var diff = d.ra1 * (d.ra3 - d.ra2) / 100 / 12;
+                return {
+                    items: [{ label: '월 추가 부담액', val: won(diff) }],
+                    chart: { type: 'bar', labels: ['현재이자', '인상후이자'], data: [d.ra1*0.04/12, d.ra1*0.06/12] }
+                };
+            }
+        },
+        'delivery-travel': {
+            title: '배달비 모아 해외여행',
+            descTitle: '치킨 참으면 비행기표가 나온다',
+            description: '평소 지출하는 배달 비용을 아껴 갈 수 있는 해외 여행지를 알려드립니다.',
+            inputs: [
+                { id: 'dt1', label: '주당 배달 횟수', value: 3 },
+                { id: 'dt2', label: '건당 배달비 (원)', value: 4000 },
+                { id: 'dt3', label: '평균 음식값 (원)', value: 25000 }
+            ],
+            run: function(d) {
+                var yearCost = (d.dt2 + d.dt3) * d.dt1 * 52;
                 var dest = yearCost >= 3000000 ? "🇺🇸 하와이 / 🇦🇺 호주" : (yearCost >= 1500000 ? "🇹🇭 방콕 / 🇻🇳 다낭" : "🇯🇵 일본 / 🇹🇼 대만");
                 return {
                     items: [
                         { label: '1년 총 배달 지출액', val: won(yearCost) },
-                        { label: '배달비만 따져도', val: won(d.dt2 * d.dt1 * 52) },
                         { label: '갈 수 있는 여행지', val: '<strong style="color:#e11d48">' + dest + '</strong>' }
                     ],
                     chart: { type: 'doughnut', labels: ['음식값', '배달비'], data: [d.dt3 * d.dt1 * 52, d.dt2 * d.dt1 * 52] }
@@ -280,8 +454,7 @@ document.addEventListener('DOMContentLoaded', function() {
         'crypto-fomo': {
             title: '비트코인 타임머신',
             descTitle: '과거의 나를 반성하는 시간',
-            description: '비트코인을 과거 특정 시점에 샀을 때, 현재 자산 가치를 시뮬레이션합니다.',
-            example: '10년 전 100만원 투자 시',
+            description: '비트코인을 과거 특정 시점에 샀을 때의 수익률을 계산합니다.',
             inputs: [
                 { id: 'f1', label: '투자금액 (원)', value: 1000000 },
                 { id: 'f2', label: '투자 시점', value: 5, type: 'select', options: [
@@ -305,12 +478,11 @@ document.addEventListener('DOMContentLoaded', function() {
         'coffee-tesla': {
             title: '커피값 vs 테슬라',
             descTitle: '스벅 아아 한 잔의 기회비용',
-            description: '매일 마시는 커피값(4,500원)을 아껴서 테슬라 주식을 5년간 적립식으로 샀다면?',
-            example: '매일 4,500원씩 5년 적립 시',
+            description: '매일 커피값 4,500원을 아껴 테슬라 주식을 샀을 때의 가치를 계산합니다.',
             inputs: [{ id: 't1', label: '일일 커피값 (원)', value: 4500 }],
             run: function(d) {
                 var totalCoffee = d.t1 * 365 * 5;
-                var futureValue = (d.t1 * 30) * 80; // Rough multiplier for 25% annual return
+                var futureValue = (d.t1 * 30) * 80; 
                 return {
                     items: [
                         { label: '5년 총 커피값', val: won(totalCoffee) },
@@ -323,8 +495,7 @@ document.addEventListener('DOMContentLoaded', function() {
         'breath-apartment': {
             title: '숨참고 한강뷰 다이브',
             descTitle: '내 집 마련 소요 기간',
-            description: '내 연봉을 한 푼도 안 쓰고 모았을 때 한강뷰 아파트를 사기까지 걸리는 기간입니다.',
-            example: '연봉 5,000만원, 아파트 25억 기준',
+            description: '내 연봉으로 한강뷰 아파트를 사기 위해 숨만 쉬고 돈을 모아야 하는 기간을 계산합니다.',
             inputs: [
                 { id: 'b1', label: '세후 연봉 (원)', value: 50000000 },
                 { id: 'b2', label: '목표 아파트가 (원)', value: 2500000000 }
@@ -341,7 +512,6 @@ document.addEventListener('DOMContentLoaded', function() {
             title: '유튜브 롱폼 수익',
             descTitle: '조회수당 예상 수익',
             description: '조회수에 따른 예상 광고 수익을 계산합니다.',
-            example: '조회수 100만 회',
             inputs: [
                 { id: 'y1', label: '월 조회수', value: 1000000 },
                 { id: 'y2', label: 'CPM(원)', value: 3000 }
@@ -354,25 +524,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 };
             }
         },
-        'influencer-price': {
-            title: '인플루언서 단가',
-            descTitle: '광고 원고료 정산',
-            description: '팔로워 수 기준 추천 협찬 단가를 제안합니다.',
-            example: '팔로워 5만 명 기준',
-            inputs: [{ id: 'i1', label: '팔로워 수', value: 50000 }],
-            run: function(d) {
-                var price = d.i1 * 15;
-                return {
-                    items: [{ label: '추천 원고료', val: won(price) }],
-                    chart: { type: 'doughnut', labels: ['원고료', '게시물가치'], data: [price, price * 1.5] }
-                };
-            }
-        },
         'ott-dutch': {
             title: 'OTT N빵 최적화',
             descTitle: '주요 OTT 가격 & 정산 가이드',
             description: '넷플릭스, 유튜브 등 주요 OTT의 파티원 수별 1인당 최적 분담금을 계산합니다.',
-            example: '넷플릭스 프리미엄, 4명 정산',
             inputs: [
                 { id: 'o1', label: 'OTT 서비스 선택', value: 'netflix', type: 'select', options: [
                     { label: '넷플릭스 (프리미엄)', value: 'netflix' },
@@ -408,27 +563,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 };
             }
         },
-        'part-time': {
-            title: '알바 주휴수당',
-            descTitle: '2026 최저임금 반영',
-            description: '주당 15시간 이상 근무 시 지급되는 주휴수당 포함 월급을 계산합니다.',
-            inputs: [
-                { id: 'p1', label: '시급 (원)', value: 10030 },
-                { id: 'p2', label: '주 근무시간', value: 20 }
-            ],
-            run: function(d) {
-                var base = d.p1 * d.p2;
-                var holiday = d.p2 >= 15 ? (d.p2 / 40) * 8 * d.p1 : 0;
-                var total = (base + holiday) * 4.345;
-                return {
-                    items: [
-                        { label: '주 주휴수당', val: won(holiday) },
-                        { label: '예상 월급', val: won(total) }
-                    ],
-                    chart: { type: 'pie', labels: ['기본급', '주휴수당'], data: [base, holiday] }
-                };
-            }
-        },
         'travel-currency': {
             title: '유럽 물가 국밥 환산',
             descTitle: '현지 금액 -> 국밥 환산',
@@ -449,134 +583,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 };
             }
         },
-        'salary': {
-            title: '2026 연봉 실수령액',
-            descTitle: '최신 요율 반영',
-            description: '2026년 국민연금, 건강보험 요율을 반영한 실수령액입니다.',
-            inputs: [{ id: 's1', label: '연봉 (원)', value: 50000000 }],
+        'influencer-price': {
+            title: '인플루언서 단가',
+            descTitle: '광고 원고료 정산',
+            description: '팔로워 수 기준 추천 협찬 단가를 제안합니다.',
+            inputs: [{ id: 'i1', label: '팔로워 수', value: 50000 }],
             run: function(d) {
-                var month = d.s1 / 12;
-                var net = month * 0.85; // Simple approximation
+                var price = d.i1 * 15;
                 return {
-                    items: [{ label: '월 실수령액', val: won(net) }],
-                    chart: { type: 'pie', labels: ['실수령', '공제'], data: [net, month - net] }
-                };
-            }
-        },
-        'loan': {
-            title: '대출 이자 계산기',
-            descTitle: '원리금 균등 상환',
-            inputs: [
-                { id: 'l1', label: '대출금', value: 300000000 },
-                { id: 'l2', label: '금리(%)', value: 4.5 },
-                { id: 'l3', label: '기간(개월)', value: 360 }
-            ],
-            run: function(d) {
-                var r = (d.l2/100)/12;
-                var n = d.l3;
-                var m = d.l1 * r * Math.pow(1+r, n) / (Math.pow(1+r, n)-1);
-                return {
-                    items: [{ label: '월 상환금', val: won(m) }],
-                    chart: { type: 'doughnut', labels: ['원금', '이자'], data: [d.l1, m*n - d.l1] }
-                };
-            }
-        },
-        'tax-settlement': {
-            title: '연말정산 환급 예상',
-            inputs: [
-                { id: 'ts1', label: '총급여', value: 55000000 },
-                { id: 'ts2', label: '기납부세액', value: 3000000 }
-            ],
-            run: function(d) {
-                var tax = d.ts1 * 0.1;
-                return {
-                    items: [{ label: '예상 환급액', val: won(d.ts2 - tax) }],
-                    chart: { type: 'bar', labels: ['기납부', '결정세액'], data: [d.ts2, tax] }
-                };
-            }
-        },
-        'rent-compare': {
-            title: '전세 vs 월세 비교',
-            inputs: [
-                { id: 'rc1', label: '전세금', value: 300000000 },
-                { id: 'rc2', label: '대출금리(%)', value: 4.0 },
-                { id: 'rc3', label: '월세', value: 1000000 }
-            ],
-            run: function(d) {
-                var j = (d.rc1 * (d.rc2/100)) / 12;
-                return {
-                    items: [{ label: '전세 월 이자', val: won(j) }],
-                    chart: { type: 'bar', labels: ['전세이자', '월세'], data: [j, d.rc3] }
-                };
-            }
-        },
-        'capital-gain': {
-            title: '양도소득세 계산기',
-            inputs: [
-                { id: 'cg1', label: '양도가액', value: 800000000 },
-                { id: 'cg2', label: '취득가액', value: 500000000 }
-            ],
-            run: function(d) {
-                var gain = d.cg1 - d.cg2;
-                var tax = gain * 0.2;
-                return {
-                    items: [{ label: '예상 세금', val: won(tax) }],
-                    chart: { type: 'pie', labels: ['실수익', '세금'], data: [gain - tax, tax] }
-                };
-            }
-        },
-        'pension': {
-            title: '연금보험 수익률',
-            inputs: [{ id: 'pe1', label: '월 납입액', value: 1000000 }, { id: 'pe2', label: '기간(년)', value: 10 }],
-            run: function(d) {
-                var total = d.pe1 * d.pe2 * 12 * 1.2;
-                return {
-                    items: [{ label: '예상 수령액', val: won(total) }],
-                    chart: { type: 'doughnut', labels: ['원금', '이자'], data: [d.pe1*d.pe2*12, total*0.2] }
-                };
-            }
-        },
-        'real-estate': {
-            title: '부동산 수익률',
-            inputs: [{ id: 're1', label: '매입가', value: 500000000 }, { id: 're2', label: '월세', value: 2000000 }],
-            run: function(d) {
-                var roi = (d.re2 * 12 / d.re1) * 100;
-                return {
-                    items: [{ label: '수익률(ROI)', val: roi.toFixed(2) + '%' }],
-                    chart: { type: 'bar', labels: ['매입가', '1년수익'], data: [d.re1, d.re2*12] }
-                };
-            }
-        },
-        'property-tax': {
-            title: '재산세/종부세 계산',
-            inputs: [{ id: 'pt1', label: '공시지가', value: 1500000000 }],
-            run: function(d) {
-                var tax = d.pt1 * 0.003;
-                return {
-                    items: [{ label: '예상 보유세', val: won(tax) }],
-                    chart: { type: 'pie', labels: ['지가', '세금'], data: [d.pt1, tax] }
-                };
-            }
-        },
-        'auto-insurance': {
-            title: '자동차 보험료 계산',
-            inputs: [{ id: 'ai1', label: '차량가액', value: 30000000 }],
-            run: function(d) {
-                var tax = 1000000 + d.ai1 * 0.02;
-                return {
-                    items: [{ label: '예상 보험료', val: won(tax) }],
-                    chart: { type: 'pie', labels: ['보험료', '기타'], data: [tax, tax*0.5] }
-                };
-            }
-        },
-        'rate-analysis': {
-            title: '금리 변동 분석',
-            inputs: [{ id: 'ra1', label: '대출금', value: 400000000 }, { id: 'ra2', label: '현재금리', value: 4.0 }, { id: 'ra3', label: '인상금리', value: 6.0 }],
-            run: function(d) {
-                var diff = d.ra1 * (d.ra3 - d.ra2) / 100 / 12;
-                return {
-                    items: [{ label: '월 추가 부담액', val: won(diff) }],
-                    chart: { type: 'bar', labels: ['현재', '인상후'], data: [d.ra1*0.04/12, d.ra1*0.06/12] }
+                    items: [{ label: '추천 원고료', val: won(price) }],
+                    chart: { type: 'doughnut', labels: ['원고료', '게시물가치'], data: [price, price * 1.5] }
                 };
             }
         }
@@ -616,10 +632,16 @@ document.addEventListener('DOMContentLoaded', function() {
         document.title = cfg.title + " - " + baseTitle;
         
         if (calcInfoBox) {
+            var refHtml = cfg.refLink ? 
+                '<p style="margin-top: 10px; font-size: 0.85rem;"><span class="example-tag" style="background: #e2e8f0; color: #475569;">공식 근거</span> ' +
+                '<a href="' + cfg.refLink + '" target="_blank" style="color: var(--accent); text-decoration: underline;">' + cfg.refName + ' 바로가기 ↗</a></p>' : '';
+
             calcInfoBox.innerHTML = '<h4>' + (cfg.descTitle || cfg.title) + '</h4>' +
                                     '<p>' + (cfg.description || '') + '</p>' +
-                                    '<div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border);">' +
-                                    '<p><span class="example-tag">예시</span> ' + (cfg.example || '데이터를 입력하세요.') + '</p>' +
+                                    refHtml +
+                                    '<div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border);">' +
+                                    '<p style="margin-bottom: 5px;"><span class="example-tag">예시</span> ' + (cfg.example || '데이터를 입력하세요.') + '</p>' +
+                                    '<p style="font-size: 0.8rem; color: var(--text-muted);">⚠️ ' + (cfg.disclaimer || '본 결과는 일반적인 기준을 적용한 시뮬레이션입니다.') + '</p>' +
                                     '</div>';
         }
 
@@ -693,16 +715,7 @@ document.addEventListener('DOMContentLoaded', function() {
         var textColor = isDark ? '#94a3b8' : '#64748b';
         var gridColor = isDark ? '#1e293b' : '#e2e8f0';
 
-        // Vibrant color palette
-        var colors = [
-            '#2563eb', // blue
-            '#10b981', // green
-            '#f59e0b', // amber
-            '#ef4444', // red
-            '#8b5cf6', // violet
-            '#ec4899', // pink
-            '#06b6d4'  // cyan
-        ];
+        var colors = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4'];
 
         currentChart = new Chart(ctx, {
             type: c.type || 'bar',
@@ -720,9 +733,7 @@ document.addEventListener('DOMContentLoaded', function() {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                layout: {
-                    padding: 20
-                },
+                layout: { padding: 20 },
                 plugins: {
                     legend: {
                         display: c.type === 'pie' || c.type === 'doughnut',
@@ -742,7 +753,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         borderWidth: 1,
                         padding: 12,
                         cornerRadius: 10,
-                        displayColors: true,
                         callbacks: {
                             label: function(context) {
                                 return ' ' + context.label + ': ' + won(context.parsed.y || context.parsed);
@@ -774,6 +784,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // --- Filter & Search Logic ---
+    var omnibar = document.getElementById('omnibar');
+    var chips = document.querySelectorAll('.chip');
+    var hotSection = document.getElementById('hot-section');
+    var mainGridCards = document.querySelectorAll('#main-grid .calc-card');
+
     if (omnibar) {
         omnibar.addEventListener('input', function(e) {
             var query = e.target.value.toLowerCase().trim();
@@ -800,7 +815,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // --- Routing ---
-    // URL 파라미터 파싱 (pSEO & Embed 지원)
     var urlParams = new URLSearchParams(window.location.search);
     var targetCalc = urlParams.get('calc');
     var isEmbed = urlParams.get('embed') === 'true';
