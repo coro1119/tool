@@ -396,3 +396,85 @@ input:focus {
     .featured-insight-hero h2 { font-size: 2rem; }
     .nav-links { display: none; }
 }
+
+/* Admin & Editor Styles */
+.login-container {
+    max-width: 450px;
+    margin: 8rem auto;
+    padding: 3rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    text-align: center;
+    box-shadow: var(--glow-shadow);
+}
+
+.login-container h3 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    letter-spacing: -0.05em;
+}
+
+.login-container p {
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+}
+
+.editor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 4rem 0 2rem;
+}
+
+.editor-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.editor-container {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: 3rem;
+    margin-bottom: 6rem;
+}
+
+.grid-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.input-group textarea {
+    width: 100%;
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem;
+    color: white;
+    font-size: 1rem;
+    resize: none;
+}
+
+/* Quill Theme Overrides (Dark Tech) */
+.ql-toolbar.ql-snow {
+    background: #1e293b;
+    border-color: var(--border) !important;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+}
+
+.ql-container.ql-snow {
+    border-color: var(--border) !important;
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+    font-family: 'Pretendard', sans-serif;
+    font-size: 1.1rem;
+    color: var(--text-main) !important;
+}
+
+.ql-editor.ql-blank::before { color: var(--text-muted) !important; }
+.ql-snow .ql-stroke { stroke: var(--text-muted) !important; }
+.ql-snow .ql-fill { fill: var(--text-muted) !important; }
+.ql-snow .ql-picker { color: var(--text-muted) !important; }
