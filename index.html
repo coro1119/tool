@@ -61,13 +61,36 @@
             </div>
         </section>
 
-        <!-- 2. 블로그 에디터 뷰 (티스토리 수준) -->
+        <!-- 2. 관리자 대시보드 (글 목록 관리) -->
+        <section id="admin-dashboard-view" class="view">
+            <div class="editor-header">
+                <h2>콘텐츠 관리</h2>
+                <button id="go-to-new-post" class="calc-btn" style="width: auto; padding: 0.8rem 1.5rem;">+ 새 인사이트 작성</button>
+            </div>
+            <div class="dashboard-container">
+                <table class="post-table">
+                    <thead>
+                        <tr>
+                            <th>제목</th>
+                            <th>카테고리</th>
+                            <th>날짜</th>
+                            <th>관리</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-post-list">
+                        <!-- 글 목록이 동적으로 들어감 -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 3. 블로그 에디터 뷰 -->
         <section id="admin-editor-view" class="view">
             <div class="editor-header">
-                <h2>새 리서치 포스팅</h2>
+                <h2 id="editor-view-title">새 리서치 포스팅</h2>
                 <div class="editor-actions">
                     <button id="save-post-btn" class="calc-btn">발행하기</button>
-                    <button class="back-btn" style="background: var(--bg-card); color: var(--text-muted); border: 1px solid var(--border);">취소</button>
+                    <button id="cancel-edit-btn" class="back-btn" style="background: var(--bg-card); color: var(--text-muted); border: 1px solid var(--border);">취소</button>
                 </div>
             </div>
             
