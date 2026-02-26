@@ -2,16 +2,137 @@ document.addEventListener('DOMContentLoaded', function() {
     var themeBtn = document.getElementById('theme-btn');
     var homeView = document.getElementById('home-view');
     var calcView = document.getElementById('calc-view');
-    var calcTitle = document.getElementById('calc-title');
-    var calcInfoBox = document.getElementById('calc-info-box');
-    var calcInputs = document.getElementById('calc-inputs');
-    var calcResults = document.getElementById('calc-results');
-    var chartWrapper = document.querySelector('.chart-wrapper');
-    var backBtn = document.querySelector('.back-btn');
-    var shareArea = document.getElementById('share-area');
-    
+    var postView = document.getElementById('post-view');
+    var postTitle = document.getElementById('post-title');
+    var postMeta = document.getElementById('post-meta');
+    var postContent = document.getElementById('post-content');
+    var backBtns = document.querySelectorAll('.back-btn');
+    var goToCalcBtn = document.getElementById('go-to-related-calc');
+
     var currentChart = null;
-    var baseTitle = "머니마스터 (MoneyMaster)";
+    var baseTitle = "테슬라번 (Teslaburn)";
+
+    // --- Blog Post Data ---
+    var posts = {
+        'optimus-factory': {
+            title: '테슬라 모델 S·X 단종이 진짜 무서운 이유: 프리몬트가 옵티머스 공장이 된다',
+            category: '테슬라 / 로봇공학',
+            date: '2026. 02. 26',
+            relatedCalc: 'son-salary', // 예시로 연결 (실제로는 로봇 가치 계산기 등이 적합)
+            content: `
+                <p>최근 테슬라의 행보 중 가장 충격적인 것은 프리몬트 공장의 변화입니다. 모델 S와 X의 단종 소식은 단순한 라인업 정리가 아닙니다.</p>
+                <h3>1. 자동차 기업에서 로봇 기업으로</h3>
+                <p>일론 머스크는 이미 테슬라를 'AI와 로봇 기업'으로 정의했습니다. 모델 S/X 라인을 들어내고 그 자리를 메우는 것은 다름 아닌 인형 로봇 <strong>옵티머스(Optimus)</strong>의 대량 생산 라인입니다.</p>
+                <ul>
+                    <li>연간 수백만 대의 로봇 생산 능력 확보</li>
+                    <li>FSD 데이터의 로봇 학습 전이</li>
+                    <li>인건비 혁명을 통한 제조 단가 파괴</li>
+                </ul>
+                <h3>2. 경제적 임팩트: 월급의 종말?</h3>
+                <p>옵티머스가 상용화되면 시간당 노동 비용은 3달러 미만으로 떨어집니다. 이는 인간 노동력의 가치를 재정의하게 될 것입니다.</p>
+                <p>우리는 이제 노동 소득이 아닌 '자본 소득'과 '로봇 생산성'에 집중해야 합니다. 아래 계산기를 통해 현재 나의 소득 가치가 미래 로봇 시대에 어떻게 변할지 체감해 보세요.</p>
+            `
+        },
+        'ge-vernova': {
+            title: 'AI 전력 부족 시대, GE 버노바(GE Vernova)의 가치',
+            category: '에너지 / 투자',
+            date: '2026. 02. 13',
+            relatedCalc: 'rate-analysis',
+            content: `
+                <p>AI의 발전 속도를 전력 인프라가 따라가지 못하고 있습니다. 젠슨 황과 일론 머스크가 동시에 경고한 '전력 부족'은 현실이 되었습니다.</p>
+                <h3>데이터 센터는 전기를 먹는 하마</h3>
+                <p>단순한 전력 생산을 넘어, 이를 분배하고 변압하는 '인프라'가 핵심입니다. GE 버노바는 이 분야에서 독보적인 기술력을 보유하고 있습니다.</p>
+                <p>금리 변동과 인프라 투자 수익률의 상관관계를 분석한 아래 도구를 활용해 보세요.</p>
+            `
+        },
+        'tesla-taxi-vip': {
+            title: '테슬라 살 돈으로 택시 타면 평생 공짜? (데이터 검증)',
+            category: '테슬라 / 재테크',
+            date: '2026. 02. 15',
+            relatedCalc: 'car-vs-taxi',
+            content: `
+                <p>자동차는 사는 순간부터 감가가 시작되는 자산입니다. 특히 테슬라와 같은 고가의 전기차는 더욱 그렇습니다.</p>
+                <h3>로보택시 시대, 소유가 정답일까?</h3>
+                <p>완전자율주행이 실현되면 자동차 소유의 개념은 '서비스'로 바뀝니다. 매일 30km를 이동하는 직장인 기준, 직접 소유하는 비용과 로보택시를 이용하는 비용을 비교해 보았습니다.</p>
+                <p>계산 결과는 충격적이었습니다. 지금 바로 아래 계산기로 확인해 보세요.</p>
+            `
+        }
+    };
+
+    // --- UI Logic: Navigation ---
+    function goTo(viewName, id) {
+        clearAll();
+        [homeView, calcView, postView].forEach(v => v.classList.remove('active'));
+        
+        if (viewName === 'home') {
+            homeView.classList.add('active');
+            document.title = "테슬라번 (Teslaburn) — 미래를 계산하다";
+        } else if (viewName === 'post') {
+            postView.classList.add('active');
+            renderPost(id);
+        } else if (viewName === 'calc') {
+            calcView.classList.add('active');
+            startUI(id);
+        }
+        window.scrollTo(0, 0);
+    }
+
+    function renderPost(id) {
+        var post = posts[id];
+        if (!post) { goTo('home'); return; }
+        postTitle.textContent = post.title;
+        postMeta.textContent = post.category + " • " + post.date;
+        postContent.innerHTML = post.content;
+        document.title = post.title + " - " + baseTitle;
+        
+        if (post.relatedCalc) {
+            goToCalcBtn.onclick = function() { goTo('calc', post.relatedCalc); };
+        }
+    }
+
+    function clearAll() {
+        if (currentChart) { currentChart.destroy(); currentChart = null; }
+        calcInputs.innerHTML = '';
+        calcResults.innerHTML = '<div class="placeholder-msg">정보를 입력하고 계산하기 버튼을 눌러주세요.</div>';
+        if (chartWrapper) chartWrapper.style.display = 'none';
+        if (calcInfoBox) calcInfoBox.innerHTML = '';
+        if (shareArea) shareArea.style.display = 'none';
+    }
+
+    // --- Updated Event Delegation ---
+    document.body.addEventListener('click', function(e) {
+        // Blog Post Click
+        var postTarget = e.target.closest('[data-post]');
+        if (postTarget) {
+            var pid = postTarget.getAttribute('data-post');
+            goTo('post', pid);
+            return;
+        }
+
+        // Calculator Click
+        var calcTarget = e.target.closest('[data-calc]');
+        if (calcTarget) {
+            var cid = calcTarget.getAttribute('data-calc');
+            goTo('calc', cid);
+            return;
+        }
+
+        // Home Link
+        if (e.target.closest('[data-page="home"]')) {
+            goTo('home');
+            return;
+        }
+
+        // All Tools Link
+        if (e.target.closest('[data-page="all-tools"]')) {
+            // Filter logic or show all grid
+            goTo('home');
+            window.scrollTo(0, document.getElementById('main-grid').offsetTop - 100);
+            return;
+        }
+    });
+
+    backBtns.forEach(btn => btn.onclick = function() { goTo('home'); });
 
     // Kakao Init (Placeholder - user should replace with real key)
     try {
