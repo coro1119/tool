@@ -3,410 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="naver-site-verification" content="58f6d1fa6fece62c6660b51c39aa566bb0c220a0" />
-    
-    <!-- Favicon -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
-
-    <!-- SEO & Metadata -->
-    <title>테슬라번 (Teslaburn) — 테슬라 & AI 미래 산업 리서치</title>
-    <meta name="description" content="테슬라, 자율주행, AI 로봇 그리고 에너지 인프라까지. 데이터와 계산기로 분석하는 미래 산업 인사이트.">
-    <meta name="keywords" content="테슬라, 테슬라 주식, 자율주행, FSD, 옵티머스, AI 산업, 에너지 인프라, 테슬라 유지비, 수익 계산기">
-    <link rel="canonical" href="https://financecalculator.cloud/">
-    
-    <!-- Open Graph -->
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="테슬라번 (Teslaburn) — 미래를 계산하다">
-    <meta property="og:description" content="테슬라와 AI 산업의 미래를 정밀 분석합니다. 직접 계산기로 수익률과 유지비를 확인하세요.">
-    <meta property="og:image" content="https://financecalculator.cloud/og-image.png">
-    <meta property="og:url" content="https://financecalculator.cloud/">
+    <title>테슬라번 (Teslaburn) — 테슬라 & AI 리서치</title>
     
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&family=Pretendard:wght@400;600;800&display=swap" rel="stylesheet">
     
     <!-- Rich Text Editor (Quill) -->
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
-    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.0/kakao.min.js"></script>
     
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 </head>
-<body>
-    <header>
-        <nav class="container">
-            <h1 class="logo">Teslaburn<span>Research</span></h1>
-            <ul class="nav-links">
-                <li><a href="#" class="active" data-page="home">홈/인사이트</a></li>
-                <li><a href="#" data-page="all-tools">계산기 도구</a></li>
-                <li><a href="#" data-page="admin-login" class="admin-link">포스팅(Admin)</a></li>
-            </ul>
-            <div class="theme-toggle">
-                <button id="theme-btn" title="테마 변경">🌓</button>
-            </div>
-        </nav>
+<body data-theme="dark">
+    <!-- 상단 내비게이션 -->
+    <header class="main-header">
+        <div class="container nav-wrapper">
+            <h1 class="logo" data-page="home">Teslaburn<span>Research</span></h1>
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="#" class="active" data-page="home">전체글</a></li>
+                    <li><a href="#" data-page="admin-login">관리자</a></li>
+                </ul>
+            </nav>
+        </div>
     </header>
 
-    <main id="app" class="container">
-        <!-- 1. 관리자 로그인 뷰 -->
-        <section id="admin-login-view" class="view">
-            <div class="login-container">
-                <h3>Admin Access</h3>
-                <p>관리자 비밀번호를 입력하세요.</p>
-                <div class="input-group">
-                    <input type="password" id="admin-password" placeholder="Password">
+    <main id="app" class="container main-layout">
+        <!-- 1. 블로그 리스트 (티스토리 홈 스타일) -->
+        <section id="home-view" class="view active">
+            <div class="list-header">
+                <h2>최신 리서치</h2>
+                <div class="category-chips">
+                    <button class="chip active">전체</button>
+                    <button class="chip">테슬라</button>
+                    <button class="chip">AI/로봇</button>
+                    <button class="chip">에너지</button>
                 </div>
-                <button id="login-btn" class="calc-btn">접속하기</button>
+            </div>
+            
+            <div id="main-post-list" class="tistory-list">
+                <!-- 포스트 목록이 동적으로 렌더링됨 -->
             </div>
         </section>
 
-        <!-- 2. 관리자 대시보드 (글 목록 관리) -->
-        <section id="admin-dashboard-view" class="view">
-            <div class="editor-header">
-                <h2>콘텐츠 관리</h2>
-                <button id="go-to-new-post" class="calc-btn" style="width: auto; padding: 0.8rem 1.5rem;">+ 새 인사이트 작성</button>
+        <!-- 2. 포스트 상세 보기 (티스토리 본문 스타일) -->
+        <section id="post-view" class="view">
+            <article class="post-detail-container">
+                <header class="post-detail-header">
+                    <span id="post-meta-cat" class="category-tag">CATEGORY</span>
+                    <h2 id="post-title">포스트 제목</h2>
+                    <div class="post-info">
+                        <span id="post-date">2026. 02. 26</span>
+                        <span class="author">by Teslaburn</span>
+                    </div>
+                </header>
+                
+                <div id="post-content" class="post-content-body">
+                    <!-- 본문 내용 -->
+                </div>
+
+                <!-- 중요: 글 하단에 계산기가 바로 삽입됨 -->
+                <div id="embedded-calc-area" class="embedded-calc-section" style="display: none;">
+                    <div class="calc-label">DATA ANALYSIS TOOL</div>
+                    <h3 id="calc-title">계산기 이름</h3>
+                    <div id="calc-inputs" class="calc-inputs-grid">
+                        <!-- 입력 필드 -->
+                    </div>
+                    <button id="run-calc" class="action-btn">데이터 분석 실행</button>
+                    
+                    <div id="calc-results-area" class="calc-results-wrapper">
+                        <div id="calc-results" class="results-list"></div>
+                        <div class="chart-container">
+                            <canvas id="calc-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </section>
+
+        <!-- 3. 관리자 로그인 -->
+        <section id="admin-login-view" class="view">
+            <div class="admin-box">
+                <h3>Admin Login</h3>
+                <input type="password" id="admin-password" placeholder="Password">
+                <button id="login-btn" class="action-btn">접속</button>
             </div>
-            <div class="dashboard-container">
-                <table class="post-table">
+        </section>
+
+        <!-- 4. 관리자 대시보드 -->
+        <section id="admin-dashboard-view" class="view">
+            <div class="dash-header">
+                <h2>글 관리</h2>
+                <button id="go-to-new-post" class="action-btn small">+ 새 글 쓰기</button>
+            </div>
+            <div class="table-wrapper">
+                <table class="admin-table">
                     <thead>
-                        <tr>
-                            <th>제목</th>
-                            <th>카테고리</th>
-                            <th>날짜</th>
-                            <th>관리</th>
-                        </tr>
+                        <tr><th>제목</th><th>날짜</th><th>관리</th></tr>
                     </thead>
-                    <tbody id="admin-post-list">
-                        <!-- 글 목록이 동적으로 들어감 -->
-                    </tbody>
+                    <tbody id="admin-post-list"></tbody>
                 </table>
             </div>
         </section>
 
-        <!-- 3. 블로그 에디터 뷰 -->
+        <!-- 5. 글 쓰기/수정 에디터 -->
         <section id="admin-editor-view" class="view">
-            <div class="editor-header">
-                <h2 id="editor-view-title">새 리서치 포스팅</h2>
-                <div class="editor-actions">
-                    <button id="save-post-btn" class="calc-btn">발행하기</button>
-                    <button id="cancel-edit-btn" class="back-btn" style="background: var(--bg-card); color: var(--text-muted); border: 1px solid var(--border);">취소</button>
+            <div class="editor-top">
+                <input type="text" id="post-title-input" class="title-input" placeholder="제목을 입력하세요">
+                <div class="editor-ctrls">
+                    <button id="save-post-btn" class="action-btn">발행</button>
+                    <button class="back-btn secondary-btn">취소</button>
                 </div>
             </div>
-            
-            <div class="editor-container">
-                <div class="editor-fields">
-                    <div class="input-group">
-                        <label>제목</label>
-                        <input type="text" id="post-title-input" placeholder="인사이트 넘치는 제목을 입력하세요">
-                    </div>
-                    <div class="grid-fields">
-                        <div class="input-group">
-                            <label>카테고리</label>
-                            <select id="post-category-input">
-                                <option value="테슬라">테슬라</option>
-                                <option value="AI/로봇">AI/로봇</option>
-                                <option value="에너지">에너지</option>
-                                <option value="거시경제">거시경제</option>
-                                <option value="기타">기타</option>
-                            </select>
-                        </div>
-                        <div class="input-group">
-                            <label>관련 계산기 연결</label>
-                            <select id="post-calc-input">
-                                <option value="none">없음</option>
-                                <option value="car-vs-taxi">테슬라 vs 택시</option>
-                                <option value="coin-tax">코인 과세</option>
-                                <option value="salary">연봉 실수령액</option>
-                                <option value="son-salary">손흥민 vs 나</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="input-group">
-                        <label>썸네일 이미지 URL (Unsplash 등)</label>
-                        <input type="text" id="post-thumb-input" placeholder="https://images.unsplash.com/...">
-                    </div>
-                    <div class="input-group">
-                        <label>요약 (리스트 노출용)</label>
-                        <textarea id="post-summary-input" rows="2" placeholder="독자의 호기심을 자극하는 짧은 요약..."></textarea>
-                    </div>
-                </div>
-
-                <!-- Rich Text Editor -->
-                <div class="editor-body">
-                    <label>본문 내용</label>
-                    <div id="quill-editor" style="height: 500px; color: var(--text-main); background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;"></div>
-                </div>
+            <div class="editor-options-grid">
+                <select id="post-category-input">
+                    <option value="테슬라">테슬라</option>
+                    <option value="AI/로봇">AI/로봇</option>
+                    <option value="에너지">에너지</option>
+                </select>
+                <select id="post-calc-input">
+                    <option value="none">연결할 계산기 없음</option>
+                    <option value="salary">연봉 실수령액</option>
+                    <option value="car-vs-taxi">테슬라 vs 택시</option>
+                    <option value="coin-tax">코인 과세</option>
+                    <option value="son-salary">손흥민 vs 나</option>
+                </select>
+                <input type="text" id="post-thumb-input" placeholder="썸네일 이미지 URL">
             </div>
-        </section>
-
-        <!-- 메인 홈 화면 (블로그형 개편) -->
-        <section id="home-view" class="view active">
-            <!-- 1. Featured Article (Hero) -->
-            <div id="featured-post-container">
-                <!-- 최신 글 중 하나가 여기 동적으로 들어감 -->
-            </div>
-
-            <!-- 2. Recent Insights Grid -->
-            <div class="section-title">
-                <h3>최신 리서치 인사이트</h3>
-            </div>
-            <div class="insight-grid" id="main-insight-grid">
-                <!-- 작성된 글들이 최신순으로 동적 렌더링됨 -->
-            </div>
-
-            <!-- 3. Mini Toolbox -->
-            <div class="section-title" style="margin-top: 5rem;">
-                <h3>데이터 분석 도구</h3>
-            </div>
-            <div class="calc-grid" id="main-grid">
-                <!-- 기존 계산기 카드들 유지 -->
-                <div class="calc-card" data-calc="car-vs-taxi">
-                    <div class="icon">🚖</div>
-                    <h3>테슬라 vs 택시 VIP</h3>
-                    <p>자차 소유 vs 로보택시 비용 비교</p>
-                </div>
-                <div class="calc-card" data-calc="salary">
-                    <div class="icon">💵</div>
-                    <h3>2026 실수령액</h3>
-                    <p>최신 세법 반영 월급 계산</p>
-                </div>
-                <div class="calc-card" data-calc="coin-tax">
-                    <div class="icon">😱</div>
-                    <h3>코인 과세 시뮬</h3>
-                    <p>22% 세금 적용 후 순수익 확인</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- 블로그 포스트 상세 뷰 -->
-        <section id="post-view" class="view">
-            <div class="post-header-fixed">
-                <button class="modern-back-btn back-btn">
-                    <span class="icon">←</span>
-                    <span class="text">BACK TO LIST</span>
-                </button>
-            </div>
-            
-            <div class="post-frame">
-                <div class="post-frame-inner">
-                    <header class="post-header">
-                        <div id="post-meta" class="post-meta-chip">CATEGORY</div>
-                        <h2 id="post-title">포스트 제목</h2>
-                        <div id="post-date" class="post-date-mono">2026. 02. 26</div>
-                    </header>
-                    
-                    <article id="post-content" class="post-article">
-                        <!-- 본문 내용 -->
-                    </article>
-                </div>
-            </div>
-            
-            <!-- 포스트 하단 관련 계산기 -->
-            <div id="post-cta-calc" class="post-cta-box modern-cta">
-                <div class="cta-glitch-text">ANALYSIS TOOL</div>
-                <h4>📊 인사이트 데이터 검증하기</h4>
-                <p>본문의 내용을 내 상황에 대입해 보세요.</p>
-                <button id="go-to-related-calc" class="calc-btn cyan-glow">계산기 실행하기</button>
-            </div>
-        </section>
-
-        <!-- 계산기 상세 뷰 (기존 유지) -->
-                    
-                    <!-- 🛡️ 돈 지키기 (Protect) -->
-                    <div class="calc-card" data-calc="salary" data-category="protect" data-keywords="월급 연봉 급여 실수령액 세금 4대보험">
-                        <div class="icon">💵</div>
-                        <h3>2026 연봉 실수령액</h3>
-                        <p>2026년 최신 요율 반영 월급 계산</p>
-                    </div>
-                    <div class="calc-card" data-calc="tax-settlement" data-category="protect" data-keywords="연말정산 환급 세금 토해내기 13월의월급">
-                        <div class="icon">📑</div>
-                        <h3>연말정산 환급 예상</h3>
-                        <p>나는 받을까 토해낼까? 미리보기</p>
-                    </div>
-                    <div class="calc-card" data-calc="freelancer-tax" data-category="protect" data-keywords="프리랜서 3.3 종소세 종합소득세 환급 삼쩜삼">
-                        <div class="icon">🛡️</div>
-                        <h3>프리랜서 종소세 방어</h3>
-                        <p>3.3% 떼인 돈 환급받기 프로젝트</p>
-                    </div>
-                    <div class="calc-card" data-calc="rent-compare" data-category="protect" data-keywords="전세 월세 비교 대출이자 주거비">
-                        <div class="icon">🏠</div>
-                        <h3>전세 vs 월세 비교</h3>
-                        <p>대출 이자 vs 월세, 무엇이 이득일까?</p>
-                    </div>
-                    <div class="calc-card" data-calc="loan" data-category="protect" data-keywords="대출 이자 상환 원리금 할부">
-                        <div class="icon">💰</div>
-                        <h3>대출 이자 계산기</h3>
-                        <p>매달 갚아야 할 원금과 이자 확인</p>
-                    </div>
-                    <div class="calc-card" data-calc="savings-vs-bitcoin" data-category="protect" data-keywords="적금 예금 비트코인 청년도약계좌 저축">
-                        <div class="icon">🆚</div>
-                        <h3>청년도약계좌 vs 비트코인</h3>
-                        <p>정부 적금 vs 코인 적립, 승자는?</p>
-                    </div>
-                    <div class="calc-card" data-calc="property-tax" data-category="protect" data-keywords="재산세 종부세 보유세 부동산 세금">
-                        <div class="icon">🏘️</div>
-                        <h3>재산세/종부세 계산</h3>
-                        <p>집 가진 죄? 보유세 미리 알아보기</p>
-                    </div>
-                    <div class="calc-card" data-calc="auto-insurance" data-category="protect" data-keywords="자동차 보험료 차 유지비">
-                        <div class="icon">🚗</div>
-                        <h3>자동차 보험료 계산</h3>
-                        <p>내 차 보험료 대략적인 견적</p>
-                    </div>
-
-                    <!-- 🚀 돈 굴리기 (Grow) -->
-                    <div class="calc-card" data-calc="coin-tax" data-category="grow" data-keywords="코인 비트코인 세금 과세 가상자산 22%">
-                        <div class="icon">😱</div>
-                        <h3>2026 코인 과세 멘붕기</h3>
-                        <p>수익의 22% 세금, 실제 내 손엔 얼마?</p>
-                    </div>
-                    <div class="calc-card" data-calc="omakase-snp500" data-category="grow" data-keywords="오마카세 스시 주식 복리 S&P500 미국주식">
-                        <div class="icon">🍣</div>
-                        <h3>오마카세 vs S&P500</h3>
-                        <p>이 돈 아껴서 주식 샀으면 얼마?</p>
-                    </div>
-                    <div class="calc-card" data-calc="capital-gain" data-category="grow" data-keywords="양도세 양도소득세 부동산 아파트 매도 세금">
-                        <div class="icon">📈</div>
-                        <h3>양도소득세 계산기</h3>
-                        <p>집 팔 때 세금 얼마나 낼까?</p>
-                    </div>
-                    <div class="calc-card" data-calc="real-estate" data-category="grow" data-keywords="부동산 수익률 월세 임대수익 갭투자">
-                        <div class="icon">🏢</div>
-                        <h3>부동산 수익률</h3>
-                        <p>월세 받을 때 진짜 수익률 계산</p>
-                    </div>
-                    <div class="calc-card" data-calc="pension" data-category="grow" data-keywords="연금 보험 노후 복리 저축">
-                        <div class="icon">🏦</div>
-                        <h3>연금보험 수익률</h3>
-                        <p>복리의 마법으로 불어나는 노후 자금</p>
-                    </div>
-                    <div class="calc-card" data-calc="rate-analysis" data-category="grow" data-keywords="금리 인상 변동 대출 이자 리스크">
-                        <div class="icon">📉</div>
-                        <h3>금리 변동 분석</h3>
-                        <p>금리 오르면 내 이자는 얼마나 오를까?</p>
-                    </div>
-
-                    <!-- 💸 N잡 & 비즈니스 (Biz) -->
-                    <div class="calc-card" data-calc="shorts-income" data-category="biz" data-keywords="유튜브 쇼츠 틱톡 수익 조회수 크리에이터">
-                        <div class="icon">📱</div>
-                        <h3>쇼츠/틱톡 수익 계산</h3>
-                        <p>조회수 100만 찍으면 얼마 벌까?</p>
-                    </div>
-                    <div class="calc-card" data-calc="influencer-price" data-category="biz" data-keywords="인스타 광고 협찬 단가 원고료">
-                        <div class="icon">📸</div>
-                        <h3>인플루언서 단가</h3>
-                        <p>내 팔로워 수로 받을 수 있는 광고비</p>
-                    </div>
-                    <div class="calc-card" data-calc="ai-subscription" data-category="biz" data-keywords="AI ChatGPT 챗GPT 구독료 비용">
-                        <div class="icon">🤖</div>
-                        <h3>AI 구독료 계산기</h3>
-                        <p>숨만 쉬어도 나가는 AI 툴 비용 합계</p>
-                    </div>
-                    <div class="calc-card" data-calc="part-time" data-category="biz" data-keywords="알바 주휴수당 시급 월급 아르바이트">
-                        <div class="icon">🏪</div>
-                        <h3>알바 주휴수당</h3>
-                        <p>주휴수당 포함된 진짜 알바비 계산</p>
-                    </div>
-                    <div class="calc-card" data-calc="youtube-adsense" data-category="biz" data-keywords="유튜브 수익 애드센스 조회수">
-                        <div class="icon">📺</div>
-                        <h3>유튜브 롱폼 수익</h3>
-                        <p>일반 영상 조회수 수익 예측</p>
-                    </div>
-
-                    <!-- 🤪 현타 & 유희 (Fun) -->
-                    <div class="calc-card" data-calc="car-vs-taxi" data-category="fun" data-keywords="테슬라 택시 차 유지비 뚜벅이 할부">
-                        <div class="icon">🚖</div>
-                        <h3>테슬라 풀할부 vs 택시</h3>
-                        <p>차 안 사고 평생 택시 타면 이득일까?</p>
-                    </div>
-                    <div class="calc-card" data-calc="son-salary" data-category="fun" data-keywords="손흥민 이강인 주급 연봉 비교 현타">
-                        <div class="icon">⚽</div>
-                        <h3>손흥민 vs 내 연봉</h3>
-                        <p>월클이 숨만 쉬어도 버는 돈 vs 나</p>
-                    </div>
-                    <div class="calc-card" data-calc="delivery-travel" data-category="fun" data-keywords="배달비 치킨 여행 해외여행 절약">
-                        <div class="icon">✈️</div>
-                        <h3>배달비 모아 해외여행</h3>
-                        <p>배달 끊으면 어디까지 갈 수 있을까?</p>
-                    </div>
-                    <div class="calc-card" data-calc="crypto-fomo" data-category="fun" data-keywords="비트코인 껄무새 후회 타임머신">
-                        <div class="icon">🚀</div>
-                        <h3>비트코인 타임머신</h3>
-                        <p>그때 샀더라면... 과거의 나 반성하기</p>
-                    </div>
-                    <div class="calc-card" data-calc="coffee-tesla" data-category="fun" data-keywords="커피 스타벅스 주식 테슬라 적립">
-                        <div class="icon">☕</div>
-                        <h3>커피값 vs 테슬라</h3>
-                        <p>커피 대신 주식 샀으면 지금 얼마?</p>
-                    </div>
-                    <div class="calc-card" data-calc="breath-apartment" data-category="fun" data-keywords="아파트 내집마련 연봉 저축 한강뷰">
-                        <div class="icon">😮‍💨</div>
-                        <h3>숨참고 한강뷰 다이브</h3>
-                        <p>숨만 쉬고 돈 모아서 아파트 사기</p>
-                    </div>
-                    <div class="calc-card" data-calc="ott-dutch" data-category="fun" data-keywords="넷플릭스 왓챠 디즈니 유튜브 프리미엄 N빵">
-                        <div class="icon">🎬</div>
-                        <h3>OTT N빵 최적화</h3>
-                        <p>파티원 모을 때 내 진짜 부담금</p>
-                    </div>
-                    <div class="calc-card" data-calc="travel-currency" data-category="fun" data-keywords="환율 유럽 여행 물가 국밥">
-                        <div class="icon">🍔</div>
-                        <h3>유럽 물가 국밥 환산</h3>
-                        <p>이 돈이면 국밥이 몇 그릇이야?</p>
-                    </div>
-
-                </div>
-            </div>
-        </section>
-
-        <!-- 계산기 상세 뷰 (동적 렌더링) -->
-        <section id="calc-view" class="view">
-            <div class="calc-header">
-                <button class="back-btn">← 다른 계산기 찾기</button>
-                <h2 id="calc-title">계산기 이름</h2>
-            </div>
-            <div id="calc-info-box" class="calc-info-box">
-                <!-- 계산기 설명 및 예시가 여기에 들어감 -->
-            </div>
-            <div class="calc-container">
-                <div class="calc-inputs" id="calc-inputs">
-                    <!-- 입력 필드들이 여기에 들어감 -->
-                </div>
-                <div class="calc-results-container" id="calc-results-container">
-                    <div id="calc-results">
-                        <div class="placeholder-msg">정보를 입력하고 계산하기 버튼을 눌러주세요.</div>
-                    </div>
-                    <div class="chart-wrapper">
-                        <canvas id="calc-chart"></canvas>
-                    </div>
-                    <!-- 공유 버튼 영역 -->
-                    <div id="share-area" class="share-container" style="display: none;">
-                        <p class="share-label">결과 공유하기</p>
-                        <div class="share-buttons">
-                            <button id="kakao-share-btn" class="share-btn kakao">
-                                <span class="share-icon">💬</span> 카카오톡 공유
-                            </button>
-                            <button id="copy-link-btn" class="share-btn link">
-                                <span class="share-icon">🔗</span> 링크 복사
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <div id="quill-editor" style="height: 600px;"></div>
         </section>
     </main>
 
-    <footer>
-        <div class="container">
-            <p>&copy; 2026 FinanceCalculator. 모든 계산 결과는 참고용이며 실제와 다를 수 있습니다.</p>
-        </div>
+    <footer class="main-footer">
+        <p>&copy; 2026 Teslaburn Research. All Rights Reserved.</p>
     </footer>
 
-    <script src="main.js?v=2"></script>
+    <script src="main.js?v=3"></script>
 </body>
 </html>
