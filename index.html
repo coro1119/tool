@@ -67,22 +67,25 @@
                     <!-- 본문 내용 -->
                 </div>
 
-                <!-- 중요: 글 하단에 계산기가 바로 삽입됨 -->
-                <div id="embedded-calc-area" class="embedded-calc-section" style="display: none;">
-                    <div class="calc-label">DATA ANALYSIS TOOL</div>
-                    <h3 id="calc-title">계산기 이름</h3>
-                    <div id="calc-inputs" class="calc-inputs-grid">
-                        <!-- 입력 필드 -->
+                <!-- 댓글 섹션 (추가) -->
+                <section class="comment-section">
+                    <div class="comment-header">
+                        <h4>댓글 <span id="comment-count">0</span></h4>
                     </div>
-                    <button id="run-calc" class="action-btn">데이터 분석 실행</button>
                     
-                    <div id="calc-results-area" class="calc-results-wrapper">
-                        <div id="calc-results" class="results-list"></div>
-                        <div class="chart-container">
-                            <canvas id="calc-chart"></canvas>
-                        </div>
+                    <div id="comment-list" class="comment-list">
+                        <!-- 댓글들이 여기에 렌더링됨 -->
                     </div>
-                </div>
+
+                    <div class="comment-form">
+                        <div class="comment-form-top">
+                            <input type="text" id="comment-name" placeholder="이름">
+                            <input type="password" id="comment-pw" placeholder="비밀번호">
+                        </div>
+                        <textarea id="comment-body" placeholder="건전한 리서치 문화를 위해 따뜻한 댓글을 남겨주세요."></textarea>
+                        <button id="submit-comment" class="action-btn small">댓글 남기기</button>
+                    </div>
+                </section>
             </article>
         </section>
 
