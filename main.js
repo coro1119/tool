@@ -19,8 +19,8 @@ document.addEventListener('DOMContentLoaded', function() {
     var quill = null;
     var currentEditingId = null;
 
-    // --- 1. INITIAL POST DATA (Fallback) ---
-    var posts = {
+    // --- 1. DATA PERSISTENCE (LocalStorage) ---
+    var defaultPosts = {
         'optimus-factory': {
             title: '테슬라 모델 S·X 단종이 진짜 무서운 이유: 프리몬트가 옵티머스 공장이 된다',
             category: '테슬라',
@@ -40,6 +40,17 @@ document.addEventListener('DOMContentLoaded', function() {
             content: `<p>AI의 발전 속도를 전력 인프라가 따라가지 못하고 있습니다...</p>`
         }
     };
+
+    function loadPosts() {
+        var saved = localStorage.getItem('teslaburn_posts');
+        return saved ? JSON.parse(saved) : defaultPosts;
+    }
+
+    function savePosts() {
+        localStorage.setItem('teslaburn_posts', JSON.stringify(posts));
+    }
+
+    var posts = loadPosts();
 
     // --- 2. DYNAMIC RENDERING FOR HOME ---
     function renderHomeInsights() {
@@ -70,8 +81,8 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
 
-        // 2. Render Grid (Others)
-        grid.innerHTML = postIds.map(id => {
+        // 2. Render Grid (Others - Skip first one if needed, or show all)
+        grid.innerHTML = postIds.slice(1).map(id => {
             var p = posts[id];
             return `
                 <div class="insight-card" data-post="${id}">
@@ -137,7 +148,10 @@ document.addEventListener('DOMContentLoaded', function() {
     function renderAdminPostList() {
         var list = document.getElementById('admin-post-list');
         if (!list) return;
-        list.innerHTML = Object.keys(posts).map(id => `
+        // Sort by date newest
+        var postIds = Object.keys(posts).sort((a, b) => new Date(posts[b].date) - new Date(posts[a].date));
+        
+        list.innerHTML = postIds.map(id => `
             <tr>
                 <td>${posts[id].title}</td>
                 <td><span class="insight-tag">${posts[id].category}</span></td>
@@ -153,7 +167,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     window.dispatchEdit = id => goTo('admin-editor', id);
-    window.dispatchDelete = id => { if(confirm('이 리서치를 삭제할까요?')) { delete posts[id]; renderAdminPostList(); } };
+    window.dispatchDelete = id => { 
+        if(confirm('이 리서치를 삭제할까요?')) { 
+            delete posts[id]; 
+            savePosts(); // Save to local storage
+            renderAdminPostList(); 
+        } 
+    };
 
     function initQuill() {
         if (!quill) {
@@ -201,6 +221,8 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     document.getElementById('go-to-new-post').onclick = () => goTo('admin-editor');
+    document.getElementById('cancel-edit-btn').onclick = () => goTo('admin-dashboard');
+    
     document.getElementById('save-post-btn').onclick = function() {
         var id = currentEditingId || 'post-' + Date.now();
         var title = document.getElementById('post-title-input').value;
@@ -215,6 +237,8 @@ document.addEventListener('DOMContentLoaded', function() {
             thumb: document.getElementById('post-thumb-input').value,
             relatedCalc: document.getElementById('post-calc-input').value
         };
+        
+        savePosts(); // Save to LocalStorage
         alert('발행되었습니다.');
         goTo('admin-dashboard');
     };
