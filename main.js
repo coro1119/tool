@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const storage = firebase.storage();
     const auth = firebase.auth();
 
-    // Offline Persistence
+    // Enable Offline Persistence
     db.enablePersistence().catch(err => console.warn("Persistence failed", err.code));
 
     // DOM Elements
@@ -23,6 +23,8 @@ document.addEventListener('DOMContentLoaded', function() {
         home: document.getElementById('home-view'),
         post: document.getElementById('post-view'),
         contact: document.getElementById('contact-view'),
+        about: document.getElementById('about-view'),
+        privacy: document.getElementById('privacy-view'),
         login: document.getElementById('admin-login-view'),
         dashboard: document.getElementById('admin-dashboard-view'),
         editor: document.getElementById('admin-editor-view')
@@ -69,6 +71,8 @@ document.addEventListener('DOMContentLoaded', function() {
         let path = '/';
         if (viewName === 'post' && title) path = `/post/${generateSlug(title)}`;
         else if (viewName === 'contact') path = '/contact';
+        else if (viewName === 'about') path = '/about';
+        else if (viewName === 'privacy') path = '/privacy';
         else if (viewName === 'admin-login') path = '/admin';
         
         if (window.location.pathname !== path) {
@@ -84,7 +88,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // --- 0.3 IMAGE HELPERS (Optimized with WebP) ---
+    // --- 0.3 IMAGE HELPERS ---
     async function compressImage(file, maxWidth = 1200, quality = 0.8) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -99,7 +103,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     canvas.width = w; canvas.height = h;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, w, h);
-                    // Use WebP for better optimization
                     canvas.toBlob(blob => blob ? resolve(blob) : reject("Canvas error"), 'image/webp', quality);
                 };
             };
@@ -173,7 +176,6 @@ document.addEventListener('DOMContentLoaded', function() {
         document.title = `${p.title} — FinanceCalculator`;
         loadComments(id);
 
-        // 이미지 클릭 확대 이벤트 바인딩
         const imgs = postDetail.content.querySelectorAll('img');
         imgs.forEach(img => {
             img.onclick = () => {
@@ -185,9 +187,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    if (lightbox) {
-        lightbox.onclick = () => lightbox.style.display = 'none';
-    }
+    if (lightbox) lightbox.onclick = () => lightbox.style.display = 'none';
 
     function renderAdminTable() {
         const list = document.getElementById('admin-post-list');
@@ -279,7 +279,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- 5. NAVIGATION ---
     function goTo(name, id = null, skipUpdateURL = false) {
         Object.values(views).forEach(v => { if(v) v.classList.remove('active'); });
-        document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+        document.querySelectorAll('.nav-links a, .footer-right a').forEach(a => a.classList.remove('active'));
         
         if (name === 'home') { 
             if(views.home) views.home.classList.add('active'); 
@@ -300,6 +300,16 @@ document.addEventListener('DOMContentLoaded', function() {
             if(contactLink) contactLink.classList.add('active');
             if(!skipUpdateURL) updateURL('contact');
             document.title = "Contact — FinanceCalculator";
+        }
+        else if (name === 'about') {
+            if(views.about) views.about.classList.add('active');
+            if(!skipUpdateURL) updateURL('about');
+            document.title = "About — FinanceCalculator";
+        }
+        else if (name === 'privacy') {
+            if(views.privacy) views.privacy.classList.add('active');
+            if(!skipUpdateURL) updateURL('privacy');
+            document.title = "Privacy Policy — FinanceCalculator";
         }
         else if (name === 'admin-login') { 
             if(views.login) views.login.classList.add('active'); 
@@ -323,6 +333,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function handleInitialRouting() {
         const path = window.location.pathname;
         if (path === '/contact') goTo('contact', null, true);
+        else if (path === '/about') goTo('about', null, true);
+        else if (path === '/privacy') goTo('privacy', null, true);
         else if (path === '/admin') goTo('admin-login', null, true);
         else if (path.startsWith('/post/')) {
             const slug = path.split('/').pop();
@@ -381,7 +393,6 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.onclick = () => views.editor.classList.contains('active') ? goTo('dashboard') : goTo('home');
     });
 
-    // Contact Form
     const submitContact = document.getElementById('submit-contact');
     if(submitContact) {
         submitContact.onclick = async function() {
@@ -403,7 +414,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     goTo('home');
                 } else { throw new Error("전송 실패"); }
             } catch (err) { alert("전송 중 오류 발생. 잠시 후 다시 시도해 주세요."); }
-            finally { btn.disabled = false; btn.textContent = "Send Email"; }
+            finally { btn.disabled = false; btn.textContent = "Send Message"; }
         };
     }
 

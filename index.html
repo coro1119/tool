@@ -54,7 +54,6 @@
                     <li><a href="#" class="active" data-page="home">Home</a></li>
                     <li><a href="#" data-page="contact">Contact</a></li>
                 </ul>
-                <!-- Language Selector -->
                 <div id="google_translate_element" class="lang-selector"></div>
             </nav>
         </div>
@@ -118,7 +117,6 @@
                     <h2>Work with Me</h2>
                     <p>협업 문의나 피드백을 남겨주세요.</p>
                 </div>
-                
                 <div class="premium-contact-card">
                     <div class="input-group">
                         <label>Your Name</label>
@@ -143,7 +141,48 @@
             </div>
         </section>
 
-        <!-- 4. 관리자 로그인 -->
+        <!-- 4. About Us View (AdSense Requirement) -->
+        <section id="about-view" class="view">
+            <div class="post-detail-container">
+                <header class="post-detail-header">
+                    <span class="category-tag">ABOUT</span>
+                    <h2>FinanceCalculator</h2>
+                </header>
+                <div class="post-content-body">
+                    <p>안녕하세요, <strong>FinanceCalculator</strong> 블로그에 오신 것을 환영합니다.</p>
+                    <p>본 블로그는 필명 <strong>Teslaburn</strong>이 운영하는 전문 금융 및 기술 리서치 플랫폼입니다. 우리는 복잡한 시장의 숫자를 단순히 나열하는 것이 아니라, 데이터를 기반으로 직접 '계산'하고 분석하여 독자분들께 명확하고 실질적인 인사이트를 제공하는 것을 목표로 합니다.</p>
+                    <h3>우리의 핵심 가치</h3>
+                    <ul>
+                        <li><strong>Data-Driven</strong>: 감정이 아닌 철저한 데이터와 계산을 바탕으로 분석합니다.</li>
+                        <li><strong>Innovation Focus</strong>: 테슬라와 같은 혁신 기업과 미래 기술이 자본 시장에 미치는 영향을 추적합니다.</li>
+                        <li><strong>Global Perspective</strong>: 해외 주식 시장의 흐름을 빠르게 파악하여 공유합니다.</li>
+                    </ul>
+                    <p>금융 지능을 높이고 더 나은 투자 결정을 내리는 여정에 FinanceCalculator가 함께하겠습니다.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. Privacy Policy View (AdSense Requirement) -->
+        <section id="privacy-view" class="view">
+            <div class="post-detail-container">
+                <header class="post-detail-header">
+                    <span class="category-tag">LEGAL</span>
+                    <h2>Privacy Policy</h2>
+                </header>
+                <div class="post-content-body" style="font-size: 0.9rem;">
+                    <p>FinanceCalculator(이하 '본 블로그')는 이용자의 개인정보를 보호하며, 구글 애드센스 등 광고 프로그램의 정책을 준수합니다.</p>
+                    <h3>1. 수집하는 개인정보</h3>
+                    <p>본 블로그는 댓글 작성 및 문의 시 이름(닉네임), 이메일 주소를 수집할 수 있습니다. 이는 원활한 소통 및 문의 응대를 위함이며, 법적 근거 없이 제3자에게 제공하지 않습니다.</p>
+                    <h3>2. 쿠키(Cookie) 및 광고</h3>
+                    <p>구글을 포함한 제3자 제공업체는 사용자의 이전 방문 기록을 바탕으로 광고를 게재하기 위해 쿠키를 사용합니다. 이용자는 구글 광고 설정에서 맞춤 설정된 광고를 해제할 수 있습니다.</p>
+                    <h3>3. 로그 데이터</h3>
+                    <p>사이트 방문 시 브라우저가 전송하는 로그 정보를 자동으로 수집할 수 있습니다. (IP 주소, 브라우저 유형, 방문 시간 등)</p>
+                    <p>본 정책은 2026년 2월 27일부터 적용됩니다.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. 관리자 로그인 -->
         <section id="admin-login-view" class="view">
             <div class="admin-box">
                 <h3>Admin Access</h3>
@@ -154,7 +193,7 @@
             </div>
         </section>
 
-        <!-- 5. 관리자 대시보드 -->
+        <!-- 7. 관리자 대시보드 -->
         <section id="admin-dashboard-view" class="view">
             <div class="dash-header">
                 <h2>Content Management</h2>
@@ -173,7 +212,7 @@
             </div>
         </section>
 
-        <!-- 6. 글 쓰기/수정 에디터 -->
+        <!-- 8. 글 쓰기/수정 에디터 -->
         <section id="admin-editor-view" class="view">
             <div class="editor-header">
                 <input type="text" id="post-title-input" class="title-input" placeholder="제목을 입력하세요">
@@ -197,7 +236,7 @@
                         </select>
                     </div>
                     <div class="side-item">
-                        <div class="editor-label">Thumbnail</div>
+                        <div class="editor-label">Thumbnail Image</div>
                         <div class="thumb-upload-area">
                             <div id="thumb-preview" class="thumb-preview-box"></div>
                             <input type="file" id="post-thumb-upload" accept="image/*" hidden>
@@ -211,14 +250,21 @@
     </main>
 
     <footer class="main-footer">
-        <div class="container">
-            <p>&copy; 2026 FinanceCalculator. Focused on Innovation & Alpha.</p>
+        <div class="container footer-content-wrapper">
+            <div class="footer-left">
+                <p>&copy; 2026 FinanceCalculator. Focused on Innovation & Alpha.</p>
+            </div>
+            <div class="footer-right">
+                <a href="#" data-page="about">About</a>
+                <span class="footer-sep">|</span>
+                <a href="#" data-page="privacy">Privacy Policy</a>
+            </div>
         </div>
     </footer>
 
     <!-- Image Lightbox -->
     <div id="lightbox"><img src="" alt="Zoomed Image"></div>
 
-    <script src="main.js?v=10"></script>
+    <script src="main.js?v=11"></script>
 </body>
 </html>
