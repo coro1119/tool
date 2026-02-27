@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     var currentEditingId = null;
     var currentPostId = null;
+    var quill = null;
 
     // --- 1. DATA PERSISTENCE (Total 10+ Posts Migrated) ---
     var defaultPosts = {
@@ -36,8 +37,9 @@ document.addEventListener('DOMContentLoaded', function() {
         var allComments = JSON.parse(localStorage.getItem('teslaburn_comments') || '{}');
         var comments = allComments[postId] || [];
         var list = document.getElementById('comment-list');
-        document.getElementById('comment-count').textContent = comments.length;
-        list.innerHTML = comments.map((c, i) => `<div class="comment-item"><div class="comment-item-top"><span class="comment-author">${c.name}</span><div style="display: flex; gap: 15px; align-items: center;"><span class="comment-date">${c.date}</span><button class="comment-delete" onclick="window.dispatchDeleteComment('${postId}', ${i})">삭제</button></div></div><p class="comment-text">${c.body}</p></div>`).join('');
+        var countSpan = document.getElementById('comment-count');
+        if (countSpan) countSpan.textContent = comments.length;
+        if (list) list.innerHTML = comments.map((c, i) => `<div class="comment-item"><div class="comment-item-top"><span class="comment-author">${c.name}</span><div style="display: flex; gap: 15px; align-items: center;"><span class="comment-date">${c.date}</span><button class="comment-delete" onclick="window.dispatchDeleteComment('${postId}', ${i})">삭제</button></div></div><p class="comment-text">${c.body}</p></div>`).join('');
     }
 
     function saveComment(postId) {
@@ -105,21 +107,70 @@ document.addEventListener('DOMContentLoaded', function() {
     window.dispatchEdit = id => goTo('admin-editor', id);
     window.dispatchDelete = id => { if(confirm('삭제하시겠습니까?')) { delete posts[id]; savePosts(); renderAdminTable(); } };
 
-    function initQuill() { if (!quill) quill = new Quill('#quill-editor', { theme: 'snow', modules: { toolbar: [[{header:[1,2,3,false]}],['bold','italic','underline'],['link','image','code-block']] } }); }
-    function resetEditor() { currentEditingId = null; document.getElementById('post-title-input').value = ''; document.getElementById('post-thumb-input').value = ''; if (quill) quill.root.innerHTML = ''; }
-    function loadEditor(id) { currentEditingId = id; var p = posts[id]; document.getElementById('post-title-input').value = p.title; document.getElementById('post-thumb-input').value = p.thumb || ''; document.getElementById('post-category-input').value = p.category || '테슬라'; if (quill) quill.root.innerHTML = p.content; }
+    function initQuill() {
+        if (!quill) {
+            quill = new Quill('#quill-editor', {
+                theme: 'snow',
+                placeholder: '내용을 입력하세요...',
+                modules: {
+                    toolbar: [
+                        [{ header: [1, 2, 3, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        ['blockquote', 'code-block'],
+                        [{ list: 'ordered' }, { list: 'bullet' }],
+                        ['link', 'image'],
+                        ['clean']
+                    ]
+                }
+            });
+        }
+    }
+    
+    function resetEditor() {
+        currentEditingId = null;
+        document.getElementById('post-title-input').value = '';
+        document.getElementById('post-thumb-input').value = '';
+        document.getElementById('post-category-input').value = '테슬라';
+        if (quill) quill.root.innerHTML = '';
+    }
+    
+    function loadEditor(id) {
+        currentEditingId = id;
+        var p = posts[id];
+        document.getElementById('post-title-input').value = p.title;
+        document.getElementById('post-thumb-input').value = p.thumb || '';
+        document.getElementById('post-category-input').value = p.category || '테슬라';
+        if (quill) quill.root.innerHTML = p.content || '';
+    }
 
     document.body.onclick = e => { var page = e.target.closest('[data-page]'); if (page) goTo(page.getAttribute('data-page')); };
     document.getElementById('login-btn').onclick = () => { if (document.getElementById('admin-password').value === '6877') goTo('admin-dashboard'); else alert('비밀번호 오류'); };
     document.getElementById('go-to-new-post').onclick = () => goTo('admin-editor');
     document.querySelectorAll('.back-btn').forEach(btn => btn.onclick = () => goTo('home'));
-    document.getElementById('submit-comment').onclick = () => saveComment(currentPostId);
+    
+    var submitCommentBtn = document.getElementById('submit-comment');
+    if (submitCommentBtn) submitCommentBtn.onclick = () => saveComment(currentPostId);
 
     document.getElementById('save-post-btn').onclick = () => {
         var id = currentEditingId || 'post-' + Date.now();
-        var title = document.getElementById('post-title-input').value; if (!title) return alert('제목을 입력하세요');
-        posts[id] = { title: title, content: quill.root.innerHTML, date: currentEditingId ? posts[id].date : new Date().toLocaleDateString(), category: document.getElementById('post-category-input').value, thumb: document.getElementById('post-thumb-input').value, summary: quill.getText().substring(0, 150) + '...' };
-        savePosts(); alert('발행 완료'); goTo('admin-dashboard');
+        var title = document.getElementById('post-title-input').value;
+        if (!title) return alert('제목을 입력하세요');
+        
+        var content = quill ? quill.root.innerHTML : '';
+        var summary = quill ? quill.getText().substring(0, 150) + '...' : '';
+        
+        posts[id] = {
+            title: title,
+            content: content,
+            date: currentEditingId ? posts[id].date : new Date().toLocaleDateString(),
+            category: document.getElementById('post-category-input').value,
+            thumb: document.getElementById('post-thumb-input').value,
+            summary: summary
+        };
+        
+        savePosts();
+        alert('발행 완료');
+        goTo('admin-dashboard');
     };
 
     renderHomeList();
