@@ -323,17 +323,39 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.back-btn').forEach(btn => btn.onclick = () => views.editor.classList.contains('active') ? goTo('dashboard') : goTo('home'));
 
     // Contact Form
-    document.getElementById('submit-contact').onclick = () => {
+    document.getElementById('submit-contact').onclick = async function() {
         const name = document.getElementById('contact-name').value;
         const email = document.getElementById('contact-email').value;
         const msg = document.getElementById('contact-message').value;
+        
         if (!name || !email || !msg) return alert("Please fill all fields.");
         
-        // Simple mailto link as fallback, or you can use a backend function
-        const subject = encodeURIComponent(`[Contact] ${name}님의 문의`);
-        const body = encodeURIComponent(`이름: ${name}\n이메일: ${email}\n\n내용:\n${msg}`);
-        window.location.href = `mailto:pjw9106@gmail.com?subject=${subject}&body=${body}`;
-        alert("이메일 앱이 실행됩니다. 전송 버튼을 눌러주세요!");
+        const btn = this;
+        btn.disabled = true;
+        btn.textContent = "Sending...";
+
+        try {
+            const response = await fetch("https://formspree.io/f/xvgzlowq", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, email, message: msg })
+            });
+
+            if (response.ok) {
+                alert("문의가 성공적으로 전송되었습니다. 곧 연락드리겠습니다!");
+                document.getElementById('contact-name').value = '';
+                document.getElementById('contact-email').value = '';
+                document.getElementById('contact-message').value = '';
+                goTo('home');
+            } else {
+                throw new Error("전송 실패");
+            }
+        } catch (err) {
+            alert("전송 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+        } finally {
+            btn.disabled = false;
+            btn.textContent = "Send Email";
+        }
     };
 
     editorFields.thumbPreview.onclick = () => editorFields.thumbFile.click();
