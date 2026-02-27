@@ -15,6 +15,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const storage = firebase.storage();
     const auth = firebase.auth();
 
+    // Enable Offline Persistence for smoother cross-device sync
+    db.enablePersistence().catch(err => {
+        if (err.code == 'failed-precondition') console.warn("Persistence failed: multiple tabs open");
+        else if (err.code == 'unimplemented') console.warn("Persistence not supported by browser");
+    });
+
     // DOM Elements
     const views = {
         home: document.getElementById('home-view'),
@@ -50,6 +56,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- 0.1 AUTH MONITORING ---
     auth.onAuthStateChanged(user => {
         isAdmin = !!user;
+        console.log("Auth state changed. IsAdmin:", isAdmin);
         if (views.dashboard.classList.contains('active') || views.editor.classList.contains('active')) {
             if (!isAdmin) goTo('home');
         }
@@ -94,10 +101,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- 1. DATA SYNC ---
     function syncPosts() {
+        // Real-time listener for posts
         db.collection('posts').orderBy('updatedAt', 'desc').onSnapshot(snap => {
             posts = {};
-            snap.forEach(doc => posts[doc.id] = doc.data());
+            snap.forEach(doc => {
+                posts[doc.id] = doc.data();
+            });
+            console.log("Posts synced. Count:", Object.keys(posts).length);
             renderCurrentView();
+        }, err => {
+            console.error("Firestore sync error:", err);
+            // If it's a permission error, it might be due to missing indexes or rules
+            if (err.code === 'permission-denied') {
+                alert("데이터를 불러올 권한이 없습니다. Firebase 규칙을 확인해 주세요.");
+            }
         });
     }
 
@@ -120,7 +137,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <h3>${posts[id].title}</h3>
                     <p>${posts[id].summary}</p>
                 </div>
-            </article>`).join('') : '<div style="text-align:center; padding:100px 0; color:var(--text-muted);">No posts found.</div>';
+            </article>`).join('') : '<div style="text-align:center; padding:100px 0; color:var(--text-muted);">등록된 글이 없습니다.</div>';
     }
 
     window.dispatchPost = id => goTo('post', id);
@@ -150,8 +167,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     window.dispatchEdit = id => goTo('editor', id);
     window.dispatchDelete = async id => {
-        if (isAdmin && confirm('Delete this post?')) {
-            try { await db.collection('posts').doc(id).delete(); } catch(e) { alert(e.message); }
+        if (isAdmin && confirm('이 글을 삭제하시겠습니까?')) {
+            try { 
+                await db.collection('posts').doc(id).delete(); 
+                alert("삭제되었습니다.");
+            } catch(e) { alert("삭제 실패: " + e.message); }
         }
     };
 
@@ -160,7 +180,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (quill) return;
         quill = new Quill('#quill-editor', {
             theme: 'snow',
-            modules: { toolbar: [[{header:[1,2,3,false]}],['bold','italic','underline','strike'],['blockquote','code-block'],[{list:'ordered'},{list:'bullet'}],['link','image','clean']] }
+            modules: { toolbar: [[{header:[1,2,3,false]}],['bold','italic','underline','strike'],['blockquote','code-block'],[{list:'ordered'},{list:'bullet'}],['link', 'image', 'clean']] }
         });
         quill.getModule('toolbar').addHandler('image', () => {
             const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*'; input.click();
@@ -169,21 +189,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (file) {
                     const id = 'L'+Date.now();
                     const loading = document.createElement('div'); loading.id = id;
-                    loading.innerHTML = `<div style="color:var(--accent); position:fixed; bottom:20px; right:20px; background:var(--bg-elevated); padding:10px; border-radius:8px; z-index:9999;">Uploading: <span id="p-${id}">0</span>%</div>`;
+                    loading.innerHTML = `<div style="color:var(--accent); position:fixed; bottom:20px; right:20px; background:var(--bg-elevated); padding:10px; border-radius:8px; z-index:9999; border:1px solid var(--border);">Uploading: <span id="p-${id}">0</span>%</div>`;
                     document.body.appendChild(loading);
                     try {
                         const url = await uploadImage(file, 'posts', p => document.getElementById(`p-${id}`).textContent = p);
                         loading.remove();
                         const range = quill.getSelection() || { index: quill.getLength() };
                         quill.insertEmbed(range.index, 'image', url);
-                    } catch(e) { loading.remove(); alert(e.message); }
+                    } catch(e) { loading.remove(); alert("업로드 실패: " + e.message); }
                 }
             };
         });
     }
 
     function resetEditor() {
-        currentEditingId = null; editorFields.title.value = ''; editorFields.thumb.value = '';
+        currentEditingId = null; 
+        editorFields.title.value = ''; 
+        editorFields.thumb.value = '';
         editorFields.thumbPreview.style.backgroundImage = 'none';
         editorFields.thumbPreview.innerHTML = '<span class="placeholder-text">Click to upload thumbnail</span>';
         editorFields.thumbStatus.textContent = 'Ready';
@@ -192,8 +214,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function loadEditor(id) {
         currentEditingId = id; const p = posts[id]; if (!p) return;
-        editorFields.title.value = p.title; editorFields.cat.value = p.category; editorFields.thumb.value = p.thumb || '';
-        if (p.thumb) { editorFields.thumbPreview.style.backgroundImage = `url('${p.thumb}')`; editorFields.thumbPreview.innerHTML = ''; }
+        editorFields.title.value = p.title; 
+        editorFields.cat.value = p.category; 
+        editorFields.thumb.value = p.thumb || '';
+        if (p.thumb) { 
+            editorFields.thumbPreview.style.backgroundImage = `url('${p.thumb}')`; 
+            editorFields.thumbPreview.innerHTML = ''; 
+        }
         if (quill) quill.root.innerHTML = p.content || '';
     }
 
@@ -223,31 +250,37 @@ document.addEventListener('DOMContentLoaded', function() {
         if (name === 'home') { views.home.classList.add('active'); renderHomeList(); }
         else if (name === 'post') { views.post.classList.add('active'); renderPostDetail(id); }
         else if (name === 'admin-login') views.login.classList.add('active');
-        else if (name === 'dashboard' && isAdmin) { views.dashboard.classList.add('active'); renderAdminTable(); }
-        else if (name === 'editor' && isAdmin) { views.editor.classList.add('active'); initQuill(); if (id) loadEditor(id); else resetEditor(); }
-        else { views.home.classList.add('active'); }
+        else if (name === 'dashboard') {
+            if (!isAdmin) return goTo('admin-login');
+            views.dashboard.classList.add('active'); 
+            renderAdminTable(); 
+        }
+        else if (name === 'editor') {
+            if (!isAdmin) return goTo('admin-login');
+            views.editor.classList.add('active'); 
+            initQuill(); 
+            if (id) loadEditor(id); else resetEditor(); 
+        }
         window.scrollTo(0, 0);
     }
 
     // --- SECRET ENTRANCE ---
     let logoClicks = 0;
     let lastClickTime = 0;
-    document.getElementById('main-logo').addEventListener('click', (e) => {
-        const currentTime = new Date().getTime();
-        if (currentTime - lastClickTime > 1500) {
-            logoClicks = 0; // Reset if clicks are too far apart
-        }
-        logoClicks++;
-        lastClickTime = currentTime;
-        
-        console.log(`Logo clicked ${logoClicks} times`); // Debugging
-        
-        if (logoClicks >= 3) {
-            logoClicks = 0;
-            if (isAdmin) goTo('dashboard'); 
-            else goTo('admin-login');
-        }
-    });
+    const logo = document.getElementById('main-logo');
+    if (logo) {
+        logo.addEventListener('click', (e) => {
+            const currentTime = new Date().getTime();
+            if (currentTime - lastClickTime > 1500) logoClicks = 0;
+            logoClicks++;
+            lastClickTime = currentTime;
+            if (logoClicks >= 3) {
+                logoClicks = 0;
+                if (isAdmin) goTo('dashboard'); 
+                else goTo('admin-login');
+            }
+        });
+    }
 
     document.body.onclick = e => {
         const t = e.target.closest('[data-page]');
@@ -260,18 +293,25 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    document.getElementById('login-btn').onclick = async () => {
-        const email = document.getElementById('admin-email').value;
-        const pw = document.getElementById('admin-password').value;
-        try {
-            await auth.signInWithEmailAndPassword(email, pw);
-            goTo('dashboard');
-        } catch(e) { alert("Login failed: " + e.message); }
-    };
+    const loginBtn = document.getElementById('login-btn');
+    if (loginBtn) {
+        loginBtn.onclick = async () => {
+            const email = document.getElementById('admin-email').value;
+            const pw = document.getElementById('admin-password').value;
+            if (!email || !pw) return alert("Email과 Password를 입력하세요.");
+            try {
+                await auth.signInWithEmailAndPassword(email, pw);
+                alert("관리자 인증 성공");
+                goTo('dashboard');
+            } catch(e) { alert("Login failed: " + e.message); }
+        };
+    }
 
-    document.getElementById('logout-btn').onclick = () => auth.signOut().then(() => goTo('home'));
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) logoutBtn.onclick = () => auth.signOut().then(() => { alert("로그아웃 되었습니다."); goTo('home'); });
+    
     document.getElementById('go-to-new-post').onclick = () => goTo('editor');
-    document.querySelectorAll('.back-btn').forEach(btn => btn.onclick = () => views.editor.classList.contains('active') ? goTo('dashboard') : goTo('home'));
+    document.querySelectorAll('.back-btn').forEach(btn => btn.onclick = () => views.editor.classList.contains('active') ? goTo('dashboard') : (views.login.classList.contains('active') ? goTo('home') : goTo('home')));
 
     editorFields.thumbPreview.onclick = () => editorFields.thumbFile.click();
     editorFields.thumbFile.onchange = async (e) => {
@@ -284,31 +324,38 @@ document.addEventListener('DOMContentLoaded', function() {
                 editorFields.thumbPreview.style.backgroundImage = `url('${url}')`;
                 editorFields.thumbPreview.innerHTML = '';
                 editorFields.thumbStatus.textContent = 'Ready';
-            } catch (e) { editorFields.thumbStatus.textContent = 'Error'; alert(e.message); }
+            } catch (e) { editorFields.thumbStatus.textContent = 'Error'; alert("썸네일 업로드 실패: " + e.message); }
         }
     };
 
     document.getElementById('save-post-btn').onclick = async function() {
-        if (!isAdmin) return;
-        const title = editorFields.title.value; if (!title) return alert('Title required');
+        if (!isAdmin) return alert("관리자 로그인이 필요합니다.");
+        const title = editorFields.title.value; if (!title) return alert('제목을 입력하세요.');
         this.disabled = true; this.textContent = 'Publishing...';
         const id = currentEditingId || 'post-' + Date.now();
         const data = {
-            title, content: quill.root.innerHTML,
-            summary: quill.getText().substring(0, 160).replace(/\n/g, ' ') + '...',
-            category: editorFields.cat.value, thumb: editorFields.thumb.value,
+            title, 
+            content: quill ? quill.root.innerHTML : '',
+            summary: quill ? quill.getText().substring(0, 160).replace(/\n/g, ' ') + '...' : '',
+            category: editorFields.cat.value, 
+            thumb: editorFields.thumb.value,
             date: currentEditingId ? posts[id].date : new Date().toLocaleDateString('ko-KR'),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
-        try { await db.collection('posts').doc(id).set(data); alert('Published!'); goTo('dashboard'); }
-        catch (e) { alert(e.message); } finally { this.disabled = false; this.textContent = 'Publish'; }
+        try { 
+            await db.collection('posts').doc(id).set(data); 
+            alert('성공적으로 발행되었습니다!'); 
+            goTo('dashboard'); 
+        }
+        catch (e) { alert("발행 실패: " + e.message); } 
+        finally { this.disabled = false; this.textContent = 'Publish'; }
     };
 
     document.getElementById('submit-comment').onclick = async () => {
         const name = document.getElementById('comment-name').value;
         const pw = document.getElementById('comment-pw').value;
         const body = document.getElementById('comment-body').value;
-        if (!name || !pw || !body) return alert('All fields required');
+        if (!name || !pw || !body) return alert('모든 필드를 입력해주세요.');
         try {
             await db.collection('posts').doc(currentPostId).collection('comments').add({
                 name, pw, body, date: new Date().toLocaleString(),
@@ -317,7 +364,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('comment-name').value = '';
             document.getElementById('comment-pw').value = '';
             document.getElementById('comment-body').value = '';
-        } catch (e) { alert(e.message); }
+        } catch (e) { alert('댓글 저장 실패: ' + err.message); }
     };
 
     syncPosts();
