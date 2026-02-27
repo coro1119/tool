@@ -229,16 +229,25 @@ document.addEventListener('DOMContentLoaded', function() {
         window.scrollTo(0, 0);
     }
 
-    // Secret Entrance: Triple click Logo
+    // --- SECRET ENTRANCE ---
     let logoClicks = 0;
-    document.getElementById('main-logo').onclick = (e) => {
-        logoClicks++;
-        if (logoClicks === 3) {
-            logoClicks = 0;
-            if (isAdmin) goTo('dashboard'); else goTo('admin-login');
+    let lastClickTime = 0;
+    document.getElementById('main-logo').addEventListener('click', (e) => {
+        const currentTime = new Date().getTime();
+        if (currentTime - lastClickTime > 1500) {
+            logoClicks = 0; // Reset if clicks are too far apart
         }
-        setTimeout(() => logoClicks = 0, 1000);
-    };
+        logoClicks++;
+        lastClickTime = currentTime;
+        
+        console.log(`Logo clicked ${logoClicks} times`); // Debugging
+        
+        if (logoClicks >= 3) {
+            logoClicks = 0;
+            if (isAdmin) goTo('dashboard'); 
+            else goTo('admin-login');
+        }
+    });
 
     document.body.onclick = e => {
         const t = e.target.closest('[data-page]');

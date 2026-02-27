@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teslaburn Research — 테슬라 & 글로벌 경제 리서치</title>
+    <title>FinanceCalculator — 금융 & 리서치 데이터 리서치</title>
     
     <!-- SEO Meta Tags -->
-    <meta name="description" content="테슬라, 일론 머스크, 그리고 글로벌 해외 주식 시장의 깊이 있는 리서치와 분석을 제공합니다.">
-    <meta property="og:title" content="Teslaburn Research">
-    <meta property="og:description" content="테슬라 & 글로벌 경제 인사이트">
+    <meta name="description" content="금융 계산과 리서치 데이터를 바탕으로 쉽고 명확한 인사이트를 제공합니다. by Teslaburn">
+    <meta property="og:title" content="FinanceCalculator">
+    <meta property="og:description" content="금융 & 데이터 리서치 인사이트">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
     
@@ -31,11 +31,10 @@
     <!-- 상단 내비게이션 -->
     <header class="main-header">
         <div class="container nav-wrapper">
-            <h1 class="logo" id="main-logo" data-page="home">Teslaburn<span>Research</span></h1>
+            <h1 class="logo" id="main-logo" style="cursor: pointer; user-select: none;">Finance<span>Calculator</span></h1>
             <nav>
                 <ul class="nav-links">
-                    <li><a href="#" class="active" data-page="home">Research</a></li>
-                    <!-- 관리자 링크 제거 (비밀 진입로 사용) -->
+                    <li><a href="#" class="active" data-page="home">Insights</a></li>
                 </ul>
             </nav>
         </div>
@@ -46,8 +45,8 @@
         <section id="home-view" class="view active">
             <div class="list-header">
                 <div class="header-content">
-                    <h2>Latest Insights</h2>
-                    <p class="subtitle">테슬라와 혁신 기술, 그리고 자본 시장의 미래를 읽습니다.</p>
+                    <h2>Financial Insights</h2>
+                    <p class="subtitle">복잡한 금융과 기술의 미래를 데이터로 계산하고 분석합니다.</p>
                 </div>
                 <div class="category-chips">
                     <button class="chip active" data-filter="전체">전체</button>
@@ -69,7 +68,7 @@
                     <div class="post-info">
                         <span id="post-date">2026. 02. 27</span>
                         <span class="dot">·</span>
-                        <span class="author">Teslaburn</span>
+                        <span class="author">by Teslaburn</span>
                     </div>
                 </header>
                 <div id="post-content" class="post-content-body"></div>
@@ -92,11 +91,11 @@
             </article>
         </section>
 
-        <!-- 3. 관리자 로그인 (비밀 진입로 전용) -->
+        <!-- 3. 관리자 로그인 -->
         <section id="admin-login-view" class="view">
             <div class="admin-box">
                 <h3>Admin Access</h3>
-                <p class="admin-desc">Only authorized researchers can access this area.</p>
+                <p class="admin-desc">Please enter your credentials to proceed.</p>
                 <input type="email" id="admin-email" placeholder="Email" style="letter-spacing: normal; text-align: left; margin-bottom: 10px;">
                 <input type="password" id="admin-password" placeholder="Password">
                 <button id="login-btn" class="action-btn">Sign In</button>
@@ -107,7 +106,7 @@
         <!-- 4. 관리자 대시보드 -->
         <section id="admin-dashboard-view" class="view">
             <div class="dash-header">
-                <h2>Manage Content</h2>
+                <h2>Content Management</h2>
                 <div style="display:flex; gap:10px;">
                     <button id="logout-btn" class="secondary-btn small">Sign Out</button>
                     <button id="go-to-new-post" class="action-btn small">+ New Post</button>
@@ -126,7 +125,7 @@
         <!-- 5. 글 쓰기/수정 에디터 -->
         <section id="admin-editor-view" class="view">
             <div class="editor-header">
-                <input type="text" id="post-title-input" class="title-input" placeholder="Enter title here...">
+                <input type="text" id="post-title-input" class="title-input" placeholder="제목을 입력하세요">
                 <div class="editor-ctrls">
                     <button class="back-btn secondary-btn">Cancel</button>
                     <button id="save-post-btn" class="action-btn">Publish</button>
@@ -134,7 +133,7 @@
             </div>
             <div class="editor-grid">
                 <div class="editor-main">
-                    <div class="editor-label">Content</div>
+                    <div class="editor-label">Body Content</div>
                     <div id="quill-editor" style="height: 600px;"></div>
                 </div>
                 <div class="editor-side">
@@ -147,8 +146,8 @@
                         </select>
                     </div>
                     <div class="side-item">
-                        <div class="editor-label">Thumbnail</div>
-                        <div class="thumb-upload-area" id="thumb-drop-zone">
+                        <div class="editor-label">Thumbnail Image</div>
+                        <div class="thumb-upload-area">
                             <div id="thumb-preview" class="thumb-preview-box">
                                 <span class="placeholder-text">Click to upload image</span>
                             </div>
@@ -166,10 +165,10 @@
 
     <footer class="main-footer">
         <div class="container">
-            <p>&copy; 2026 Teslaburn Research. Focused on Innovation & Alpha.</p>
+            <p>&copy; 2026 FinanceCalculator. Focused on Innovation & Alpha.</p>
         </div>
     </footer>
 
-    <script src="main.js?v=5"></script>
+    <script src="main.js?v=6"></script>
 </body>
 </html>
