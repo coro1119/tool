@@ -15,16 +15,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const storage = firebase.storage();
     const auth = firebase.auth();
 
-    // Enable Offline Persistence for smoother cross-device sync
-    db.enablePersistence().catch(err => {
-        if (err.code == 'failed-precondition') console.warn("Persistence failed: multiple tabs open");
-        else if (err.code == 'unimplemented') console.warn("Persistence not supported by browser");
-    });
+    // Offline Persistence
+    db.enablePersistence().catch(err => console.warn("Persistence failed", err.code));
 
     // DOM Elements
     const views = {
         home: document.getElementById('home-view'),
         post: document.getElementById('post-view'),
+        contact: document.getElementById('contact-view'),
         login: document.getElementById('admin-login-view'),
         dashboard: document.getElementById('admin-dashboard-view'),
         editor: document.getElementById('admin-editor-view')
@@ -53,16 +51,36 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentFilter = '전체';
     let isAdmin = false;
 
-    // --- 0.1 AUTH MONITORING ---
+    // --- 0.1 SEO & URL UTILS ---
+    function generateSlug(text) {
+        return text.toString().toLowerCase()
+            .replace(/\s+/g, '-')           // Replace spaces with -
+            .replace(/[^\wㄱ-ㅎㅏ-ㅣ가-힣\-]+/g, '') // Remove all non-word chars (keep Korean)
+            .replace(/\-\-+/g, '-')         // Replace multiple - with single -
+            .replace(/^-+/, '')             // Trim - from start
+            .replace(/-+$/, '');            // Trim - from end
+    }
+
+    function updateURL(viewName, id = null, title = null) {
+        let path = '/';
+        if (viewName === 'post' && title) path = `/post/${generateSlug(title)}`;
+        else if (viewName === 'contact') path = '/contact';
+        else if (viewName === 'admin-login') path = '/admin';
+        
+        // Use hash for simple static hosting compatibility if needed, 
+        // but here we'll use history for cleaner URLs
+        window.history.pushState({view: viewName, id: id}, '', path);
+    }
+
+    // --- 0.2 AUTH ---
     auth.onAuthStateChanged(user => {
         isAdmin = !!user;
-        console.log("Auth state changed. IsAdmin:", isAdmin);
-        if (views.dashboard.classList.contains('active') || views.editor.classList.contains('active')) {
-            if (!isAdmin) goTo('home');
+        if ((views.dashboard.classList.contains('active') || views.editor.classList.contains('active')) && !isAdmin) {
+            goTo('home');
         }
     });
 
-    // --- 0.2 IMAGE OPTIMIZATION ---
+    // --- 0.3 IMAGE HELPERS ---
     async function compressImage(file, maxWidth = 1000, quality = 0.6) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -101,20 +119,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- 1. DATA SYNC ---
     function syncPosts() {
-        // Real-time listener for posts
         db.collection('posts').orderBy('updatedAt', 'desc').onSnapshot(snap => {
             posts = {};
-            snap.forEach(doc => {
-                posts[doc.id] = doc.data();
-            });
-            console.log("Posts synced. Count:", Object.keys(posts).length);
+            snap.forEach(doc => posts[doc.id] = doc.data());
             renderCurrentView();
-        }, err => {
-            console.error("Firestore sync error:", err);
-            // If it's a permission error, it might be due to missing indexes or rules
-            if (err.code === 'permission-denied') {
-                alert("데이터를 불러올 권한이 없습니다. Firebase 규칙을 확인해 주세요.");
-            }
+            handleInitialRouting(); // Check URL on first load
         });
     }
 
@@ -148,6 +157,7 @@ document.addEventListener('DOMContentLoaded', function() {
         postDetail.cat.textContent = p.category;
         postDetail.date.textContent = p.date;
         postDetail.content.innerHTML = p.content;
+        document.title = `${p.title} — FinanceCalculator`; // Dynamic SEO Title
         loadComments(id);
     }
 
@@ -168,10 +178,7 @@ document.addEventListener('DOMContentLoaded', function() {
     window.dispatchEdit = id => goTo('editor', id);
     window.dispatchDelete = async id => {
         if (isAdmin && confirm('이 글을 삭제하시겠습니까?')) {
-            try { 
-                await db.collection('posts').doc(id).delete(); 
-                alert("삭제되었습니다.");
-            } catch(e) { alert("삭제 실패: " + e.message); }
+            try { await db.collection('posts').doc(id).delete(); } catch(e) { alert(e.message); }
         }
     };
 
@@ -187,25 +194,23 @@ document.addEventListener('DOMContentLoaded', function() {
             input.onchange = async () => {
                 const file = input.files[0];
                 if (file) {
-                    const id = 'L'+Date.now();
-                    const loading = document.createElement('div'); loading.id = id;
-                    loading.innerHTML = `<div style="color:var(--accent); position:fixed; bottom:20px; right:20px; background:var(--bg-elevated); padding:10px; border-radius:8px; z-index:9999; border:1px solid var(--border);">Uploading: <span id="p-${id}">0</span>%</div>`;
+                    const lid = 'L'+Date.now();
+                    const loading = document.createElement('div'); loading.id = lid;
+                    loading.innerHTML = `<div style="color:var(--accent); position:fixed; bottom:20px; right:20px; background:var(--bg-elevated); padding:10px; border-radius:8px; z-index:9999; border:1px solid var(--border);">Uploading: <span id="p-${lid}">0</span>%</div>`;
                     document.body.appendChild(loading);
                     try {
-                        const url = await uploadImage(file, 'posts', p => document.getElementById(`p-${id}`).textContent = p);
+                        const url = await uploadImage(file, 'posts', p => document.getElementById(`p-${lid}`).textContent = p);
                         loading.remove();
                         const range = quill.getSelection() || { index: quill.getLength() };
                         quill.insertEmbed(range.index, 'image', url);
-                    } catch(e) { loading.remove(); alert("업로드 실패: " + e.message); }
+                    } catch(e) { loading.remove(); alert(e.message); }
                 }
             };
         });
     }
 
     function resetEditor() {
-        currentEditingId = null; 
-        editorFields.title.value = ''; 
-        editorFields.thumb.value = '';
+        currentEditingId = null; editorFields.title.value = ''; editorFields.thumb.value = '';
         editorFields.thumbPreview.style.backgroundImage = 'none';
         editorFields.thumbPreview.innerHTML = '<span class="placeholder-text">Click to upload thumbnail</span>';
         editorFields.thumbStatus.textContent = 'Ready';
@@ -214,17 +219,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function loadEditor(id) {
         currentEditingId = id; const p = posts[id]; if (!p) return;
-        editorFields.title.value = p.title; 
-        editorFields.cat.value = p.category; 
-        editorFields.thumb.value = p.thumb || '';
-        if (p.thumb) { 
-            editorFields.thumbPreview.style.backgroundImage = `url('${p.thumb}')`; 
-            editorFields.thumbPreview.innerHTML = ''; 
-        }
+        editorFields.title.value = p.title; editorFields.cat.value = p.category; editorFields.thumb.value = p.thumb || '';
+        if (p.thumb) { editorFields.thumbPreview.style.backgroundImage = `url('${p.thumb}')`; editorFields.thumbPreview.innerHTML = ''; }
         if (quill) quill.root.innerHTML = p.content || '';
     }
 
-    // --- 4. COMMENTS ---
+    // --- 4. COMMENTS & CONTACT ---
     function loadComments(postId) {
         db.collection('posts').doc(postId).collection('comments').orderBy('timestamp', 'asc').onSnapshot(snap => {
             const comments = []; snap.forEach(doc => comments.push({ id: doc.id, ...doc.data() }));
@@ -244,43 +244,62 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- 5. NAVIGATION & ACTIONS ---
-    function goTo(name, id) {
+    // --- 5. NAVIGATION ---
+    function goTo(name, id = null) {
         Object.values(views).forEach(v => v.classList.remove('active'));
-        if (name === 'home') { views.home.classList.add('active'); renderHomeList(); }
-        else if (name === 'post') { views.post.classList.add('active'); renderPostDetail(id); }
-        else if (name === 'admin-login') views.login.classList.add('active');
-        else if (name === 'dashboard') {
-            if (!isAdmin) return goTo('admin-login');
-            views.dashboard.classList.add('active'); 
-            renderAdminTable(); 
+        document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+        
+        if (name === 'home') { 
+            views.home.classList.add('active'); 
+            renderHomeList(); 
+            document.querySelector('[data-page="home"]').classList.add('active');
+            updateURL('home');
+            document.title = "FinanceCalculator — 금융 & 데이터 리서치";
         }
-        else if (name === 'editor') {
-            if (!isAdmin) return goTo('admin-login');
-            views.editor.classList.add('active'); 
-            initQuill(); 
-            if (id) loadEditor(id); else resetEditor(); 
+        else if (name === 'post') { 
+            views.post.classList.add('active'); 
+            renderPostDetail(id); 
+            updateURL('post', id, posts[id]?.title);
         }
+        else if (name === 'contact') { 
+            views.contact.classList.add('active'); 
+            document.querySelector('[data-page="contact"]').classList.add('active');
+            updateURL('contact');
+            document.title = "Contact — FinanceCalculator";
+        }
+        else if (name === 'admin-login') { views.login.classList.add('active'); updateURL('admin-login'); }
+        else if (name === 'dashboard' && isAdmin) { views.dashboard.classList.add('active'); renderAdminTable(); }
+        else if (name === 'editor' && isAdmin) { views.editor.classList.add('active'); initQuill(); if (id) loadEditor(id); else resetEditor(); }
+        else { views.home.classList.add('active'); }
         window.scrollTo(0, 0);
     }
 
-    // --- SECRET ENTRANCE ---
-    let logoClicks = 0;
-    let lastClickTime = 0;
-    const logo = document.getElementById('main-logo');
-    if (logo) {
-        logo.addEventListener('click', (e) => {
-            const currentTime = new Date().getTime();
-            if (currentTime - lastClickTime > 1500) logoClicks = 0;
-            logoClicks++;
-            lastClickTime = currentTime;
-            if (logoClicks >= 3) {
-                logoClicks = 0;
-                if (isAdmin) goTo('dashboard'); 
-                else goTo('admin-login');
-            }
-        });
+    function handleInitialRouting() {
+        const path = window.location.pathname;
+        if (path === '/contact') goTo('contact');
+        else if (path === '/admin') goTo('admin-login');
+        else if (path.startsWith('/post/')) {
+            const slug = path.split('/').pop();
+            const postId = Object.keys(posts).find(id => generateSlug(posts[id].title) === slug);
+            if (postId) goTo('post', postId);
+            else goTo('home');
+        }
     }
+
+    window.onpopstate = (e) => {
+        if (e.state && e.state.view) goTo(e.state.view, e.state.id);
+        else handleInitialRouting();
+    };
+
+    // Secret Entrance
+    let logoClicks = 0; let lastClickTime = 0;
+    const logo = document.getElementById('main-logo');
+    logo.addEventListener('click', () => {
+        const now = new Date().getTime();
+        if (now - lastClickTime > 1500) logoClicks = 0;
+        logoClicks++; lastClickTime = now;
+        if (logoClicks >= 3) { logoClicks = 0; isAdmin ? goTo('dashboard') : goTo('admin-login'); }
+    });
 
     document.body.onclick = e => {
         const t = e.target.closest('[data-page]');
@@ -293,25 +312,29 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    const loginBtn = document.getElementById('login-btn');
-    if (loginBtn) {
-        loginBtn.onclick = async () => {
-            const email = document.getElementById('admin-email').value;
-            const pw = document.getElementById('admin-password').value;
-            if (!email || !pw) return alert("Email과 Password를 입력하세요.");
-            try {
-                await auth.signInWithEmailAndPassword(email, pw);
-                alert("관리자 인증 성공");
-                goTo('dashboard');
-            } catch(e) { alert("Login failed: " + e.message); }
-        };
-    }
+    document.getElementById('login-btn').onclick = async () => {
+        const email = document.getElementById('admin-email').value;
+        const pw = document.getElementById('admin-password').value;
+        try { await auth.signInWithEmailAndPassword(email, pw); goTo('dashboard'); } catch(e) { alert(e.message); }
+    };
 
-    const logoutBtn = document.getElementById('logout-btn');
-    if (logoutBtn) logoutBtn.onclick = () => auth.signOut().then(() => { alert("로그아웃 되었습니다."); goTo('home'); });
-    
+    document.getElementById('logout-btn').onclick = () => auth.signOut().then(() => goTo('home'));
     document.getElementById('go-to-new-post').onclick = () => goTo('editor');
-    document.querySelectorAll('.back-btn').forEach(btn => btn.onclick = () => views.editor.classList.contains('active') ? goTo('dashboard') : (views.login.classList.contains('active') ? goTo('home') : goTo('home')));
+    document.querySelectorAll('.back-btn').forEach(btn => btn.onclick = () => views.editor.classList.contains('active') ? goTo('dashboard') : goTo('home'));
+
+    // Contact Form
+    document.getElementById('submit-contact').onclick = () => {
+        const name = document.getElementById('contact-name').value;
+        const email = document.getElementById('contact-email').value;
+        const msg = document.getElementById('contact-message').value;
+        if (!name || !email || !msg) return alert("Please fill all fields.");
+        
+        // Simple mailto link as fallback, or you can use a backend function
+        const subject = encodeURIComponent(`[Contact] ${name}님의 문의`);
+        const body = encodeURIComponent(`이름: ${name}\n이메일: ${email}\n\n내용:\n${msg}`);
+        window.location.href = `mailto:pjw9106@gmail.com?subject=${subject}&body=${body}`;
+        alert("이메일 앱이 실행됩니다. 전송 버튼을 눌러주세요!");
+    };
 
     editorFields.thumbPreview.onclick = () => editorFields.thumbFile.click();
     editorFields.thumbFile.onchange = async (e) => {
@@ -324,38 +347,31 @@ document.addEventListener('DOMContentLoaded', function() {
                 editorFields.thumbPreview.style.backgroundImage = `url('${url}')`;
                 editorFields.thumbPreview.innerHTML = '';
                 editorFields.thumbStatus.textContent = 'Ready';
-            } catch (e) { editorFields.thumbStatus.textContent = 'Error'; alert("썸네일 업로드 실패: " + e.message); }
+            } catch (e) { editorFields.thumbStatus.textContent = 'Error'; alert(e.message); }
         }
     };
 
     document.getElementById('save-post-btn').onclick = async function() {
-        if (!isAdmin) return alert("관리자 로그인이 필요합니다.");
-        const title = editorFields.title.value; if (!title) return alert('제목을 입력하세요.');
+        if (!isAdmin) return;
+        const title = editorFields.title.value; if (!title) return alert('Title required');
         this.disabled = true; this.textContent = 'Publishing...';
         const id = currentEditingId || 'post-' + Date.now();
         const data = {
-            title, 
-            content: quill ? quill.root.innerHTML : '',
-            summary: quill ? quill.getText().substring(0, 160).replace(/\n/g, ' ') + '...' : '',
-            category: editorFields.cat.value, 
-            thumb: editorFields.thumb.value,
+            title, content: quill.root.innerHTML,
+            summary: quill.getText().substring(0, 160).replace(/\n/g, ' ') + '...',
+            category: editorFields.cat.value, thumb: editorFields.thumb.value,
             date: currentEditingId ? posts[id].date : new Date().toLocaleDateString('ko-KR'),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
-        try { 
-            await db.collection('posts').doc(id).set(data); 
-            alert('성공적으로 발행되었습니다!'); 
-            goTo('dashboard'); 
-        }
-        catch (e) { alert("발행 실패: " + e.message); } 
-        finally { this.disabled = false; this.textContent = 'Publish'; }
+        try { await db.collection('posts').doc(id).set(data); alert('Published!'); goTo('dashboard'); }
+        catch (e) { alert(e.message); } finally { this.disabled = false; this.textContent = 'Publish'; }
     };
 
     document.getElementById('submit-comment').onclick = async () => {
         const name = document.getElementById('comment-name').value;
         const pw = document.getElementById('comment-pw').value;
         const body = document.getElementById('comment-body').value;
-        if (!name || !pw || !body) return alert('모든 필드를 입력해주세요.');
+        if (!name || !pw || !body) return alert('All fields required');
         try {
             await db.collection('posts').doc(currentPostId).collection('comments').add({
                 name, pw, body, date: new Date().toLocaleString(),
@@ -364,7 +380,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('comment-name').value = '';
             document.getElementById('comment-pw').value = '';
             document.getElementById('comment-body').value = '';
-        } catch (e) { alert('댓글 저장 실패: ' + err.message); }
+        } catch (e) { alert(e.message); }
     };
 
     syncPosts();
