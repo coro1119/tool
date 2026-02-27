@@ -1,13 +1,13 @@
 document.addEventListener('DOMContentLoaded', function() {
     // --- 0. FIREBASE INITIALIZATION ---
     const firebaseConfig = {
-        apiKey: "AIzaSyCukyy8HDb_WUU1as06VmdPen3TLhtjfJQ",
-        authDomain: "pdtjo-8851b.firebaseapp.com",
-        projectId: "pdtjo-8851b",
-        storageBucket: "pdtjo-8851b.firebasestorage.app",
-        messagingSenderId: "376873682315",
-        appId: "1:376873682315:web:86a58cc0845ceba6999b8e",
-        measurementId: "G-4EBTV3RSLR"
+        apiKey: "AIzaSyBuC3zXrNa69yIX7HJRRG32RD3_OtWw2PE",
+        authDomain: "blog-pro-520a6.firebaseapp.com",
+        projectId: "blog-pro-520a6",
+        storageBucket: "blog-pro-520a6.firebasestorage.app",
+        messagingSenderId: "302282337310",
+        appId: "1:302282337310:web:99f74ea92754acf798520f",
+        measurementId: "G-6PM4C2YLRH"
     };
 
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
@@ -218,7 +218,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     try {
                         const url = await uploadImageWithProgress(file, 'posts', (p) => {
-                            document.getElementById('editor-progress').textContent = p;
+                            const progressSpan = document.getElementById('editor-progress');
+                            if (progressSpan) progressSpan.textContent = p;
                         });
                         loadingMsg.remove();
                         const range = quill.getSelection() || { index: quill.getLength() };
