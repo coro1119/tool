@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const storage = firebase.storage();
     const auth = firebase.auth();
 
-    // Enable Offline Persistence
+    // Offline Persistence
     db.enablePersistence().catch(err => console.warn("Persistence failed", err.code));
 
     // DOM Elements
@@ -44,6 +44,9 @@ document.addEventListener('DOMContentLoaded', function() {
         thumbStatus: document.getElementById('thumb-status')
     };
 
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = lightbox ? lightbox.querySelector('img') : null;
+
     let currentEditingId = null;
     let currentPostId = null;
     let quill = null;
@@ -55,11 +58,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- 0.1 SEO & URL UTILS ---
     function generateSlug(text) {
         return text.toString().toLowerCase()
-            .replace(/\s+/g, '-')           // Replace spaces with -
-            .replace(/[^\wㄱ-ㅎㅏ-ㅣ가-힣\-]+/g, '') // Remove all non-word chars (keep Korean)
-            .replace(/\-\-+/g, '-')         // Replace multiple - with single -
-            .replace(/^-+/, '')             // Trim - from start
-            .replace(/-+$/, '');            // Trim - from end
+            .replace(/\s+/g, '-')           
+            .replace(/[^\wㄱ-ㅎㅏ-ㅣ가-힣\-]+/g, '') 
+            .replace(/\-\-+/g, '-')         
+            .replace(/^-+/, '')             
+            .replace(/-+$/, '');            
     }
 
     function updateURL(viewName, id = null, title = null) {
@@ -81,8 +84,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // --- 0.3 IMAGE HELPERS ---
-    async function compressImage(file, maxWidth = 1000, quality = 0.6) {
+    // --- 0.3 IMAGE HELPERS (Optimized with WebP) ---
+    async function compressImage(file, maxWidth = 1200, quality = 0.8) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.readAsDataURL(file);
@@ -96,18 +99,22 @@ document.addEventListener('DOMContentLoaded', function() {
                     canvas.width = w; canvas.height = h;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, w, h);
-                    canvas.toBlob(blob => blob ? resolve(blob) : reject("Canvas error"), 'image/jpeg', quality);
+                    // Use WebP for better optimization
+                    canvas.toBlob(blob => blob ? resolve(blob) : reject("Canvas error"), 'image/webp', quality);
                 };
             };
         });
     }
 
     async function uploadImage(file, folder, onProgress) {
-        const maxWidth = folder === 'thumbs' ? 600 : 1000;
-        const uploadFile = file.type === 'image/gif' ? file : await compressImage(file, maxWidth, 0.6);
-        const fileName = `${Date.now()}_${file.name.replace(/[^a-z0-9.]/gi, '_')}`;
+        const maxWidth = folder === 'thumbs' ? 800 : 1200;
+        const quality = folder === 'thumbs' ? 0.7 : 0.8;
+        const uploadFile = file.type === 'image/gif' ? file : await compressImage(file, maxWidth, quality);
+        
+        const extension = file.type === 'image/gif' ? 'gif' : 'webp';
+        const fileName = `${Date.now()}_${file.name.replace(/[^a-z0-9.]/gi, '_')}.${extension}`;
         const storageRef = storage.ref().child(`${folder}/${fileName}`);
-        const uploadTask = storageRef.put(uploadFile);
+        const uploadTask = storageRef.put(uploadFile, { contentType: `image/${extension}` });
 
         return new Promise((resolve, reject) => {
             uploadTask.on('state_changed', 
@@ -165,6 +172,21 @@ document.addEventListener('DOMContentLoaded', function() {
         postDetail.content.innerHTML = p.content;
         document.title = `${p.title} — FinanceCalculator`;
         loadComments(id);
+
+        // 이미지 클릭 확대 이벤트 바인딩
+        const imgs = postDetail.content.querySelectorAll('img');
+        imgs.forEach(img => {
+            img.onclick = () => {
+                if (lightbox && lightboxImg) {
+                    lightboxImg.src = img.src;
+                    lightbox.style.display = 'flex';
+                }
+            };
+        });
+    }
+
+    if (lightbox) {
+        lightbox.onclick = () => lightbox.style.display = 'none';
     }
 
     function renderAdminTable() {
@@ -406,7 +428,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if(savePostBtn) {
         savePostBtn.onclick = async function() {
             if (!isAdmin) return;
-            const title = editorFields.title.value; if (!title) return alert('Title required');
+            const title = editorFields.title.value; if (!title) return alert('제목을 입력하세요.');
             this.disabled = true; this.textContent = 'Publishing...';
             const id = currentEditingId || 'post-' + Date.now();
             const data = {
@@ -416,7 +438,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 date: currentEditingId ? posts[id].date : new Date().toLocaleDateString('ko-KR'),
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             };
-            try { await db.collection('posts').doc(id).set(data); alert('Published!'); goTo('dashboard'); }
+            try { await db.collection('posts').doc(id).set(data); alert('성공적으로 발행되었습니다!'); goTo('dashboard'); }
             catch (e) { alert(e.message); } finally { this.disabled = false; this.textContent = 'Publish'; }
         };
     }
