@@ -21,8 +21,9 @@
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
     
-    <!-- Firebase SDKs -->
+    <!-- Firebase SDKs (Compat) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 </head>
@@ -30,11 +31,11 @@
     <!-- 상단 내비게이션 -->
     <header class="main-header">
         <div class="container nav-wrapper">
-            <h1 class="logo" data-page="home">Teslaburn<span>Research</span></h1>
+            <h1 class="logo" id="main-logo" data-page="home">Teslaburn<span>Research</span></h1>
             <nav>
                 <ul class="nav-links">
                     <li><a href="#" class="active" data-page="home">Research</a></li>
-                    <li><a href="#" data-page="admin-login" class="admin-link">Admin</a></li>
+                    <!-- 관리자 링크 제거 (비밀 진입로 사용) -->
                 </ul>
             </nav>
         </div>
@@ -56,9 +57,7 @@
                 </div>
             </div>
             
-            <div id="main-post-list" class="tistory-list">
-                <!-- 포스트 목록 -->
-            </div>
+            <div id="main-post-list" class="tistory-list"></div>
         </section>
 
         <!-- 2. 포스트 상세 보기 -->
@@ -73,19 +72,14 @@
                         <span class="author">Teslaburn</span>
                     </div>
                 </header>
-                
-                <div id="post-content" class="post-content-body">
-                    <!-- 본문 내용 -->
-                </div>
+                <div id="post-content" class="post-content-body"></div>
 
                 <!-- 댓글 섹션 -->
                 <section class="comment-section">
                     <div class="comment-header">
                         <h4>Comments <span id="comment-count">0</span></h4>
                     </div>
-                    
                     <div id="comment-list" class="comment-list"></div>
-
                     <div class="comment-form">
                         <div class="comment-form-top">
                             <input type="text" id="comment-name" placeholder="Name">
@@ -98,13 +92,15 @@
             </article>
         </section>
 
-        <!-- 3. 관리자 로그인 -->
+        <!-- 3. 관리자 로그인 (비밀 진입로 전용) -->
         <section id="admin-login-view" class="view">
             <div class="admin-box">
                 <h3>Admin Access</h3>
-                <p class="admin-desc">Enter password to manage research posts.</p>
-                <input type="password" id="admin-password" placeholder="••••••">
+                <p class="admin-desc">Only authorized researchers can access this area.</p>
+                <input type="email" id="admin-email" placeholder="Email" style="letter-spacing: normal; text-align: left; margin-bottom: 10px;">
+                <input type="password" id="admin-password" placeholder="Password">
                 <button id="login-btn" class="action-btn">Sign In</button>
+                <button class="back-btn secondary-btn" style="margin-top: 15px; width: 100%;">Return to Home</button>
             </div>
         </section>
 
@@ -112,7 +108,10 @@
         <section id="admin-dashboard-view" class="view">
             <div class="dash-header">
                 <h2>Manage Content</h2>
-                <button id="go-to-new-post" class="action-btn small">+ New Post</button>
+                <div style="display:flex; gap:10px;">
+                    <button id="logout-btn" class="secondary-btn small">Sign Out</button>
+                    <button id="go-to-new-post" class="action-btn small">+ New Post</button>
+                </div>
             </div>
             <div class="table-wrapper">
                 <table class="admin-table">
@@ -133,13 +132,11 @@
                     <button id="save-post-btn" class="action-btn">Publish</button>
                 </div>
             </div>
-            
             <div class="editor-grid">
                 <div class="editor-main">
                     <div class="editor-label">Content</div>
                     <div id="quill-editor" style="height: 600px;"></div>
                 </div>
-                
                 <div class="editor-side">
                     <div class="side-item">
                         <div class="editor-label">Category</div>
@@ -149,7 +146,6 @@
                             <option value="해외주식">해외주식</option>
                         </select>
                     </div>
-                    
                     <div class="side-item">
                         <div class="editor-label">Thumbnail</div>
                         <div class="thumb-upload-area" id="thumb-drop-zone">
@@ -174,6 +170,6 @@
         </div>
     </footer>
 
-    <script src="main.js?v=4"></script>
+    <script src="main.js?v=5"></script>
 </body>
 </html>
