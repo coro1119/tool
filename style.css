@@ -99,6 +99,21 @@ body {
 
 .editor-label { margin-bottom: 0.8rem; font-weight: 700; color: var(--accent); font-size: 0.9rem; }
 
+/* File Upload Button */
+.file-upload-wrapper { display: flex; align-items: center; gap: 1rem; }
+.file-label {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    padding: 0.8rem 1.2rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: 0.2s;
+    color: var(--text-main);
+}
+.file-label:hover { background: var(--border); border-color: var(--accent); }
+
 /* Utils */
 .view { display: none; }
 .view.active { display: block; animation: fadeIn 0.4s ease-out; }

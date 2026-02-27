@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var firebaseConfig = { projectId: "pdtjo-8851b" };
     firebase.initializeApp(firebaseConfig);
     var db = firebase.firestore();
+    var storage = firebase.storage();
 
     var homeView = document.getElementById('home-view');
     var postView = document.getElementById('post-view');
@@ -19,6 +20,14 @@ document.addEventListener('DOMContentLoaded', function() {
     var currentPostId = null;
     var quill = null;
     var posts = {};
+
+    // --- 0.1 IMAGE UPLOAD HELPER ---
+    async function uploadImage(file, folder = 'uploads') {
+        const fileName = `${Date.now()}_${file.name}`;
+        const storageRef = storage.ref().child(`${folder}/${fileName}`);
+        const snapshot = await storageRef.put(file);
+        return await snapshot.ref.getDownloadURL();
+    }
 
     // --- 1. DATA PERSISTENCE (Firestore) ---
     function syncPosts(callback) {
@@ -161,6 +170,28 @@ document.addEventListener('DOMContentLoaded', function() {
                     ]
                 }
             });
+
+            // Custom Image Handler
+            quill.getModule('toolbar').addHandler('image', () => {
+                const input = document.createElement('input');
+                input.setAttribute('type', 'file');
+                input.setAttribute('accept', 'image/*');
+                input.click();
+
+                input.onchange = async () => {
+                    const file = input.files[0];
+                    if (file) {
+                        try {
+                            const url = await uploadImage(file, 'posts');
+                            const range = quill.getSelection();
+                            quill.insertEmbed(range.index, 'image', url);
+                        } catch (err) {
+                            console.error('Upload failed:', err);
+                            alert('이미지 업로드에 실패했습니다.');
+                        }
+                    }
+                };
+            });
         }
     }
     
@@ -168,6 +199,7 @@ document.addEventListener('DOMContentLoaded', function() {
         currentEditingId = null;
         document.getElementById('post-title-input').value = '';
         document.getElementById('post-thumb-input').value = '';
+        document.getElementById('thumb-status').textContent = '파일 없음';
         document.getElementById('post-category-input').value = '테슬라';
         if (quill) quill.root.innerHTML = '';
     }
@@ -177,6 +209,7 @@ document.addEventListener('DOMContentLoaded', function() {
         var p = posts[id];
         document.getElementById('post-title-input').value = p.title;
         document.getElementById('post-thumb-input').value = p.thumb || '';
+        document.getElementById('thumb-status').textContent = p.thumb ? '기존 이미지 있음' : '파일 없음';
         document.getElementById('post-category-input').value = p.category || '테슬라';
         if (quill) quill.root.innerHTML = p.content || '';
     }
@@ -188,6 +221,23 @@ document.addEventListener('DOMContentLoaded', function() {
     
     var submitCommentBtn = document.getElementById('submit-comment');
     if (submitCommentBtn) submitCommentBtn.onclick = () => saveComment(currentPostId);
+
+    // Thumbnail Upload Event
+    document.getElementById('post-thumb-upload').onchange = async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            document.getElementById('thumb-status').textContent = '업로드 중...';
+            try {
+                const url = await uploadImage(file, 'thumbs');
+                document.getElementById('post-thumb-input').value = url;
+                document.getElementById('thumb-status').textContent = '업로드 완료';
+            } catch (err) {
+                console.error('Thumb upload failed:', err);
+                document.getElementById('thumb-status').textContent = '실패';
+                alert('썸네일 업로드에 실패했습니다.');
+            }
+        }
+    };
 
     document.getElementById('save-post-btn').onclick = async () => {
         var id = currentEditingId || 'post-' + Date.now();

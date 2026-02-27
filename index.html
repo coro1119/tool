@@ -18,6 +18,7 @@
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 </head>
 <body data-theme="dark">
     <!-- 상단 내비게이션 -->
@@ -41,8 +42,8 @@
                 <div class="category-chips">
                     <button class="chip active">전체</button>
                     <button class="chip">테슬라</button>
-                    <button class="chip">AI/로봇</button>
-                    <button class="chip">에너지</button>
+                    <button class="chip">일론머스크</button>
+                    <button class="chip">해외주식</button>
                 </div>
             </div>
             
@@ -126,10 +127,15 @@
             <div class="editor-options-grid">
                 <select id="post-category-input">
                     <option value="테슬라">테슬라</option>
-                    <option value="AI/로봇">AI/로봇</option>
-                    <option value="에너지">에너지</option>
+                    <option value="일론머스크">일론머스크</option>
+                    <option value="해외주식">해외주식</option>
                 </select>
-                <input type="text" id="post-thumb-input" placeholder="썸네일 이미지 URL">
+                <div class="file-upload-wrapper">
+                    <label for="post-thumb-upload" class="file-label">썸네일 업로드</label>
+                    <input type="file" id="post-thumb-upload" accept="image/*" style="display: none;">
+                    <span id="thumb-status" style="font-size: 0.8rem; color: var(--text-muted);">파일 없음</span>
+                    <input type="hidden" id="post-thumb-input">
+                </div>
             </div>
             <div class="editor-label">본문 내용</div>
             <div id="quill-editor" style="height: 600px;"></div>
