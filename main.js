@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const storage = firebase.storage();
     const auth = firebase.auth();
 
-    // Offline Persistence
+    // Enable Offline Persistence
     db.enablePersistence().catch(err => console.warn("Persistence failed", err.code));
 
     // DOM Elements
@@ -50,6 +50,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let posts = {};
     let currentFilter = '전체';
     let isAdmin = false;
+    let isInitialLoad = true;
 
     // --- 0.1 SEO & URL UTILS ---
     function generateSlug(text) {
@@ -67,9 +68,9 @@ document.addEventListener('DOMContentLoaded', function() {
         else if (viewName === 'contact') path = '/contact';
         else if (viewName === 'admin-login') path = '/admin';
         
-        // Use hash for simple static hosting compatibility if needed, 
-        // but here we'll use history for cleaner URLs
-        window.history.pushState({view: viewName, id: id}, '', path);
+        if (window.location.pathname !== path) {
+            window.history.pushState({view: viewName, id: id}, '', path);
+        }
     }
 
     // --- 0.2 AUTH ---
@@ -122,8 +123,13 @@ document.addEventListener('DOMContentLoaded', function() {
         db.collection('posts').orderBy('updatedAt', 'desc').onSnapshot(snap => {
             posts = {};
             snap.forEach(doc => posts[doc.id] = doc.data());
-            renderCurrentView();
-            handleInitialRouting(); // Check URL on first load
+            
+            if (isInitialLoad) {
+                handleInitialRouting();
+                isInitialLoad = false;
+            } else {
+                renderCurrentView();
+            }
         });
     }
 
@@ -157,7 +163,7 @@ document.addEventListener('DOMContentLoaded', function() {
         postDetail.cat.textContent = p.category;
         postDetail.date.textContent = p.date;
         postDetail.content.innerHTML = p.content;
-        document.title = `${p.title} — FinanceCalculator`; // Dynamic SEO Title
+        document.title = `${p.title} — FinanceCalculator`;
         loadComments(id);
     }
 
@@ -199,7 +205,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     loading.innerHTML = `<div style="color:var(--accent); position:fixed; bottom:20px; right:20px; background:var(--bg-elevated); padding:10px; border-radius:8px; z-index:9999; border:1px solid var(--border);">Uploading: <span id="p-${lid}">0</span>%</div>`;
                     document.body.appendChild(loading);
                     try {
-                        const url = await uploadImage(file, 'posts', p => document.getElementById(`p-${lid}`).textContent = p);
+                        const url = await uploadImage(file, 'posts', p => {
+                            const pSpan = document.getElementById(`p-${lid}`);
+                            if (pSpan) pSpan.textContent = p;
+                        });
                         loading.remove();
                         const range = quill.getSelection() || { index: quill.getLength() };
                         quill.insertEmbed(range.index, 'image', url);
@@ -224,11 +233,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (quill) quill.root.innerHTML = p.content || '';
     }
 
-    // --- 4. COMMENTS & CONTACT ---
+    // --- 4. COMMENTS ---
     function loadComments(postId) {
         db.collection('posts').doc(postId).collection('comments').orderBy('timestamp', 'asc').onSnapshot(snap => {
             const comments = []; snap.forEach(doc => comments.push({ id: doc.id, ...doc.data() }));
-            document.getElementById('comment-count').textContent = comments.length;
+            const countSpan = document.getElementById('comment-count');
+            if (countSpan) countSpan.textContent = comments.length;
             const list = document.getElementById('comment-list');
             if (list) list.innerHTML = comments.map(c => `
                 <div class="comment-item">
@@ -245,61 +255,79 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // --- 5. NAVIGATION ---
-    function goTo(name, id = null) {
-        Object.values(views).forEach(v => v.classList.remove('active'));
+    function goTo(name, id = null, skipUpdateURL = false) {
+        Object.values(views).forEach(v => { if(v) v.classList.remove('active'); });
         document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
         
         if (name === 'home') { 
-            views.home.classList.add('active'); 
+            if(views.home) views.home.classList.add('active'); 
             renderHomeList(); 
-            document.querySelector('[data-page="home"]').classList.add('active');
-            updateURL('home');
+            const homeLink = document.querySelector('[data-page="home"]');
+            if(homeLink) homeLink.classList.add('active');
+            if(!skipUpdateURL) updateURL('home');
             document.title = "FinanceCalculator — 금융 & 데이터 리서치";
         }
         else if (name === 'post') { 
-            views.post.classList.add('active'); 
+            if(views.post) views.post.classList.add('active'); 
             renderPostDetail(id); 
-            updateURL('post', id, posts[id]?.title);
+            if(!skipUpdateURL) updateURL('post', id, posts[id]?.title);
         }
         else if (name === 'contact') { 
-            views.contact.classList.add('active'); 
-            document.querySelector('[data-page="contact"]').classList.add('active');
-            updateURL('contact');
+            if(views.contact) views.contact.classList.add('active'); 
+            const contactLink = document.querySelector('[data-page="contact"]');
+            if(contactLink) contactLink.classList.add('active');
+            if(!skipUpdateURL) updateURL('contact');
             document.title = "Contact — FinanceCalculator";
         }
-        else if (name === 'admin-login') { views.login.classList.add('active'); updateURL('admin-login'); }
-        else if (name === 'dashboard' && isAdmin) { views.dashboard.classList.add('active'); renderAdminTable(); }
-        else if (name === 'editor' && isAdmin) { views.editor.classList.add('active'); initQuill(); if (id) loadEditor(id); else resetEditor(); }
-        else { views.home.classList.add('active'); }
+        else if (name === 'admin-login') { 
+            if(views.login) views.login.classList.add('active'); 
+            if(!skipUpdateURL) updateURL('admin-login'); 
+        }
+        else if (name === 'dashboard' && isAdmin) { 
+            if(views.dashboard) views.dashboard.classList.add('active'); 
+            renderAdminTable(); 
+        }
+        else if (name === 'editor' && isAdmin) { 
+            if(views.editor) views.editor.classList.add('active'); 
+            initQuill(); 
+            if (id) loadEditor(id); else resetEditor(); 
+        }
+        else { 
+            if(views.home) views.home.classList.add('active'); 
+        }
         window.scrollTo(0, 0);
     }
 
     function handleInitialRouting() {
         const path = window.location.pathname;
-        if (path === '/contact') goTo('contact');
-        else if (path === '/admin') goTo('admin-login');
+        if (path === '/contact') goTo('contact', null, true);
+        else if (path === '/admin') goTo('admin-login', null, true);
         else if (path.startsWith('/post/')) {
             const slug = path.split('/').pop();
             const postId = Object.keys(posts).find(id => generateSlug(posts[id].title) === slug);
-            if (postId) goTo('post', postId);
-            else goTo('home');
+            if (postId) goTo('post', postId, true);
+            else goTo('home', null, true);
+        } else {
+            goTo('home', null, true);
         }
     }
 
     window.onpopstate = (e) => {
-        if (e.state && e.state.view) goTo(e.state.view, e.state.id);
+        if (e.state && e.state.view) goTo(e.state.view, e.state.id, true);
         else handleInitialRouting();
     };
 
     // Secret Entrance
     let logoClicks = 0; let lastClickTime = 0;
     const logo = document.getElementById('main-logo');
-    logo.addEventListener('click', () => {
-        const now = new Date().getTime();
-        if (now - lastClickTime > 1500) logoClicks = 0;
-        logoClicks++; lastClickTime = now;
-        if (logoClicks >= 3) { logoClicks = 0; isAdmin ? goTo('dashboard') : goTo('admin-login'); }
-    });
+    if (logo) {
+        logo.addEventListener('click', () => {
+            const now = new Date().getTime();
+            if (now - lastClickTime > 1500) logoClicks = 0;
+            logoClicks++; lastClickTime = now;
+            if (logoClicks >= 3) { logoClicks = 0; isAdmin ? goTo('dashboard') : goTo('admin-login'); }
+        });
+    }
 
     document.body.onclick = e => {
         const t = e.target.closest('[data-page]');
@@ -312,51 +340,50 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    document.getElementById('login-btn').onclick = async () => {
-        const email = document.getElementById('admin-email').value;
-        const pw = document.getElementById('admin-password').value;
-        try { await auth.signInWithEmailAndPassword(email, pw); goTo('dashboard'); } catch(e) { alert(e.message); }
-    };
+    const loginBtn = document.getElementById('login-btn');
+    if(loginBtn) {
+        loginBtn.onclick = async () => {
+            const email = document.getElementById('admin-email').value;
+            const pw = document.getElementById('admin-password').value;
+            try { await auth.signInWithEmailAndPassword(email, pw); goTo('dashboard'); } catch(e) { alert(e.message); }
+        };
+    }
 
-    document.getElementById('logout-btn').onclick = () => auth.signOut().then(() => goTo('home'));
-    document.getElementById('go-to-new-post').onclick = () => goTo('editor');
-    document.querySelectorAll('.back-btn').forEach(btn => btn.onclick = () => views.editor.classList.contains('active') ? goTo('dashboard') : goTo('home'));
+    const logoutBtn = document.getElementById('logout-btn');
+    if(logoutBtn) logoutBtn.onclick = () => auth.signOut().then(() => goTo('home'));
+    
+    const newPostBtn = document.getElementById('go-to-new-post');
+    if(newPostBtn) newPostBtn.onclick = () => goTo('editor');
+    
+    document.querySelectorAll('.back-btn').forEach(btn => {
+        btn.onclick = () => views.editor.classList.contains('active') ? goTo('dashboard') : goTo('home');
+    });
 
     // Contact Form
-    document.getElementById('submit-contact').onclick = async function() {
-        const name = document.getElementById('contact-name').value;
-        const email = document.getElementById('contact-email').value;
-        const msg = document.getElementById('contact-message').value;
-        
-        if (!name || !email || !msg) return alert("Please fill all fields.");
-        
-        const btn = this;
-        btn.disabled = true;
-        btn.textContent = "Sending...";
-
-        try {
-            const response = await fetch("https://formspree.io/f/xvgzlowq", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name, email, message: msg })
-            });
-
-            if (response.ok) {
-                alert("문의가 성공적으로 전송되었습니다. 곧 연락드리겠습니다!");
-                document.getElementById('contact-name').value = '';
-                document.getElementById('contact-email').value = '';
-                document.getElementById('contact-message').value = '';
-                goTo('home');
-            } else {
-                throw new Error("전송 실패");
-            }
-        } catch (err) {
-            alert("전송 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
-        } finally {
-            btn.disabled = false;
-            btn.textContent = "Send Email";
-        }
-    };
+    const submitContact = document.getElementById('submit-contact');
+    if(submitContact) {
+        submitContact.onclick = async function() {
+            const name = document.getElementById('contact-name').value;
+            const email = document.getElementById('contact-email').value;
+            const msg = document.getElementById('contact-message').value;
+            if (!name || !email || !msg) return alert("Please fill all fields.");
+            const btn = this; btn.disabled = true; btn.textContent = "Sending...";
+            try {
+                const response = await fetch("https://formspree.io/f/xvgzlowq", {
+                    method: "POST", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name, email, message: msg })
+                });
+                if (response.ok) {
+                    alert("문의가 성공적으로 전송되었습니다!");
+                    document.getElementById('contact-name').value = '';
+                    document.getElementById('contact-email').value = '';
+                    document.getElementById('contact-message').value = '';
+                    goTo('home');
+                } else { throw new Error("전송 실패"); }
+            } catch (err) { alert("전송 중 오류 발생. 잠시 후 다시 시도해 주세요."); }
+            finally { btn.disabled = false; btn.textContent = "Send Email"; }
+        };
+    }
 
     editorFields.thumbPreview.onclick = () => editorFields.thumbFile.click();
     editorFields.thumbFile.onchange = async (e) => {
@@ -364,7 +391,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (file) {
             editorFields.thumbStatus.textContent = 'Uploading...';
             try {
-                const url = await uploadImage(file, 'thumbs', p => editorFields.thumbStatus.textContent = `Uploading ${p}%`);
+                const url = await uploadImage(file, 'thumbs', p => {
+                    editorFields.thumbStatus.textContent = `Uploading ${p}%`;
+                });
                 editorFields.thumb.value = url;
                 editorFields.thumbPreview.style.backgroundImage = `url('${url}')`;
                 editorFields.thumbPreview.innerHTML = '';
@@ -373,37 +402,43 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    document.getElementById('save-post-btn').onclick = async function() {
-        if (!isAdmin) return;
-        const title = editorFields.title.value; if (!title) return alert('Title required');
-        this.disabled = true; this.textContent = 'Publishing...';
-        const id = currentEditingId || 'post-' + Date.now();
-        const data = {
-            title, content: quill.root.innerHTML,
-            summary: quill.getText().substring(0, 160).replace(/\n/g, ' ') + '...',
-            category: editorFields.cat.value, thumb: editorFields.thumb.value,
-            date: currentEditingId ? posts[id].date : new Date().toLocaleDateString('ko-KR'),
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    const savePostBtn = document.getElementById('save-post-btn');
+    if(savePostBtn) {
+        savePostBtn.onclick = async function() {
+            if (!isAdmin) return;
+            const title = editorFields.title.value; if (!title) return alert('Title required');
+            this.disabled = true; this.textContent = 'Publishing...';
+            const id = currentEditingId || 'post-' + Date.now();
+            const data = {
+                title, content: quill.root.innerHTML,
+                summary: quill.getText().substring(0, 160).replace(/\n/g, ' ') + '...',
+                category: editorFields.cat.value, thumb: editorFields.thumb.value,
+                date: currentEditingId ? posts[id].date : new Date().toLocaleDateString('ko-KR'),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            try { await db.collection('posts').doc(id).set(data); alert('Published!'); goTo('dashboard'); }
+            catch (e) { alert(e.message); } finally { this.disabled = false; this.textContent = 'Publish'; }
         };
-        try { await db.collection('posts').doc(id).set(data); alert('Published!'); goTo('dashboard'); }
-        catch (e) { alert(e.message); } finally { this.disabled = false; this.textContent = 'Publish'; }
-    };
+    }
 
-    document.getElementById('submit-comment').onclick = async () => {
-        const name = document.getElementById('comment-name').value;
-        const pw = document.getElementById('comment-pw').value;
-        const body = document.getElementById('comment-body').value;
-        if (!name || !pw || !body) return alert('All fields required');
-        try {
-            await db.collection('posts').doc(currentPostId).collection('comments').add({
-                name, pw, body, date: new Date().toLocaleString(),
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            document.getElementById('comment-name').value = '';
-            document.getElementById('comment-pw').value = '';
-            document.getElementById('comment-body').value = '';
-        } catch (e) { alert(e.message); }
-    };
+    const submitCommentBtn = document.getElementById('submit-comment');
+    if(submitCommentBtn) {
+        submitCommentBtn.onclick = async () => {
+            const name = document.getElementById('comment-name').value;
+            const pw = document.getElementById('comment-pw').value;
+            const body = document.getElementById('comment-body').value;
+            if (!name || !pw || !body) return alert('All fields required');
+            try {
+                await db.collection('posts').doc(currentPostId).collection('comments').add({
+                    name, pw, body, date: new Date().toLocaleString(),
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                document.getElementById('comment-name').value = '';
+                document.getElementById('comment-pw').value = '';
+                document.getElementById('comment-body').value = '';
+            } catch (e) { alert(e.message); }
+        };
+    }
 
     syncPosts();
 });
