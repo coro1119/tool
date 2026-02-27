@@ -26,17 +26,32 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+
+    <!-- Google Translate API -->
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'ko',
+                includedLanguages: 'en,es,ar,fr,de,zh-CN,ja,ru,pt,vi',
+                layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+                autoDisplay: false
+            }, 'google_translate_element');
+        }
+    </script>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </head>
 <body data-theme="dark">
     <!-- 상단 내비게이션 -->
     <header class="main-header">
         <div class="container nav-wrapper">
             <h1 class="logo" id="main-logo" style="cursor: pointer; user-select: none;">Finance<span>Calculator</span></h1>
-            <nav>
+            <nav class="nav-right">
                 <ul class="nav-links">
                     <li><a href="#" class="active" data-page="home">Home</a></li>
                     <li><a href="#" data-page="contact">Contact</a></li>
                 </ul>
+                <!-- Language Selector -->
+                <div id="google_translate_element" class="lang-selector"></div>
             </nav>
         </div>
     </header>
@@ -47,7 +62,7 @@
             <div class="list-header">
                 <div class="header-content">
                     <h2>Financial Insights</h2>
-                    <p class="subtitle">복잡한 금융과 기술의 미래를 데이터로 계산하고 분석합니다.</p>
+                    <p class="subtitle">데이터로 계산하고 분석하는 금융과 기술의 미래.</p>
                 </div>
                 <div class="category-chips">
                     <button class="chip active" data-filter="전체">전체</button>
@@ -91,37 +106,33 @@
             </article>
         </section>
 
-        <!-- 3. Contact View (개선된 디자인) -->
+        <!-- 3. Contact View -->
         <section id="contact-view" class="view">
             <div class="contact-page-wrapper">
                 <div class="contact-header-box">
                     <span class="minimal-tag">CONNECT</span>
                     <h2>Work with Me</h2>
-                    <p>협업 문의, 리서치 요청, 혹은 피드백이 있다면 언제든 환영합니다.</p>
+                    <p>협업 문의나 피드백을 남겨주세요.</p>
                 </div>
                 
                 <div class="premium-contact-card">
                     <div class="input-group">
                         <label>Your Name</label>
-                        <input type="text" id="contact-name" placeholder="이름을 입력하세요">
+                        <input type="text" id="contact-name" placeholder="Name">
                     </div>
-                    
                     <div class="input-group">
                         <label>Your Email</label>
                         <input type="email" id="contact-email" placeholder="example@email.com">
                     </div>
-                    
                     <div class="input-group">
                         <label>Message</label>
-                        <textarea id="contact-message" placeholder="전하실 내용을 상세히 적어주세요."></textarea>
+                        <textarea id="contact-message" placeholder="Message"></textarea>
                     </div>
-                    
                     <button id="submit-contact" class="fancy-submit-btn">
                         <span>Send Message</span>
                         <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
                     </button>
                 </div>
-                
                 <div class="contact-footer">
                     <p>문의하신 내용은 작성하신 이메일로 회신 드립니다.</p>
                 </div>
@@ -132,7 +143,6 @@
         <section id="admin-login-view" class="view">
             <div class="admin-box">
                 <h3>Admin Access</h3>
-                <p class="admin-desc">Please enter your credentials to proceed.</p>
                 <input type="email" id="admin-email" placeholder="Email" style="letter-spacing: normal; text-align: left; margin-bottom: 10px;">
                 <input type="password" id="admin-password" placeholder="Password">
                 <button id="login-btn" class="action-btn">Sign In</button>
@@ -183,15 +193,11 @@
                         </select>
                     </div>
                     <div class="side-item">
-                        <div class="editor-label">Thumbnail Image</div>
+                        <div class="editor-label">Thumbnail</div>
                         <div class="thumb-upload-area">
-                            <div id="thumb-preview" class="thumb-preview-box">
-                                <span class="placeholder-text">Click to upload image</span>
-                            </div>
+                            <div id="thumb-preview" class="thumb-preview-box"></div>
                             <input type="file" id="post-thumb-upload" accept="image/*" hidden>
-                            <div class="thumb-status-bar">
-                                <span id="thumb-status">Ready</span>
-                            </div>
+                            <div class="thumb-status-bar"><span id="thumb-status">Ready</span></div>
                         </div>
                         <input type="hidden" id="post-thumb-input">
                     </div>
@@ -209,6 +215,6 @@
     <!-- Image Lightbox -->
     <div id="lightbox"><img src="" alt="Zoomed Image"></div>
 
-    <script src="main.js?v=9"></script>
+    <script src="main.js?v=10"></script>
 </body>
 </html>
