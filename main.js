@@ -1,8 +1,13 @@
 document.addEventListener('DOMContentLoaded', function() {
     // --- 0. FIREBASE INITIALIZATION ---
-    var firebaseConfig = { 
-        projectId: "pdtjo-8851b",
-        storageBucket: "pdtjo-8851b.firebasestorage.app"
+    var firebaseConfig = {
+        "projectId": "pdtjo-8851b",
+        "appId": "1:376873682315:web:86a58cc0845ceba6999b8e",
+        "storageBucket": "pdtjo-8851b.firebasestorage.app",
+        "apiKey": "AIzaSyCukyy8HDb_WUU1as06VmdPen3TLhtjfJQ",
+        "authDomain": "pdtjo-8851b.firebaseapp.com",
+        "messagingSenderId": "376873682315",
+        "measurementId": "G-4EBTV3RSLR"
     };
     firebase.initializeApp(firebaseConfig);
     var db = firebase.firestore();

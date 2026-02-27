@@ -1,5 +1,7 @@
 {
   "projects": {
     "default": "pdtjo-8851b"
-  }
+  },
+  "targets": {},
+  "etags": {}
 }
