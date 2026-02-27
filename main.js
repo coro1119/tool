@@ -46,15 +46,60 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentFilter = '전체';
 
     // --- 0.1 IMAGE OPTIMIZATION & UPLOAD ---
+    async function compressImage(file, maxWidth = 1200, quality = 0.7) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > maxWidth) {
+                        height = (maxWidth / width) * height;
+                        width = maxWidth;
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    canvas.toBlob((blob) => {
+                        if (blob) {
+                            // 원본보다 압축본이 크면 원본 사용
+                            resolve(blob.size < file.size ? blob : file);
+                        } else {
+                            reject(new Error("Canvas conversion failed"));
+                        }
+                    }, 'image/jpeg', quality);
+                };
+                img.onerror = reject;
+            };
+            reader.onerror = reject;
+        });
+    }
+
     async function uploadImage(file, folder = 'uploads') {
-        // Simple client-side validation
-        if (file.size > 5 * 1024 * 1024) throw new Error("File size too large (max 5MB)");
+        let uploadFile = file;
         
+        // 1. Client-side Compression (Except for GIFs)
+        if (file.type !== 'image/gif') {
+            try {
+                uploadFile = await compressImage(file);
+            } catch (err) {
+                console.warn("Compression failed, using original", err);
+            }
+        }
+
         const fileName = `${Date.now()}_${file.name.replace(/[^a-z0-9.]/gi, '_')}`;
         const storageRef = storage.ref().child(`${folder}/${fileName}`);
         
-        const metadata = { contentType: file.type };
-        const snapshot = await storageRef.put(file, metadata);
+        const metadata = { contentType: 'image/jpeg' };
+        const snapshot = await storageRef.put(uploadFile, metadata);
         return await snapshot.ref.getDownloadURL();
     }
 
@@ -162,8 +207,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 const file = input.files[0];
                 if (file) {
                     try {
+                        const loadingLabel = document.createElement('p');
+                        loadingLabel.textContent = "Uploading image...";
+                        loadingLabel.style.color = "var(--accent)";
+                        quill.root.appendChild(loadingLabel);
+                        
                         const url = await uploadImage(file, 'posts');
-                        const range = quill.getSelection();
+                        loadingLabel.remove();
+                        
+                        const range = quill.getSelection() || { index: quill.getLength() };
                         quill.insertEmbed(range.index, 'image', url);
                     } catch (err) { alert('이미지 업로드 실패: ' + err.message); }
                 }
@@ -192,6 +244,7 @@ document.addEventListener('DOMContentLoaded', function() {
             editorFields.thumbPreview.style.backgroundImage = `url('${p.thumb}')`;
             editorFields.thumbPreview.innerHTML = '';
         }
+        editorFields.thumbStatus.textContent = 'Existing';
         if (quill) quill.root.innerHTML = p.content || '';
     }
 
@@ -266,13 +319,13 @@ document.addEventListener('DOMContentLoaded', function() {
     editorFields.thumbFile.onchange = async (e) => {
         const file = e.target.files[0];
         if (file) {
-            editorFields.thumbStatus.textContent = 'Uploading...';
+            editorFields.thumbStatus.textContent = 'Compressing...';
             try {
                 const url = await uploadImage(file, 'thumbs');
                 editorFields.thumb.value = url;
                 editorFields.thumbPreview.style.backgroundImage = `url('${url}')`;
                 editorFields.thumbPreview.innerHTML = '';
-                editorFields.thumbStatus.textContent = 'Complete';
+                editorFields.thumbStatus.textContent = 'Upload Complete';
             } catch (err) {
                 editorFields.thumbStatus.textContent = 'Failed';
                 alert('Upload Error: ' + err.message);
