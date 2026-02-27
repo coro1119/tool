@@ -1,6 +1,9 @@
 document.addEventListener('DOMContentLoaded', function() {
     // --- 0. FIREBASE INITIALIZATION ---
-    var firebaseConfig = { projectId: "pdtjo-8851b" };
+    var firebaseConfig = { 
+        projectId: "pdtjo-8851b",
+        storageBucket: "pdtjo-8851b.firebasestorage.app"
+    };
     firebase.initializeApp(firebaseConfig);
     var db = firebase.firestore();
     var storage = firebase.storage();
@@ -234,7 +237,7 @@ document.addEventListener('DOMContentLoaded', function() {
             } catch (err) {
                 console.error('Thumb upload failed:', err);
                 document.getElementById('thumb-status').textContent = '실패';
-                alert('썸네일 업로드에 실패했습니다.');
+                alert('썸네일 업로드에 실패했습니다. (Storage 설정 확인 필요)');
             }
         }
     };
