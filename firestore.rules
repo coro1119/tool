@@ -1,0 +1,15 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 모든 방문자가 게시물과 댓글을 읽을 수 있게 허용
+    match /posts/{post} {
+      allow read: if true;
+      allow write: if request.auth != null; // 로그인된 관리자만 쓰기 허용
+      
+      match /comments/{comment} {
+        allow read: if true;
+        allow write: if true; // 댓글은 누구나 작성 가능
+      }
+    }
+  }
+}
