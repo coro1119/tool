@@ -1,4 +1,9 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // --- 0. FIREBASE INITIALIZATION ---
+    var firebaseConfig = { projectId: "pdtjo-8851b" };
+    firebase.initializeApp(firebaseConfig);
+    var db = firebase.firestore();
+
     var homeView = document.getElementById('home-view');
     var postView = document.getElementById('post-view');
     var adminLoginView = document.getElementById('admin-login-view');
@@ -13,53 +18,80 @@ document.addEventListener('DOMContentLoaded', function() {
     var currentEditingId = null;
     var currentPostId = null;
     var quill = null;
+    var posts = {};
 
-    // --- 1. DATA PERSISTENCE (Total 10+ Posts Migrated) ---
-    var defaultPosts = {
-        'post-1': { title: 'AI 전력부족 시대, GE 버노바(GE Vernova) 주식 지금 볼 만한가?', category: '에너지', date: '2026. 02. 13', summary: 'AI 인프라의 핵심은 이제 전력입니다. GE 버노바를 분석합니다.', thumb: 'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=600', content: `<h3>AI의 심장은 전력입니다</h3><p>데이터 센터 구동을 위한 '전기'와 이를 전달할 '전력 인프라'가 핵심입니다. GE 버노바는 전 세계 발전량의 30%를 담당하는 압도적인 기업입니다.</p>` },
-        'post-2': { title: '자율주행에서 휴머노이드까지: 테슬라가 데이터로 AI를 키우는 법', category: '테슬라', date: '2026. 02. 11', summary: '테슬라의 AI 학습은 도로 위 자동차를 넘어 인간 형태의 로봇 옵티머스로 확장되고 있습니다.', thumb: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=600', content: `<h3>데이터의 물리적 확산</h3><p>FSD 데이터는 이제 옵티머스에게 전이되고 있습니다. 로봇이 걷고 집는 행위는 도로 위 장애물 회피와 수학적으로 동일한 원리입니다.</p>` },
-        'post-3': { title: '일론 머스크 달 도시 선언, 화성 포기 아닌 AI 전력 공장?', category: 'AI/로봇', date: '2026. 02. 09', summary: '머스크가 최근 달 식민지 건설을 화성보다 우선순위에 두었습니다. 그 이면에는 AI 전력 전략이 숨어있을지 모릅니다.', thumb: 'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=600', content: `<p>지구상의 전력 공급 한계를 넘기 위해 태양광 효율이 높은 달에 데이터 센터를 구축하려는 장기 포석일 수 있습니다.</p>` },
-        'post-4': { title: '테슬라 모델 S·X 단종이 진짜 무서운 이유: 프리몬트가 옵티머스 공장이 된다... 2편', category: '테슬라', date: '2026. 02. 05', summary: '모델 S/X 단종은 테슬라가 차량에서 로봇으로 100% 전환하고 있다는 명확한 신호입니다.', thumb: 'https://images.unsplash.com/photo-1558444458-5cd00bb12f1d?w=600', content: `<p>프리몬트의 빈자리를 채우는 것은 수만 명의 노동력을 대체할 옵티머스 대량 생산 라인입니다.</p>` },
-        'post-5': { title: '테슬라 모델 S·X 단종이 진짜 무서운 이유: 프리몬트가 옵티머스 공장이 된다... 1편', category: '테슬라', date: '2026. 02. 04', summary: '모델 S와 X는 테슬라의 시작이었습니다. 그러나 이제 그들은 과거와 결별하려 합니다.', thumb: 'https://images.unsplash.com/photo-1617791160536-598cf32026fb?w=600', content: `<p>가장 상징적인 모델을 단종시킴으로써 리소스를 자율 로봇 플랫폼에 집중하는 공격적인 재편입니다.</p>` },
-        'post-6': { title: 'AI 시대의 전력 인프라: 왜 지금 변압기인가?', category: '에너지', date: '2026. 01. 30', summary: '구리 가격 상승과 맞물린 전력 인프라의 위기. 변압기 쇼티지가 단순한 현상이 아닌 이유를 분석합니다.', thumb: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600', content: `<h3>인프라의 병목 현상</h3><p>전 세계 전력망은 노후화되었고, AI 데이터 센터는 막대한 전력을 요구합니다. 그 사이를 연결하는 변압기 시장은 현재 공급자 우위의 독점 시장으로 변모했습니다.</p>` },
-        'post-7': { title: '테슬라 옵티머스 Gen 2: 로봇 공학의 아이폰 순간', category: 'AI/로봇', date: '2026. 01. 25', summary: '촉각 센서가 달린 옵티머스의 손. 이는 단순한 하드웨어의 발전을 넘어 인간의 노동을 완벽히 대체할 수 있는 AI의 육체가 완성되었음을 의미합니다.', thumb: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=600', content: `<h3>노동의 가치가 변하는 지점</h3><p>옵티머스가 3만 달러 미만으로 대량 생산되는 순간, 전 세계 서비스업과 제조업의 비용 구조는 완전히 무너질 것입니다.</p>` },
-        'post-8': { title: '미국 대선과 테슬라: 정책 리스크인가 기회인가?', category: '거시경제', date: '2026. 01. 15', summary: '보조금 폐지 위기와 자율주행 규제 완화. 정치적 지형 변화가 테슬라의 펀더멘털에 미치는 영향을 점검합니다.', thumb: 'https://images.unsplash.com/photo-1541872703-74c5e443d1f5?w=600', content: `<p>IRA 보조금 축소는 단기적으로 악재일 수 있으나, 압도적인 제조 경쟁력을 가진 테슬라에게는 경쟁자들을 고사시킬 기회가 될 수도 있습니다.</p>` },
-        'post-9': { title: '로보택시 비즈니스 모델: 테슬라 네트워크의 가치', category: '테슬라', date: '2026. 01. 05', summary: '자동차 소유주가 수수료를 지불하고 테슬라 네트워크에 가입하는 시대. 우버를 뛰어넘는 플랫폼 수익 구조를 분석합니다.', thumb: 'https://images.unsplash.com/photo-1558444458-5cd00bb12f1d?w=600', content: `<p>테슬라는 차량을 파는 것보다 그 안에서 돌아가는 소프트웨어와 네트워크 수수료에서 더 큰 가치를 창출하게 될 것입니다.</p>` },
-        'post-10': { title: 'S&P500 지수 투자, 지금도 늦지 않았을까?', category: '거시경제', date: '2025. 12. 20', summary: '기술주 중심의 나스닥 광풍 속에서 S&P500 지수 투자가 가지는 안정성과 장기 수익률을 재조명합니다.', thumb: 'https://images.unsplash.com/photo-1611974714024-4607a55d40ed?w=600', content: `<p>시장은 늘 과열과 냉각을 반복하지만, 인류의 혁신은 계속됩니다. 지수 투자는 그 혁신에 가장 안전하게 올라타는 방법입니다.</p>` }
-    };
-
-    function loadPosts() { var saved = localStorage.getItem('teslaburn_posts_v3'); return saved ? JSON.parse(saved) : defaultPosts; }
-    function savePosts() { localStorage.setItem('teslaburn_posts_v3', JSON.stringify(posts)); }
-    var posts = loadPosts();
-
-    // --- 2. COMMENT LOGIC ---
-    function loadComments(postId) {
-        var allComments = JSON.parse(localStorage.getItem('teslaburn_comments') || '{}');
-        var comments = allComments[postId] || [];
-        var list = document.getElementById('comment-list');
-        var countSpan = document.getElementById('comment-count');
-        if (countSpan) countSpan.textContent = comments.length;
-        if (list) list.innerHTML = comments.map((c, i) => `<div class="comment-item"><div class="comment-item-top"><span class="comment-author">${c.name}</span><div style="display: flex; gap: 15px; align-items: center;"><span class="comment-date">${c.date}</span><button class="comment-delete" onclick="window.dispatchDeleteComment('${postId}', ${i})">삭제</button></div></div><p class="comment-text">${c.body}</p></div>`).join('');
+    // --- 1. DATA PERSISTENCE (Firestore) ---
+    function syncPosts(callback) {
+        db.collection('posts').onSnapshot(snapshot => {
+            posts = {};
+            snapshot.forEach(doc => { posts[doc.id] = doc.data(); });
+            if (callback) callback();
+            
+            // Re-render based on current active view
+            if (homeView.classList.contains('active')) renderHomeList();
+            if (adminDashboardView.classList.contains('active')) renderAdminTable();
+        });
     }
 
-    function saveComment(postId) {
+    async function savePost(id, data) {
+        await db.collection('posts').doc(id).set(data);
+    }
+
+    async function deletePost(id) {
+        await db.collection('posts').doc(id).delete();
+    }
+
+    // --- 2. COMMENT LOGIC (Firestore) ---
+    function loadComments(postId) {
+        db.collection('posts').doc(postId).collection('comments').orderBy('timestamp', 'asc').onSnapshot(snapshot => {
+            var comments = [];
+            snapshot.forEach(doc => { comments.push({ id: doc.id, ...doc.data() }); });
+            
+            var list = document.getElementById('comment-list');
+            var countSpan = document.getElementById('comment-count');
+            if (countSpan) countSpan.textContent = comments.length;
+            if (list) {
+                list.innerHTML = comments.map((c, i) => `
+                    <div class="comment-item">
+                        <div class="comment-item-top">
+                            <span class="comment-author">${c.name}</span>
+                            <div style="display: flex; gap: 15px; align-items: center;">
+                                <span class="comment-date">${c.date}</span>
+                                <button class="comment-delete" onclick="window.dispatchDeleteComment('${postId}', '${c.id}', '${c.pw}')">삭제</button>
+                            </div>
+                        </div>
+                        <p class="comment-text">${c.body}</p>
+                    </div>`).join('');
+            }
+        });
+    }
+
+    async function saveComment(postId) {
         var name = document.getElementById('comment-name').value;
         var pw = document.getElementById('comment-pw').value;
         var body = document.getElementById('comment-body').value;
         if (!name || !pw || !body) { alert('이름, 비밀번호, 내용을 입력하세요.'); return; }
-        var allComments = JSON.parse(localStorage.getItem('teslaburn_comments') || '{}');
-        if (!allComments[postId]) allComments[postId] = [];
-        allComments[postId].push({ name: name, pw: pw, body: body, date: new Date().toLocaleString() });
-        localStorage.setItem('teslaburn_comments', JSON.stringify(allComments));
-        document.getElementById('comment-name').value = ''; document.getElementById('comment-pw').value = ''; document.getElementById('comment-body').value = '';
-        loadComments(postId);
+        
+        await db.collection('posts').doc(postId).collection('comments').add({
+            name: name,
+            pw: pw,
+            body: body,
+            date: new Date().toLocaleString(),
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        document.getElementById('comment-name').value = ''; 
+        document.getElementById('comment-pw').value = ''; 
+        document.getElementById('comment-body').value = '';
     }
 
-    window.dispatchDeleteComment = (postId, index) => {
+    window.dispatchDeleteComment = async (postId, commentId, correctPw) => {
         var pw = prompt('삭제 비밀번호?');
-        var allComments = JSON.parse(localStorage.getItem('teslaburn_comments') || '{}');
-        if (allComments[postId][index].pw === pw) { allComments[postId].splice(index, 1); localStorage.setItem('teslaburn_comments', JSON.stringify(allComments)); loadComments(postId); }
-        else { alert('비번 오류'); }
+        if (pw === correctPw) {
+            await db.collection('posts').doc(postId).collection('comments').doc(commentId).delete();
+        } else {
+            alert('비번 오류');
+        }
     };
 
     // --- 3. VIEW TRANSITIONS ---
@@ -75,10 +107,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function renderHomeList() {
         var list = document.getElementById('main-post-list');
-        var sorted = Object.keys(posts).sort((a, b) => new Date(posts[b].date) - new Date(posts[a].date));
-        list.innerHTML = sorted.map(id => `
+        if (!list) return;
+        var sortedIds = Object.keys(posts).sort((a, b) => new Date(posts[b].date) - new Date(posts[a].date));
+        list.innerHTML = sortedIds.map(id => `
             <div class="post-item" onclick="window.dispatchPost('${id}')">
-                <div class="post-item-thumb" style="background-image: url('${posts[id].thumb}')"></div>
+                <div class="post-item-thumb" style="background-image: url('${posts[id].thumb || ''}')"></div>
                 <div class="post-item-content">
                     <span class="cat">${posts[id].category}</span>
                     <h3>${posts[id].title}</h3>
@@ -102,10 +135,15 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- 4. ADMIN & EVENTS ---
     function renderAdminTable() {
         var list = document.getElementById('admin-post-list');
+        if (!list) return;
         list.innerHTML = Object.keys(posts).map(id => `<tr><td>${posts[id].title}</td><td>${posts[id].date}</td><td><button class="edit-btn" onclick="window.dispatchEdit('${id}')">수정</button><button class="delete-btn" onclick="window.dispatchDelete('${id}')">삭제</button></td></tr>`).join('');
     }
     window.dispatchEdit = id => goTo('admin-editor', id);
-    window.dispatchDelete = id => { if(confirm('삭제하시겠습니까?')) { delete posts[id]; savePosts(); renderAdminTable(); } };
+    window.dispatchDelete = async id => { 
+        if(confirm('삭제하시겠습니까?')) { 
+            await deletePost(id);
+        } 
+    };
 
     function initQuill() {
         if (!quill) {
@@ -151,7 +189,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var submitCommentBtn = document.getElementById('submit-comment');
     if (submitCommentBtn) submitCommentBtn.onclick = () => saveComment(currentPostId);
 
-    document.getElementById('save-post-btn').onclick = () => {
+    document.getElementById('save-post-btn').onclick = async () => {
         var id = currentEditingId || 'post-' + Date.now();
         var title = document.getElementById('post-title-input').value;
         if (!title) return alert('제목을 입력하세요');
@@ -159,7 +197,7 @@ document.addEventListener('DOMContentLoaded', function() {
         var content = quill ? quill.root.innerHTML : '';
         var summary = quill ? quill.getText().substring(0, 150) + '...' : '';
         
-        posts[id] = {
+        var data = {
             title: title,
             content: content,
             date: currentEditingId ? posts[id].date : new Date().toLocaleDateString(),
@@ -168,10 +206,10 @@ document.addEventListener('DOMContentLoaded', function() {
             summary: summary
         };
         
-        savePosts();
+        await savePost(id, data);
         alert('발행 완료');
         goTo('admin-dashboard');
     };
 
-    renderHomeList();
+    syncPosts(renderHomeList);
 });
