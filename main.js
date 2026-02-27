@@ -45,8 +45,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let posts = {};
     let currentFilter = '전체';
 
-    // --- 0.1 IMAGE OPTIMIZATION & UPLOAD ---
-    async function compressImage(file, maxWidth = 1200, quality = 0.7) {
+    // --- 0.1 IMAGE OPTIMIZATION & UPLOAD WITH PROGRESS ---
+    async function compressImage(file, maxWidth = 1000, quality = 0.6) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.readAsDataURL(file);
@@ -69,12 +69,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     ctx.drawImage(img, 0, 0, width, height);
 
                     canvas.toBlob((blob) => {
-                        if (blob) {
-                            // 원본보다 압축본이 크면 원본 사용
-                            resolve(blob.size < file.size ? blob : file);
-                        } else {
-                            reject(new Error("Canvas conversion failed"));
-                        }
+                        if (blob) resolve(blob);
+                        else reject(new Error("Canvas conversion failed"));
                     }, 'image/jpeg', quality);
                 };
                 img.onerror = reject;
@@ -83,24 +79,33 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    async function uploadImage(file, folder = 'uploads') {
-        let uploadFile = file;
-        
-        // 1. Client-side Compression (Except for GIFs)
-        if (file.type !== 'image/gif') {
+    function uploadImageWithProgress(file, folder, onProgress) {
+        return new Promise(async (resolve, reject) => {
             try {
-                uploadFile = await compressImage(file);
-            } catch (err) {
-                console.warn("Compression failed, using original", err);
-            }
-        }
+                // 1. More aggressive compression
+                const isThumb = folder === 'thumbs';
+                const maxWidth = isThumb ? 600 : 1000;
+                const quality = isThumb ? 0.5 : 0.6;
+                
+                const uploadFile = file.type === 'image/gif' ? file : await compressImage(file, maxWidth, quality);
+                
+                const fileName = `${Date.now()}_${file.name.replace(/[^a-z0-9.]/gi, '_')}`;
+                const storageRef = storage.ref().child(`${folder}/${fileName}`);
+                const uploadTask = storageRef.put(uploadFile, { contentType: 'image/jpeg' });
 
-        const fileName = `${Date.now()}_${file.name.replace(/[^a-z0-9.]/gi, '_')}`;
-        const storageRef = storage.ref().child(`${folder}/${fileName}`);
-        
-        const metadata = { contentType: 'image/jpeg' };
-        const snapshot = await storageRef.put(uploadFile, metadata);
-        return await snapshot.ref.getDownloadURL();
+                uploadTask.on('state_changed', 
+                    (snapshot) => {
+                        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                        if (onProgress) onProgress(Math.round(progress));
+                    }, 
+                    (error) => reject(error), 
+                    async () => {
+                        const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
+                        resolve(downloadURL);
+                    }
+                );
+            } catch (err) { reject(err); }
+        });
     }
 
     // --- 1. DATA PERSISTENCE ---
@@ -206,18 +211,22 @@ document.addEventListener('DOMContentLoaded', function() {
             input.onchange = async () => {
                 const file = input.files[0];
                 if (file) {
+                    const loadingMsg = document.createElement('div');
+                    loadingMsg.id = 'editor-upload-loading';
+                    loadingMsg.innerHTML = `<div style="color: var(--accent); font-weight: 800; padding: 10px; border: 1px solid var(--border); background: var(--bg-elevated); border-radius: 8px; position: fixed; bottom: 20px; right: 20px; z-index: 9999;">Uploading Image: <span id="editor-progress">0</span>%</div>`;
+                    document.body.appendChild(loadingMsg);
+                    
                     try {
-                        const loadingLabel = document.createElement('p');
-                        loadingLabel.textContent = "Uploading image...";
-                        loadingLabel.style.color = "var(--accent)";
-                        quill.root.appendChild(loadingLabel);
-                        
-                        const url = await uploadImage(file, 'posts');
-                        loadingLabel.remove();
-                        
+                        const url = await uploadImageWithProgress(file, 'posts', (p) => {
+                            document.getElementById('editor-progress').textContent = p;
+                        });
+                        loadingMsg.remove();
                         const range = quill.getSelection() || { index: quill.getLength() };
                         quill.insertEmbed(range.index, 'image', url);
-                    } catch (err) { alert('이미지 업로드 실패: ' + err.message); }
+                    } catch (err) { 
+                        loadingMsg.remove();
+                        alert('이미지 업로드 실패: ' + err.message); 
+                    }
                 }
             };
         });
@@ -282,17 +291,12 @@ document.addEventListener('DOMContentLoaded', function() {
         window.scrollTo(0, 0);
     }
 
-    // Global Click Delegation
     document.body.onclick = e => {
         const target = e.target.closest('[data-page]');
         if (target) {
             e.preventDefault();
-            const page = target.getAttribute('data-page');
-            if (page === 'home') goTo('home');
-            else if (page === 'admin-login') goTo('admin-login');
+            goTo(target.getAttribute('data-page'));
         }
-        
-        // Category filtering
         if (e.target.classList.contains('chip') && e.target.closest('.category-chips')) {
             document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
             e.target.classList.add('active');
@@ -312,22 +316,22 @@ document.addEventListener('DOMContentLoaded', function() {
         else goTo('home');
     });
 
-    // Thumbnail Preview Click
     editorFields.thumbPreview.onclick = () => editorFields.thumbFile.click();
     
-    // Thumbnail Upload
     editorFields.thumbFile.onchange = async (e) => {
         const file = e.target.files[0];
         if (file) {
-            editorFields.thumbStatus.textContent = 'Compressing...';
+            editorFields.thumbStatus.textContent = 'Optimizing...';
             try {
-                const url = await uploadImage(file, 'thumbs');
+                const url = await uploadImageWithProgress(file, 'thumbs', (p) => {
+                    editorFields.thumbStatus.textContent = `Uploading ${p}%`;
+                });
                 editorFields.thumb.value = url;
                 editorFields.thumbPreview.style.backgroundImage = `url('${url}')`;
                 editorFields.thumbPreview.innerHTML = '';
-                editorFields.thumbStatus.textContent = 'Upload Complete';
+                editorFields.thumbStatus.textContent = 'Ready';
             } catch (err) {
-                editorFields.thumbStatus.textContent = 'Failed';
+                editorFields.thumbStatus.textContent = 'Error';
                 alert('Upload Error: ' + err.message);
             }
         }
@@ -336,10 +340,8 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('save-post-btn').onclick = async function() {
         const title = editorFields.title.value;
         if (!title) return alert('Please enter a title');
-        
         this.disabled = true;
         this.textContent = 'Publishing...';
-        
         const id = currentEditingId || 'post-' + Date.now();
         const data = {
             title: title,
@@ -350,17 +352,12 @@ document.addEventListener('DOMContentLoaded', function() {
             date: currentEditingId ? posts[id].date : new Date().toLocaleDateString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit' }),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
-
         try {
             await db.collection('posts').doc(id).set(data);
             alert('게시물이 발행되었습니다.');
             goTo('dashboard');
-        } catch (err) {
-            alert('발행 실패: ' + err.message);
-        } finally {
-            this.disabled = false;
-            this.textContent = 'Publish';
-        }
+        } catch (err) { alert('발행 실패: ' + err.message); }
+        finally { this.disabled = false; this.textContent = 'Publish'; }
     };
 
     document.getElementById('submit-comment').onclick = async () => {
@@ -368,7 +365,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const pw = document.getElementById('comment-pw').value;
         const body = document.getElementById('comment-body').value;
         if (!name || !pw || !body) return alert('모든 필드를 입력해주세요.');
-        
         try {
             await db.collection('posts').doc(currentPostId).collection('comments').add({
                 name, pw, body,

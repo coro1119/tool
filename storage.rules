@@ -1,0 +1,8 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if true; // 개발용 개방형 규칙 (운영 시 강화 권장)
+    }
+  }
+}
