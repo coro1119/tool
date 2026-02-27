@@ -3,7 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>테슬라번 (Teslaburn) — 테슬라 & AI 리서치</title>
+    <title>Teslaburn Research — 테슬라 & 글로벌 경제 리서치</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="테슬라, 일론 머스크, 그리고 글로벌 해외 주식 시장의 깊이 있는 리서치와 분석을 제공합니다.">
+    <meta property="og:title" content="Teslaburn Research">
+    <meta property="og:description" content="테슬라 & 글로벌 경제 인사이트">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
     
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,7 +20,6 @@
     <!-- Rich Text Editor (Quill) -->
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -27,40 +33,44 @@
             <h1 class="logo" data-page="home">Teslaburn<span>Research</span></h1>
             <nav>
                 <ul class="nav-links">
-                    <li><a href="#" class="active" data-page="home">전체글</a></li>
-                    <li><a href="#" data-page="admin-login">관리자</a></li>
+                    <li><a href="#" class="active" data-page="home">Research</a></li>
+                    <li><a href="#" data-page="admin-login" class="admin-link">Admin</a></li>
                 </ul>
             </nav>
         </div>
     </header>
 
     <main id="app" class="container main-layout">
-        <!-- 1. 블로그 리스트 (티스토리 홈 스타일) -->
+        <!-- 1. 블로그 리스트 -->
         <section id="home-view" class="view active">
             <div class="list-header">
-                <h2>최신 리서치</h2>
+                <div class="header-content">
+                    <h2>Latest Insights</h2>
+                    <p class="subtitle">테슬라와 혁신 기술, 그리고 자본 시장의 미래를 읽습니다.</p>
+                </div>
                 <div class="category-chips">
-                    <button class="chip active">전체</button>
-                    <button class="chip">테슬라</button>
-                    <button class="chip">일론머스크</button>
-                    <button class="chip">해외주식</button>
+                    <button class="chip active" data-filter="전체">전체</button>
+                    <button class="chip" data-filter="테슬라">테슬라</button>
+                    <button class="chip" data-filter="일론머스크">일론머스크</button>
+                    <button class="chip" data-filter="해외주식">해외주식</button>
                 </div>
             </div>
             
             <div id="main-post-list" class="tistory-list">
-                <!-- 포스트 목록이 동적으로 렌더링됨 -->
+                <!-- 포스트 목록 -->
             </div>
         </section>
 
-        <!-- 2. 포스트 상세 보기 (티스토리 본문 스타일) -->
+        <!-- 2. 포스트 상세 보기 -->
         <section id="post-view" class="view">
             <article class="post-detail-container">
                 <header class="post-detail-header">
                     <span id="post-meta-cat" class="category-tag">CATEGORY</span>
                     <h2 id="post-title">포스트 제목</h2>
                     <div class="post-info">
-                        <span id="post-date">2026. 02. 26</span>
-                        <span class="author">by Teslaburn</span>
+                        <span id="post-date">2026. 02. 27</span>
+                        <span class="dot">·</span>
+                        <span class="author">Teslaburn</span>
                     </div>
                 </header>
                 
@@ -68,23 +78,21 @@
                     <!-- 본문 내용 -->
                 </div>
 
-                <!-- 댓글 섹션 (추가) -->
+                <!-- 댓글 섹션 -->
                 <section class="comment-section">
                     <div class="comment-header">
-                        <h4>댓글 <span id="comment-count">0</span></h4>
+                        <h4>Comments <span id="comment-count">0</span></h4>
                     </div>
                     
-                    <div id="comment-list" class="comment-list">
-                        <!-- 댓글들이 여기에 렌더링됨 -->
-                    </div>
+                    <div id="comment-list" class="comment-list"></div>
 
                     <div class="comment-form">
                         <div class="comment-form-top">
-                            <input type="text" id="comment-name" placeholder="이름">
-                            <input type="password" id="comment-pw" placeholder="비밀번호">
+                            <input type="text" id="comment-name" placeholder="Name">
+                            <input type="password" id="comment-pw" placeholder="Password">
                         </div>
                         <textarea id="comment-body" placeholder="건전한 리서치 문화를 위해 따뜻한 댓글을 남겨주세요."></textarea>
-                        <button id="submit-comment" class="action-btn small">댓글 남기기</button>
+                        <button id="submit-comment" class="action-btn small">Post Comment</button>
                     </div>
                 </section>
             </article>
@@ -93,22 +101,23 @@
         <!-- 3. 관리자 로그인 -->
         <section id="admin-login-view" class="view">
             <div class="admin-box">
-                <h3>Admin Login</h3>
-                <input type="password" id="admin-password" placeholder="Password">
-                <button id="login-btn" class="action-btn">접속</button>
+                <h3>Admin Access</h3>
+                <p class="admin-desc">Enter password to manage research posts.</p>
+                <input type="password" id="admin-password" placeholder="••••••">
+                <button id="login-btn" class="action-btn">Sign In</button>
             </div>
         </section>
 
         <!-- 4. 관리자 대시보드 -->
         <section id="admin-dashboard-view" class="view">
             <div class="dash-header">
-                <h2>글 관리</h2>
-                <button id="go-to-new-post" class="action-btn small">+ 새 글 쓰기</button>
+                <h2>Manage Content</h2>
+                <button id="go-to-new-post" class="action-btn small">+ New Post</button>
             </div>
             <div class="table-wrapper">
                 <table class="admin-table">
                     <thead>
-                        <tr><th>제목</th><th>날짜</th><th>관리</th></tr>
+                        <tr><th>Title</th><th>Date</th><th>Actions</th></tr>
                     </thead>
                     <tbody id="admin-post-list"></tbody>
                 </table>
@@ -117,35 +126,54 @@
 
         <!-- 5. 글 쓰기/수정 에디터 -->
         <section id="admin-editor-view" class="view">
-            <div class="editor-top">
-                <input type="text" id="post-title-input" class="title-input" placeholder="제목을 입력하세요">
+            <div class="editor-header">
+                <input type="text" id="post-title-input" class="title-input" placeholder="Enter title here...">
                 <div class="editor-ctrls">
-                    <button id="save-post-btn" class="action-btn">발행</button>
-                    <button class="back-btn secondary-btn">취소</button>
+                    <button class="back-btn secondary-btn">Cancel</button>
+                    <button id="save-post-btn" class="action-btn">Publish</button>
                 </div>
             </div>
-            <div class="editor-options-grid">
-                <select id="post-category-input">
-                    <option value="테슬라">테슬라</option>
-                    <option value="일론머스크">일론머스크</option>
-                    <option value="해외주식">해외주식</option>
-                </select>
-                <div class="file-upload-wrapper">
-                    <label for="post-thumb-upload" class="file-label">썸네일 업로드</label>
-                    <input type="file" id="post-thumb-upload" accept="image/*" style="display: none;">
-                    <span id="thumb-status" style="font-size: 0.8rem; color: var(--text-muted);">파일 없음</span>
-                    <input type="hidden" id="post-thumb-input">
+            
+            <div class="editor-grid">
+                <div class="editor-main">
+                    <div class="editor-label">Content</div>
+                    <div id="quill-editor" style="height: 600px;"></div>
+                </div>
+                
+                <div class="editor-side">
+                    <div class="side-item">
+                        <div class="editor-label">Category</div>
+                        <select id="post-category-input">
+                            <option value="테슬라">테슬라</option>
+                            <option value="일론머스크">일론머스크</option>
+                            <option value="해외주식">해외주식</option>
+                        </select>
+                    </div>
+                    
+                    <div class="side-item">
+                        <div class="editor-label">Thumbnail</div>
+                        <div class="thumb-upload-area" id="thumb-drop-zone">
+                            <div id="thumb-preview" class="thumb-preview-box">
+                                <span class="placeholder-text">Click to upload image</span>
+                            </div>
+                            <input type="file" id="post-thumb-upload" accept="image/*" hidden>
+                            <div class="thumb-status-bar">
+                                <span id="thumb-status">Ready</span>
+                            </div>
+                        </div>
+                        <input type="hidden" id="post-thumb-input">
+                    </div>
                 </div>
             </div>
-            <div class="editor-label">본문 내용</div>
-            <div id="quill-editor" style="height: 600px;"></div>
         </section>
     </main>
 
     <footer class="main-footer">
-        <p>&copy; 2026 Teslaburn Research. All Rights Reserved.</p>
+        <div class="container">
+            <p>&copy; 2026 Teslaburn Research. Focused on Innovation & Alpha.</p>
+        </div>
     </footer>
 
-    <script src="main.js?v=3"></script>
+    <script src="main.js?v=4"></script>
 </body>
 </html>
