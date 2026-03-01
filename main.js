@@ -60,6 +60,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let quill = null;
     let posts = {};
     let currentFilter = '전체';
+    let searchQuery = '';
     let isAdmin = false;
     let isInitialLoad = true;
 
@@ -169,10 +170,18 @@ document.addEventListener('DOMContentLoaded', function() {
     function renderHomeList() {
         const list = document.getElementById('main-post-list');
         if (!list) return;
-        const filteredIds = Object.keys(posts).filter(id => currentFilter === '전체' || posts[id].category === currentFilter);
+        
+        const filteredIds = Object.keys(posts).filter(id => {
+            const p = posts[id];
+            const matchCategory = currentFilter === '전체' || p.category === currentFilter;
+            const matchSearch = !searchQuery || 
+                                p.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                p.summary.toLowerCase().includes(searchQuery.toLowerCase());
+            return matchCategory && matchSearch;
+        });
+
         list.innerHTML = filteredIds.length ? filteredIds.map(id => {
             let thumb = posts[id].thumb || '';
-            // Safe path fixing for thumbnails
             if (thumb && !thumb.startsWith('http') && !thumb.startsWith('/') && !thumb.startsWith('data:')) {
                 thumb = '/' + thumb;
             }
@@ -185,7 +194,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     <p>${posts[id].summary}</p>
                 </div>
             </article>`;
-        }).join('') : '<div style="text-align:center; padding:100px 0; color:var(--text-muted);">등록된 글이 없습니다.</div>';
+        }).join('') : `<div style="text-align:center; padding:100px 0; color:var(--text-muted);">
+            ${searchQuery ? `'${searchQuery}'에 대한 검색 결과가 없습니다.` : '등록된 글이 없습니다.'}
+        </div>`;
     }
 
     window.dispatchPost = id => goTo('post', id);
@@ -197,16 +208,16 @@ document.addEventListener('DOMContentLoaded', function() {
         postDetail.date.textContent = p.date;
         postDetail.content.innerHTML = p.content;
         document.title = `${p.title} — FinanceCalculator`;
+        
+        renderRelatedPosts(id, p.category);
         loadComments(id);
 
         const imgs = postDetail.content.querySelectorAll('img');
         imgs.forEach(img => {
-            // Fix relative paths securely
             const src = img.getAttribute('src');
             if (src && !src.startsWith('http') && !src.startsWith('/') && !src.startsWith('data:') && !src.startsWith('blob:')) {
                 img.setAttribute('src', '/' + src);
             }
-
             img.onclick = () => {
                 if (lightbox && lightboxImg) {
                     lightboxImg.src = img.src;
@@ -214,6 +225,37 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             };
         });
+    }
+
+    function renderRelatedPosts(currentId, category) {
+        const list = document.getElementById('related-posts-list');
+        if (!list) return;
+
+        const relatedIds = Object.keys(posts)
+            .filter(id => id !== currentId && posts[id].category === category)
+            .slice(0, 3);
+
+        if (relatedIds.length === 0) {
+            document.getElementById('related-posts-section').style.display = 'none';
+            return;
+        }
+
+        document.getElementById('related-posts-section').style.display = 'block';
+        list.innerHTML = relatedIds.map(id => {
+            const rp = posts[id];
+            let thumb = rp.thumb || '';
+            if (thumb && !thumb.startsWith('http') && !thumb.startsWith('/') && !thumb.startsWith('data:')) {
+                thumb = '/' + thumb;
+            }
+            return `
+            <div class="related-item" onclick="window.dispatchPost('${id}')">
+                <div class="related-thumb" style="background-image: url('${thumb}')"></div>
+                <div class="related-info">
+                    <span class="cat">${rp.category}</span>
+                    <h5>${rp.title}</h5>
+                </div>
+            </div>`;
+        }).join('');
     }
 
     if (lightbox) lightbox.onclick = () => lightbox.style.display = 'none';
@@ -379,6 +421,15 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.state && e.state.view) goTo(e.state.view, e.state.id, true);
         else handleInitialRouting();
     };
+
+    // Search Interaction
+    const searchInput = document.getElementById('post-search');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            searchQuery = e.target.value;
+            renderHomeList();
+        });
+    }
 
     // Secret Entrance
     let logoClicks = 0; let lastClickTime = 0;
