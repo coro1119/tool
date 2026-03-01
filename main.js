@@ -78,6 +78,16 @@ document.addEventListener('DOMContentLoaded', function() {
         if (window.location.pathname !== path) {
             window.history.pushState({view: viewName, id: id}, '', path);
         }
+
+        // --- SEO: Update Canonical Tag Dynamically ---
+        let canonical = document.querySelector('link[rel="canonical"]');
+        if (!canonical) {
+            canonical = document.createElement('link');
+            canonical.setAttribute('rel', 'canonical');
+            document.head.appendChild(canonical);
+        }
+        const fullURL = `https://financecalculator.cloud${path === '/' ? '' : path}`;
+        canonical.setAttribute('href', fullURL);
     }
 
     // --- 0.2 AUTH ---
@@ -337,7 +347,7 @@ document.addEventListener('DOMContentLoaded', function() {
         else if (path === '/privacy') goTo('privacy', null, true);
         else if (path === '/admin') goTo('admin-login', null, true);
         else if (path.startsWith('/post/')) {
-            const slug = path.split('/').pop();
+            const slug = decodeURIComponent(path.split('/').pop());
             const postId = Object.keys(posts).find(id => generateSlug(posts[id].title) === slug);
             if (postId) goTo('post', postId, true);
             else goTo('home', null, true);
