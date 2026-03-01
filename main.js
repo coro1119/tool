@@ -15,8 +15,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const storage = firebase.storage();
     const auth = firebase.auth();
 
-    // Enable Offline Persistence
-    db.enablePersistence().catch(err => console.warn("Persistence failed", err.code));
+    // Enable Offline Persistence (Modernized to avoid deprecation warning)
+    db.enablePersistence({ synchronizeTabs: true }).catch(err => {
+        if (err.code === 'failed-precondition') {
+            console.warn("Persistence failed: Multiple tabs open");
+        } else if (err.code === 'unimplemented') {
+            console.warn("Persistence is not available in this browser");
+        }
+    });
 
     // DOM Elements
     const views = {
@@ -166,7 +172,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const filteredIds = Object.keys(posts).filter(id => currentFilter === '전체' || posts[id].category === currentFilter);
         list.innerHTML = filteredIds.length ? filteredIds.map(id => {
             let thumb = posts[id].thumb || '';
-            if (thumb && !thumb.startsWith('http') && !thumb.startsWith('/')) thumb = '/' + thumb;
+            // Safe path fixing for thumbnails
+            if (thumb && !thumb.startsWith('http') && !thumb.startsWith('/') && !thumb.startsWith('data:')) {
+                thumb = '/' + thumb;
+            }
             return `
             <article class="post-item" onclick="window.dispatchPost('${id}')">
                 <div class="post-item-thumb" style="background-image: url('${thumb}')"></div>
@@ -192,9 +201,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const imgs = postDetail.content.querySelectorAll('img');
         imgs.forEach(img => {
-            // Fix relative paths for post body images
+            // Fix relative paths securely
             const src = img.getAttribute('src');
-            if (src && !src.startsWith('http') && !src.startsWith('/')) {
+            if (src && !src.startsWith('http') && !src.startsWith('/') && !src.startsWith('data:') && !src.startsWith('blob:')) {
                 img.setAttribute('src', '/' + src);
             }
 
