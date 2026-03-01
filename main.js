@@ -40,7 +40,8 @@ document.addEventListener('DOMContentLoaded', function() {
         title: document.getElementById('post-title'),
         cat: document.getElementById('post-meta-cat'),
         content: document.getElementById('post-content'),
-        date: document.getElementById('post-date')
+        date: document.getElementById('post-date'),
+        readingTime: document.getElementById('post-reading-time')
     };
 
     const editorFields = {
@@ -72,6 +73,28 @@ document.addEventListener('DOMContentLoaded', function() {
             .replace(/\-\-+/g, '-')         
             .replace(/^-+/, '')             
             .replace(/-+$/, '');            
+    }
+
+    function calculateReadingTime(html) {
+        const text = html.replace(/<[^>]*>/g, ''); // Remove HTML tags
+        const wpm = 500; // Characters per minute for Korean/English mix
+        const minutes = Math.ceil(text.length / wpm);
+        return minutes < 1 ? 1 : minutes;
+    }
+
+    function updateMetaTags(title, desc, thumb) {
+        // Standard Tags
+        document.title = title ? `${title} — FinanceCalculator` : "FinanceCalculator — 금융 & 데이터 리서치";
+        const metaDesc = document.querySelector('meta[name="description"]');
+        if (metaDesc) metaDesc.setAttribute('content', desc || "금융 계산과 리서치 데이터를 바탕으로 쉽고 명확한 인사이트를 제공합니다.");
+
+        // Open Graph
+        const ogTitle = document.querySelector('meta[property="og:title"]');
+        if (ogTitle) ogTitle.setAttribute('content', title || "FinanceCalculator");
+        const ogDesc = document.querySelector('meta[property="og:description"]');
+        if (ogDesc) ogDesc.setAttribute('content', desc || "금융 & 데이터 리서치 인사이트");
+        const ogImage = document.querySelector('meta[property="og:image"]');
+        if (ogImage && thumb) ogImage.setAttribute('content', thumb);
     }
 
     function updateURL(viewName, id = null, title = null) {
@@ -207,7 +230,14 @@ document.addEventListener('DOMContentLoaded', function() {
         postDetail.cat.textContent = p.category;
         postDetail.date.textContent = p.date;
         postDetail.content.innerHTML = p.content;
-        document.title = `${p.title} — FinanceCalculator`;
+        
+        // Advanced UX: Reading Time
+        if (postDetail.readingTime) {
+            postDetail.readingTime.textContent = `${calculateReadingTime(p.content)} min read`;
+        }
+
+        // Advanced SEO: Update Dynamic Meta
+        updateMetaTags(p.title, p.summary, p.thumb);
         
         renderRelatedPosts(id, p.category);
         loadComments(id);
@@ -358,7 +388,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const homeLink = document.querySelector('[data-page="home"]');
             if(homeLink) homeLink.classList.add('active');
             if(!skipUpdateURL) updateURL('home');
-            document.title = "FinanceCalculator — 금융 & 데이터 리서치";
+            updateMetaTags(); // Reset to default
         }
         else if (name === 'post') { 
             if(views.post) views.post.classList.add('active'); 
@@ -370,17 +400,17 @@ document.addEventListener('DOMContentLoaded', function() {
             const contactLink = document.querySelector('[data-page="contact"]');
             if(contactLink) contactLink.classList.add('active');
             if(!skipUpdateURL) updateURL('contact');
-            document.title = "Contact — FinanceCalculator";
+            updateMetaTags("Contact", "협업 문의나 피드백을 남겨주세요.");
         }
         else if (name === 'about') {
             if(views.about) views.about.classList.add('active');
             if(!skipUpdateURL) updateURL('about');
-            document.title = "About — FinanceCalculator";
+            updateMetaTags("About", "FinanceCalculator에 대한 소개입니다.");
         }
         else if (name === 'privacy') {
             if(views.privacy) views.privacy.classList.add('active');
             if(!skipUpdateURL) updateURL('privacy');
-            document.title = "Privacy Policy — FinanceCalculator";
+            updateMetaTags("Privacy Policy", "개인정보 처리방침입니다.");
         }
         else if (name === 'admin-login') { 
             if(views.login) views.login.classList.add('active'); 
@@ -429,6 +459,17 @@ document.addEventListener('DOMContentLoaded', function() {
             searchQuery = e.target.value;
             renderHomeList();
         });
+    }
+
+    // Share Insight Logic
+    const shareBtn = document.getElementById('share-link-btn');
+    if (shareBtn) {
+        shareBtn.onclick = (e) => {
+            e.preventDefault();
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                alert("Insight link copied to clipboard!");
+            });
+        };
     }
 
     // Secret Entrance

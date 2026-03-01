@@ -27,6 +27,9 @@
     <!-- Rich Text Editor (Quill) -->
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+
+    <!-- Data Visualization (Chart.js) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <!-- Firebase SDKs (Compat) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -71,7 +74,7 @@
                     <p class="subtitle">데이터로 계산하고 분석하는 금융과 기술의 미래.</p>
                 </div>
                 
-                <!-- 검색바 추가 -->
+                <!-- 검색바 -->
                 <div class="search-container">
                     <div class="search-wrapper">
                         <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
@@ -98,12 +101,38 @@
                     <div class="post-info">
                         <span id="post-date">2026. 02. 27</span>
                         <span class="dot">·</span>
+                        <span id="post-reading-time">5 min read</span>
+                        <span class="dot">·</span>
                         <span class="author">by Teslaburn</span>
                     </div>
                 </header>
+                
                 <div id="post-content" class="post-content-body"></div>
 
-                <!-- 관련 포스트 섹션 추가 -->
+                <!-- AdSense Optimize: In-Article Unit -->
+                <div class="post-ad-wrapper">
+                    <ins class="adsbygoogle"
+                         style="display:block; text-align:center;"
+                         data-ad-layout="in-article"
+                         data-ad-format="fluid"
+                         data-ad-client="ca-pub-1366039516093309"
+                         data-ad-slot="YOUR_AD_SLOT"></ins>
+                    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+                </div>
+
+                <!-- 저자 프로필 박스 -->
+                <section class="author-profile-card">
+                    <div class="author-avatar">T</div>
+                    <div class="author-bio">
+                        <h4>Teslaburn</h4>
+                        <p>혁신 기술과 금융 데이터를 연결하여 새로운 알파를 찾는 독립 리서처입니다. 테슬라와 AI, 에너지 트랜지션을 중점적으로 분석합니다.</p>
+                        <div class="author-social">
+                            <a href="#" id="share-link-btn" title="Copy Link">Share Insight</a>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 관련 포스트 섹션 -->
                 <div id="related-posts-section" class="related-posts-area">
                     <h4 class="section-title">Related Insights</h4>
                     <div id="related-posts-list" class="related-grid"></div>
