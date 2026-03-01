@@ -164,15 +164,19 @@ document.addEventListener('DOMContentLoaded', function() {
         const list = document.getElementById('main-post-list');
         if (!list) return;
         const filteredIds = Object.keys(posts).filter(id => currentFilter === '전체' || posts[id].category === currentFilter);
-        list.innerHTML = filteredIds.length ? filteredIds.map(id => `
+        list.innerHTML = filteredIds.length ? filteredIds.map(id => {
+            let thumb = posts[id].thumb || '';
+            if (thumb && !thumb.startsWith('http') && !thumb.startsWith('/')) thumb = '/' + thumb;
+            return `
             <article class="post-item" onclick="window.dispatchPost('${id}')">
-                <div class="post-item-thumb" style="background-image: url('${posts[id].thumb || ''}')"></div>
+                <div class="post-item-thumb" style="background-image: url('${thumb}')"></div>
                 <div class="post-item-content">
                     <span class="cat">${posts[id].category}</span>
                     <h3>${posts[id].title}</h3>
                     <p>${posts[id].summary}</p>
                 </div>
-            </article>`).join('') : '<div style="text-align:center; padding:100px 0; color:var(--text-muted);">등록된 글이 없습니다.</div>';
+            </article>`;
+        }).join('') : '<div style="text-align:center; padding:100px 0; color:var(--text-muted);">등록된 글이 없습니다.</div>';
     }
 
     window.dispatchPost = id => goTo('post', id);
@@ -188,6 +192,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const imgs = postDetail.content.querySelectorAll('img');
         imgs.forEach(img => {
+            // Fix relative paths for post body images
+            const src = img.getAttribute('src');
+            if (src && !src.startsWith('http') && !src.startsWith('/')) {
+                img.setAttribute('src', '/' + src);
+            }
+
             img.onclick = () => {
                 if (lightbox && lightboxImg) {
                     lightboxImg.src = img.src;
