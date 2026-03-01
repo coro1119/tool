@@ -14,10 +14,19 @@
     <meta property="og:title" content="FinanceCalculator">
     <meta property="og:description" content="금융 & 데이터 리서치 인사이트">
     <meta property="og:type" content="website">
-    <meta name="twitter:card" content="summary_large_image">
+    <meta property="og:site_name" content="FinanceCalculator">
     
-    <!-- Canonical URL -->
+    <!-- Global Social Media Tags (X/Twitter, LinkedIn) -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@FinanceCalc">
+    <meta name="twitter:title" content="FinanceCalculator — Financial Research Platform">
+    <meta name="twitter:description" content="Data-driven financial insights and technology research.">
+    
+    <!-- Canonical & Global Language Link -->
     <link rel="canonical" href="https://financecalculator.cloud/">
+    <link rel="alternate" hreflang="ko" href="https://financecalculator.cloud/">
+    <link rel="alternate" hreflang="en" href="https://financecalculator.cloud/">
+    <link rel="alternate" hreflang="x-default" href="https://financecalculator.cloud/">
     
     <link rel="stylesheet" href="/style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -60,7 +69,11 @@
                     <li><a href="#" class="active" data-page="home">Home</a></li>
                     <li><a href="#" data-page="contact">Contact</a></li>
                 </ul>
-                <div id="google_translate_element" class="lang-selector"></div>
+                <!-- 글로벌 언어 스위처 디자인 개선 -->
+                <div class="global-language-switcher">
+                    <div id="google_translate_element"></div>
+                    <div class="custom-lang-status" id="lang-status">KR</div>
+                </div>
             </nav>
         </div>
     </header>

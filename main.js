@@ -15,13 +15,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const storage = firebase.storage();
     const auth = firebase.auth();
 
-    // Enable Offline Persistence (Modernized to avoid deprecation warning)
+    // Enable Offline Persistence
     db.enablePersistence({ synchronizeTabs: true }).catch(err => {
-        if (err.code === 'failed-precondition') {
-            console.warn("Persistence failed: Multiple tabs open");
-        } else if (err.code === 'unimplemented') {
-            console.warn("Persistence is not available in this browser");
-        }
+        if (err.code === 'failed-precondition') console.warn("Persistence failed: Multiple tabs open");
+        else if (err.code === 'unimplemented') console.warn("Persistence not available");
     });
 
     // DOM Elements
@@ -65,7 +62,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let isAdmin = false;
     let isInitialLoad = true;
 
-    // --- 0.1 SEO & URL UTILS ---
+    // --- 0.1 SEO & GLOBAL UTILS ---
     function generateSlug(text) {
         return text.toString().toLowerCase()
             .replace(/\s+/g, '-')           
@@ -76,25 +73,29 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function calculateReadingTime(html) {
-        const text = html.replace(/<[^>]*>/g, ''); // Remove HTML tags
-        const wpm = 500; // Characters per minute for Korean/English mix
+        const text = html.replace(/<[^>]*>/g, '');
+        const wpm = 500;
         const minutes = Math.ceil(text.length / wpm);
         return minutes < 1 ? 1 : minutes;
     }
 
     function updateMetaTags(title, desc, thumb) {
-        // Standard Tags
-        document.title = title ? `${title} — FinanceCalculator` : "FinanceCalculator — 금융 & 데이터 리서치";
-        const metaDesc = document.querySelector('meta[name="description"]');
-        if (metaDesc) metaDesc.setAttribute('content', desc || "금융 계산과 리서치 데이터를 바탕으로 쉽고 명확한 인사이트를 제공합니다.");
+        const siteTitle = "FinanceCalculator";
+        document.title = title ? `${title} — ${siteTitle}` : `${siteTitle} — Financial & Tech Research`;
+        
+        const finalDesc = desc || "Strategic financial analysis and data-driven technology research by Teslaburn.";
+        const setMeta = (prop, content) => {
+            const el = document.querySelector(`meta[property="${prop}"]`) || document.querySelector(`meta[name="${prop}"]`);
+            if (el) el.setAttribute('content', content);
+        };
 
-        // Open Graph
-        const ogTitle = document.querySelector('meta[property="og:title"]');
-        if (ogTitle) ogTitle.setAttribute('content', title || "FinanceCalculator");
-        const ogDesc = document.querySelector('meta[property="og:description"]');
-        if (ogDesc) ogDesc.setAttribute('content', desc || "금융 & 데이터 리서치 인사이트");
-        const ogImage = document.querySelector('meta[property="og:image"]');
-        if (ogImage && thumb) ogImage.setAttribute('content', thumb);
+        setMeta("description", finalDesc);
+        setMeta("og:title", title || siteTitle);
+        setMeta("og:description", finalDesc);
+        if (thumb) setMeta("og:image", thumb);
+        setMeta("twitter:title", title || siteTitle);
+        setMeta("twitter:description", finalDesc);
+        if (thumb) setMeta("twitter:image", thumb);
     }
 
     function updateURL(viewName, id = null, title = null) {
@@ -109,7 +110,6 @@ document.addEventListener('DOMContentLoaded', function() {
             window.history.pushState({view: viewName, id: id}, '', path);
         }
 
-        // --- SEO: Update Canonical Tag Dynamically ---
         let canonical = document.querySelector('link[rel="canonical"]');
         if (!canonical) {
             canonical = document.createElement('link');
@@ -123,9 +123,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- 0.2 AUTH ---
     auth.onAuthStateChanged(user => {
         isAdmin = !!user;
-        if ((views.dashboard.classList.contains('active') || views.editor.classList.contains('active')) && !isAdmin) {
-            goTo('home');
-        }
+        if ((views.dashboard.classList.contains('active') || views.editor.classList.contains('active')) && !isAdmin) goTo('home');
     });
 
     // --- 0.3 IMAGE HELPERS ---
@@ -153,7 +151,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const maxWidth = folder === 'thumbs' ? 800 : 1200;
         const quality = folder === 'thumbs' ? 0.7 : 0.8;
         const uploadFile = file.type === 'image/gif' ? file : await compressImage(file, maxWidth, quality);
-        
         const extension = file.type === 'image/gif' ? 'gif' : 'webp';
         const fileName = `${Date.now()}_${file.name.replace(/[^a-z0-9.]/gi, '_')}.${extension}`;
         const storageRef = storage.ref().child(`${folder}/${fileName}`);
@@ -173,13 +170,8 @@ document.addEventListener('DOMContentLoaded', function() {
         db.collection('posts').orderBy('updatedAt', 'desc').onSnapshot(snap => {
             posts = {};
             snap.forEach(doc => posts[doc.id] = doc.data());
-            
-            if (isInitialLoad) {
-                handleInitialRouting();
-                isInitialLoad = false;
-            } else {
-                renderCurrentView();
-            }
+            if (isInitialLoad) { handleInitialRouting(); isInitialLoad = false; }
+            else renderCurrentView();
         });
     }
 
@@ -193,21 +185,16 @@ document.addEventListener('DOMContentLoaded', function() {
     function renderHomeList() {
         const list = document.getElementById('main-post-list');
         if (!list) return;
-        
         const filteredIds = Object.keys(posts).filter(id => {
             const p = posts[id];
             const matchCategory = currentFilter === '전체' || p.category === currentFilter;
-            const matchSearch = !searchQuery || 
-                                p.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                                p.summary.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchSearch = !searchQuery || p.title.toLowerCase().includes(searchQuery.toLowerCase()) || p.summary.toLowerCase().includes(searchQuery.toLowerCase());
             return matchCategory && matchSearch;
         });
 
         list.innerHTML = filteredIds.length ? filteredIds.map(id => {
             let thumb = posts[id].thumb || '';
-            if (thumb && !thumb.startsWith('http') && !thumb.startsWith('/') && !thumb.startsWith('data:')) {
-                thumb = '/' + thumb;
-            }
+            if (thumb && !thumb.startsWith('http') && !thumb.startsWith('/') && !thumb.startsWith('data:')) thumb = '/' + thumb;
             return `
             <article class="post-item" onclick="window.dispatchPost('${id}')">
                 <div class="post-item-thumb" style="background-image: url('${thumb}')"></div>
@@ -217,9 +204,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <p>${posts[id].summary}</p>
                 </div>
             </article>`;
-        }).join('') : `<div style="text-align:center; padding:100px 0; color:var(--text-muted);">
-            ${searchQuery ? `'${searchQuery}'에 대한 검색 결과가 없습니다.` : '등록된 글이 없습니다.'}
-        </div>`;
+        }).join('') : `<div style="text-align:center; padding:100px 0; color:var(--text-muted);">${searchQuery ? `'${searchQuery}' result not found.` : 'No posts found.'}</div>`;
     }
 
     window.dispatchPost = id => goTo('post', id);
@@ -230,61 +215,31 @@ document.addEventListener('DOMContentLoaded', function() {
         postDetail.cat.textContent = p.category;
         postDetail.date.textContent = p.date;
         postDetail.content.innerHTML = p.content;
-        
-        // Advanced UX: Reading Time
-        if (postDetail.readingTime) {
-            postDetail.readingTime.textContent = `${calculateReadingTime(p.content)} min read`;
-        }
-
-        // Advanced SEO: Update Dynamic Meta
+        if (postDetail.readingTime) postDetail.readingTime.textContent = `${calculateReadingTime(p.content)} min read`;
         updateMetaTags(p.title, p.summary, p.thumb);
-        
         renderRelatedPosts(id, p.category);
         loadComments(id);
 
         const imgs = postDetail.content.querySelectorAll('img');
         imgs.forEach(img => {
             const src = img.getAttribute('src');
-            if (src && !src.startsWith('http') && !src.startsWith('/') && !src.startsWith('data:') && !src.startsWith('blob:')) {
-                img.setAttribute('src', '/' + src);
-            }
-            img.onclick = () => {
-                if (lightbox && lightboxImg) {
-                    lightboxImg.src = img.src;
-                    lightbox.style.display = 'flex';
-                }
-            };
+            if (src && !src.startsWith('http') && !src.startsWith('/') && !src.startsWith('data:') && !src.startsWith('blob:')) img.setAttribute('src', '/' + src);
+            img.onclick = () => { if (lightbox && lightboxImg) { lightboxImg.src = img.src; lightbox.style.display = 'flex'; } };
         });
     }
 
     function renderRelatedPosts(currentId, category) {
         const list = document.getElementById('related-posts-list');
-        if (!list) return;
-
-        const relatedIds = Object.keys(posts)
-            .filter(id => id !== currentId && posts[id].category === category)
-            .slice(0, 3);
-
-        if (relatedIds.length === 0) {
-            document.getElementById('related-posts-section').style.display = 'none';
-            return;
-        }
-
-        document.getElementById('related-posts-section').style.display = 'block';
+        const section = document.getElementById('related-posts-section');
+        if (!list || !section) return;
+        const relatedIds = Object.keys(posts).filter(id => id !== currentId && posts[id].category === category).slice(0, 3);
+        if (relatedIds.length === 0) { section.style.display = 'none'; return; }
+        section.style.display = 'block';
         list.innerHTML = relatedIds.map(id => {
             const rp = posts[id];
             let thumb = rp.thumb || '';
-            if (thumb && !thumb.startsWith('http') && !thumb.startsWith('/') && !thumb.startsWith('data:')) {
-                thumb = '/' + thumb;
-            }
-            return `
-            <div class="related-item" onclick="window.dispatchPost('${id}')">
-                <div class="related-thumb" style="background-image: url('${thumb}')"></div>
-                <div class="related-info">
-                    <span class="cat">${rp.category}</span>
-                    <h5>${rp.title}</h5>
-                </div>
-            </div>`;
+            if (thumb && !thumb.startsWith('http') && !thumb.startsWith('/') && !thumb.startsWith('data:')) thumb = '/' + thumb;
+            return `<div class="related-item" onclick="window.dispatchPost('${id}')"><div class="related-thumb" style="background-image: url('${thumb}')"></div><div class="related-info"><span class="cat">${rp.category}</span><h5>${rp.title}</h5></div></div>`;
         }).join('');
     }
 
@@ -293,31 +248,15 @@ document.addEventListener('DOMContentLoaded', function() {
     function renderAdminTable() {
         const list = document.getElementById('admin-post-list');
         if (!list) return;
-        list.innerHTML = Object.keys(posts).map(id => `
-            <tr>
-                <td>${posts[id].title}</td>
-                <td>${posts[id].date}</td>
-                <td>
-                    <button class="edit-btn" onclick="window.dispatchEdit('${id}')">Edit</button>
-                    <button class="delete-btn" onclick="window.dispatchDelete('${id}')">Delete</button>
-                </td>
-            </tr>`).join('');
+        list.innerHTML = Object.keys(posts).map(id => `<tr><td>${posts[id].title}</td><td>${posts[id].date}</td><td><button class="edit-btn" onclick="window.dispatchEdit('${id}')">Edit</button><button class="delete-btn" onclick="window.dispatchDelete('${id}')">Delete</button></td></tr>`).join('');
     }
 
     window.dispatchEdit = id => goTo('editor', id);
-    window.dispatchDelete = async id => {
-        if (isAdmin && confirm('이 글을 삭제하시겠습니까?')) {
-            try { await db.collection('posts').doc(id).delete(); } catch(e) { alert(e.message); }
-        }
-    };
+    window.dispatchDelete = async id => { if (isAdmin && confirm('Delete this post?')) { try { await db.collection('posts').doc(id).delete(); } catch(e) { alert(e.message); } } };
 
-    // --- 3. EDITOR ---
     function initQuill() {
         if (quill) return;
-        quill = new Quill('#quill-editor', {
-            theme: 'snow',
-            modules: { toolbar: [[{header:[1,2,3,false]}],['bold','italic','underline','strike'],['blockquote','code-block'],[{list:'ordered'},{list:'bullet'}],['link', 'image', 'clean']] }
-        });
+        quill = new Quill('#quill-editor', { theme: 'snow', modules: { toolbar: [[{header:[1,2,3,false]}],['bold','italic','underline','strike'],['blockquote','code-block'],[{list:'ordered'},{list:'bullet'}],['link', 'image', 'clean']] } });
         quill.getModule('toolbar').addHandler('image', () => {
             const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*'; input.click();
             input.onchange = async () => {
@@ -328,10 +267,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     loading.innerHTML = `<div style="color:var(--accent); position:fixed; bottom:20px; right:20px; background:var(--bg-elevated); padding:10px; border-radius:8px; z-index:9999; border:1px solid var(--border);">Uploading: <span id="p-${lid}">0</span>%</div>`;
                     document.body.appendChild(loading);
                     try {
-                        const url = await uploadImage(file, 'posts', p => {
-                            const pSpan = document.getElementById(`p-${lid}`);
-                            if (pSpan) pSpan.textContent = p;
-                        });
+                        const url = await uploadImage(file, 'posts', p => { const pSpan = document.getElementById(`p-${lid}`); if (pSpan) pSpan.textContent = p; });
                         loading.remove();
                         const range = quill.getSelection() || { index: quill.getLength() };
                         quill.insertEmbed(range.index, 'image', url);
@@ -356,76 +292,42 @@ document.addEventListener('DOMContentLoaded', function() {
         if (quill) quill.root.innerHTML = p.content || '';
     }
 
-    // --- 4. COMMENTS ---
     function loadComments(postId) {
         db.collection('posts').doc(postId).collection('comments').orderBy('timestamp', 'asc').onSnapshot(snap => {
             const comments = []; snap.forEach(doc => comments.push({ id: doc.id, ...doc.data() }));
-            const countSpan = document.getElementById('comment-count');
-            if (countSpan) countSpan.textContent = comments.length;
+            const countSpan = document.getElementById('comment-count'); if (countSpan) countSpan.textContent = comments.length;
             const list = document.getElementById('comment-list');
-            if (list) list.innerHTML = comments.map(c => `
-                <div class="comment-item">
-                    <div class="comment-item-top">
-                        <span class="comment-author">${c.name}</span>
-                        <div style="display:flex; gap:12px; align-items:center;">
-                            <span class="comment-date">${c.date}</span>
-                            <button class="comment-delete" onclick="window.dispatchDeleteComment('${postId}', '${c.id}', '${c.pw}')">삭제</button>
-                        </div>
-                    </div>
-                    <p class="comment-text">${c.body}</p>
-                </div>`).join('');
+            if (list) list.innerHTML = comments.map(c => `<div class="comment-item"><div class="comment-item-top"><span class="comment-author">${c.name}</span><div style="display:flex; gap:12px; align-items:center;"><span class="comment-date">${c.date}</span><button class="comment-delete" onclick="window.dispatchDeleteComment('${postId}', '${c.id}', '${c.pw}')">삭제</button></div></div><p class="comment-text">${c.body}</p></div>`).join('');
         });
     }
 
-    // --- 5. NAVIGATION ---
     function goTo(name, id = null, skipUpdateURL = false) {
         Object.values(views).forEach(v => { if(v) v.classList.remove('active'); });
         document.querySelectorAll('.nav-links a, .footer-right a').forEach(a => a.classList.remove('active'));
-        
         if (name === 'home') { 
-            if(views.home) views.home.classList.add('active'); 
-            renderHomeList(); 
-            const homeLink = document.querySelector('[data-page="home"]');
-            if(homeLink) homeLink.classList.add('active');
-            if(!skipUpdateURL) updateURL('home');
-            updateMetaTags(); // Reset to default
-        }
-        else if (name === 'post') { 
-            if(views.post) views.post.classList.add('active'); 
-            renderPostDetail(id); 
+            if(views.home) views.home.classList.add('active'); renderHomeList(); 
+            const homeLink = document.querySelector('[data-page="home"]'); if(homeLink) homeLink.classList.add('active');
+            if(!skipUpdateURL) updateURL('home'); updateMetaTags(); 
+        } else if (name === 'post') { 
+            if(views.post) views.post.classList.add('active'); renderPostDetail(id); 
             if(!skipUpdateURL) updateURL('post', id, posts[id]?.title);
-        }
-        else if (name === 'contact') { 
+        } else if (name === 'contact') { 
             if(views.contact) views.contact.classList.add('active'); 
-            const contactLink = document.querySelector('[data-page="contact"]');
-            if(contactLink) contactLink.classList.add('active');
-            if(!skipUpdateURL) updateURL('contact');
-            updateMetaTags("Contact", "협업 문의나 피드백을 남겨주세요.");
-        }
-        else if (name === 'about') {
+            const contactLink = document.querySelector('[data-page="contact"]'); if(contactLink) contactLink.classList.add('active');
+            if(!skipUpdateURL) updateURL('contact'); updateMetaTags("Contact", "Collaboration or feedback.");
+        } else if (name === 'about') {
             if(views.about) views.about.classList.add('active');
-            if(!skipUpdateURL) updateURL('about');
-            updateMetaTags("About", "FinanceCalculator에 대한 소개입니다.");
-        }
-        else if (name === 'privacy') {
+            if(!skipUpdateURL) updateURL('about'); updateMetaTags("About", "The story of FinanceCalculator.");
+        } else if (name === 'privacy') {
             if(views.privacy) views.privacy.classList.add('active');
-            if(!skipUpdateURL) updateURL('privacy');
-            updateMetaTags("Privacy Policy", "개인정보 처리방침입니다.");
-        }
-        else if (name === 'admin-login') { 
-            if(views.login) views.login.classList.add('active'); 
-            if(!skipUpdateURL) updateURL('admin-login'); 
-        }
-        else if (name === 'dashboard' && isAdmin) { 
-            if(views.dashboard) views.dashboard.classList.add('active'); 
-            renderAdminTable(); 
-        }
-        else if (name === 'editor' && isAdmin) { 
-            if(views.editor) views.editor.classList.add('active'); 
-            initQuill(); 
-            if (id) loadEditor(id); else resetEditor(); 
-        }
-        else { 
+            if(!skipUpdateURL) updateURL('privacy'); updateMetaTags("Privacy Policy", "Legal information.");
+        } else if (name === 'admin-login') { 
+            if(views.login) views.login.classList.add('active'); if(!skipUpdateURL) updateURL('admin-login'); 
+        } else if (name === 'dashboard' && isAdmin) { 
+            if(views.dashboard) views.dashboard.classList.add('active'); renderAdminTable(); 
+        } else if (name === 'editor' && isAdmin) { 
+            if(views.editor) views.editor.classList.add('active'); initQuill(); if (id) loadEditor(id); else resetEditor(); 
+        } else { 
             if(views.home) views.home.classList.add('active'); 
         }
         window.scrollTo(0, 0);
@@ -440,159 +342,88 @@ document.addEventListener('DOMContentLoaded', function() {
         else if (path.startsWith('/post/')) {
             const slug = decodeURIComponent(path.split('/').pop());
             const postId = Object.keys(posts).find(id => generateSlug(posts[id].title) === slug);
-            if (postId) goTo('post', postId, true);
-            else goTo('home', null, true);
-        } else {
-            goTo('home', null, true);
-        }
+            if (postId) goTo('post', postId, true); else goTo('home', null, true);
+        } else goTo('home', null, true);
     }
 
-    window.onpopstate = (e) => {
-        if (e.state && e.state.view) goTo(e.state.view, e.state.id, true);
-        else handleInitialRouting();
-    };
+    window.onpopstate = (e) => { if (e.state && e.state.view) goTo(e.state.view, e.state.id, true); else handleInitialRouting(); };
 
-    // Search Interaction
     const searchInput = document.getElementById('post-search');
-    if (searchInput) {
-        searchInput.addEventListener('input', (e) => {
-            searchQuery = e.target.value;
-            renderHomeList();
-        });
-    }
+    if (searchInput) searchInput.addEventListener('input', (e) => { searchQuery = e.target.value; renderHomeList(); });
 
-    // Share Insight Logic
+    setInterval(() => {
+        const status = document.getElementById('lang-status');
+        const google = document.querySelector('.goog-te-menu-value span:first-child');
+        if (status && google) status.textContent = google.textContent.trim().includes('한국어') ? 'KR' : 'GLOBAL';
+    }, 1000);
+
     const shareBtn = document.getElementById('share-link-btn');
-    if (shareBtn) {
-        shareBtn.onclick = (e) => {
-            e.preventDefault();
-            navigator.clipboard.writeText(window.location.href).then(() => {
-                alert("Insight link copied to clipboard!");
-            });
-        };
-    }
+    if (shareBtn) shareBtn.onclick = (e) => { e.preventDefault(); navigator.clipboard.writeText(window.location.href).then(() => alert("Link copied!")); };
 
-    // Secret Entrance
     let logoClicks = 0; let lastClickTime = 0;
     const logo = document.getElementById('main-logo');
-    if (logo) {
-        logo.addEventListener('click', () => {
-            const now = new Date().getTime();
-            if (now - lastClickTime > 1500) logoClicks = 0;
-            logoClicks++; lastClickTime = now;
-            if (logoClicks >= 3) { logoClicks = 0; isAdmin ? goTo('dashboard') : goTo('admin-login'); }
-        });
-    }
+    if (logo) logo.addEventListener('click', () => {
+        const now = new Date().getTime(); if (now - lastClickTime > 1500) logoClicks = 0;
+        logoClicks++; lastClickTime = now; if (logoClicks >= 3) { logoClicks = 0; isAdmin ? goTo('dashboard') : goTo('admin-login'); }
+    });
 
     document.body.onclick = e => {
-        const t = e.target.closest('[data-page]');
-        if (t) { e.preventDefault(); goTo(t.getAttribute('data-page')); }
+        const t = e.target.closest('[data-page]'); if (t) { e.preventDefault(); goTo(t.getAttribute('data-page')); }
         if (e.target.classList.contains('chip')) {
-            document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-            e.target.classList.add('active');
-            currentFilter = e.target.getAttribute('data-filter') || '전체';
-            renderHomeList();
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('active')); e.target.classList.add('active');
+            currentFilter = e.target.getAttribute('data-filter') || '전체'; renderHomeList();
         }
     };
 
     const loginBtn = document.getElementById('login-btn');
-    if(loginBtn) {
-        loginBtn.onclick = async () => {
-            const email = document.getElementById('admin-email').value;
-            const pw = document.getElementById('admin-password').value;
-            try { await auth.signInWithEmailAndPassword(email, pw); goTo('dashboard'); } catch(e) { alert(e.message); }
-        };
-    }
+    if(loginBtn) loginBtn.onclick = async () => {
+        const email = document.getElementById('admin-email').value; const pw = document.getElementById('admin-password').value;
+        try { await auth.signInWithEmailAndPassword(email, pw); goTo('dashboard'); } catch(e) { alert(e.message); }
+    };
 
     const logoutBtn = document.getElementById('logout-btn');
     if(logoutBtn) logoutBtn.onclick = () => auth.signOut().then(() => goTo('home'));
-    
-    const newPostBtn = document.getElementById('go-to-new-post');
-    if(newPostBtn) newPostBtn.onclick = () => goTo('editor');
-    
-    document.querySelectorAll('.back-btn').forEach(btn => {
-        btn.onclick = () => views.editor.classList.contains('active') ? goTo('dashboard') : goTo('home');
-    });
+    if(document.getElementById('go-to-new-post')) document.getElementById('go-to-new-post').onclick = () => goTo('editor');
+    document.querySelectorAll('.back-btn').forEach(btn => btn.onclick = () => views.editor.classList.contains('active') ? goTo('dashboard') : goTo('home'));
 
     const submitContact = document.getElementById('submit-contact');
-    if(submitContact) {
-        submitContact.onclick = async function() {
-            const name = document.getElementById('contact-name').value;
-            const email = document.getElementById('contact-email').value;
-            const msg = document.getElementById('contact-message').value;
-            if (!name || !email || !msg) return alert("Please fill all fields.");
-            const btn = this; btn.disabled = true; btn.textContent = "Sending...";
-            try {
-                const response = await fetch("https://formspree.io/f/xvgzlowq", {
-                    method: "POST", headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ name, email, message: msg })
-                });
-                if (response.ok) {
-                    alert("문의가 성공적으로 전송되었습니다!");
-                    document.getElementById('contact-name').value = '';
-                    document.getElementById('contact-email').value = '';
-                    document.getElementById('contact-message').value = '';
-                    goTo('home');
-                } else { throw new Error("전송 실패"); }
-            } catch (err) { alert("전송 중 오류 발생. 잠시 후 다시 시도해 주세요."); }
-            finally { btn.disabled = false; btn.textContent = "Send Message"; }
-        };
-    }
-
-    editorFields.thumbPreview.onclick = () => editorFields.thumbFile.click();
-    editorFields.thumbFile.onchange = async (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            editorFields.thumbStatus.textContent = 'Uploading...';
-            try {
-                const url = await uploadImage(file, 'thumbs', p => {
-                    editorFields.thumbStatus.textContent = `Uploading ${p}%`;
-                });
-                editorFields.thumb.value = url;
-                editorFields.thumbPreview.style.backgroundImage = `url('${url}')`;
-                editorFields.thumbPreview.innerHTML = '';
-                editorFields.thumbStatus.textContent = 'Ready';
-            } catch (e) { editorFields.thumbStatus.textContent = 'Error'; alert(e.message); }
-        }
+    if(submitContact) submitContact.onclick = async function() {
+        const name = document.getElementById('contact-name').value; const email = document.getElementById('contact-email').value; const msg = document.getElementById('contact-message').value;
+        if (!name || !email || !msg) return alert("All fields required.");
+        const btn = this; btn.disabled = true; btn.textContent = "Sending...";
+        try {
+            const res = await fetch("https://formspree.io/f/xvgzlowq", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, email, message: msg }) });
+            if (res.ok) { alert("Sent!"); goTo('home'); } else throw new Error();
+        } catch (err) { alert("Error."); } finally { btn.disabled = false; btn.textContent = "Send Message"; }
     };
 
-    const savePostBtn = document.getElementById('save-post-btn');
-    if(savePostBtn) {
-        savePostBtn.onclick = async function() {
-            if (!isAdmin) return;
-            const title = editorFields.title.value; if (!title) return alert('제목을 입력하세요.');
-            this.disabled = true; this.textContent = 'Publishing...';
-            const id = currentEditingId || 'post-' + Date.now();
-            const data = {
-                title, content: quill.root.innerHTML,
-                summary: quill.getText().substring(0, 160).replace(/\n/g, ' ') + '...',
-                category: editorFields.cat.value, thumb: editorFields.thumb.value,
-                date: currentEditingId ? posts[id].date : new Date().toLocaleDateString('ko-KR'),
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            try { await db.collection('posts').doc(id).set(data); alert('성공적으로 발행되었습니다!'); goTo('dashboard'); }
-            catch (e) { alert(e.message); } finally { this.disabled = false; this.textContent = 'Publish'; }
+    if (editorFields.thumbPreview) {
+        editorFields.thumbPreview.onclick = () => editorFields.thumbFile.click();
+        editorFields.thumbFile.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                editorFields.thumbStatus.textContent = 'Uploading...';
+                try {
+                    const url = await uploadImage(file, 'thumbs', p => editorFields.thumbStatus.textContent = `Uploading ${p}%`);
+                    editorFields.thumb.value = url; editorFields.thumbPreview.style.backgroundImage = `url('${url}')`; editorFields.thumbPreview.innerHTML = ''; editorFields.thumbStatus.textContent = 'Ready';
+                } catch (e) { alert(e.message); }
+            }
         };
     }
 
-    const submitCommentBtn = document.getElementById('submit-comment');
-    if(submitCommentBtn) {
-        submitCommentBtn.onclick = async () => {
-            const name = document.getElementById('comment-name').value;
-            const pw = document.getElementById('comment-pw').value;
-            const body = document.getElementById('comment-body').value;
-            if (!name || !pw || !body) return alert('All fields required');
-            try {
-                await db.collection('posts').doc(currentPostId).collection('comments').add({
-                    name, pw, body, date: new Date().toLocaleString(),
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                document.getElementById('comment-name').value = '';
-                document.getElementById('comment-pw').value = '';
-                document.getElementById('comment-body').value = '';
-            } catch (e) { alert(e.message); }
-        };
-    }
+    if(document.getElementById('save-post-btn')) document.getElementById('save-post-btn').onclick = async function() {
+        if (!isAdmin) return; const title = editorFields.title.value; if (!title) return alert('Enter title.');
+        this.disabled = true; this.textContent = 'Publishing...';
+        const id = currentEditingId || 'post-' + Date.now();
+        const data = { title, content: quill.root.innerHTML, summary: quill.getText().substring(0, 160).replace(/\n/g, ' ') + '...', category: editorFields.cat.value, thumb: editorFields.thumb.value, date: currentEditingId ? posts[id].date : new Date().toLocaleDateString('ko-KR'), updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+        try { await db.collection('posts').doc(id).set(data); alert('Published!'); goTo('dashboard'); } catch (e) { alert(e.message); } finally { this.disabled = false; this.textContent = 'Publish'; }
+    };
+
+    if(document.getElementById('submit-comment')) document.getElementById('submit-comment').onclick = async () => {
+        const name = document.getElementById('comment-name').value; const pw = document.getElementById('comment-pw').value; const body = document.getElementById('comment-body').value;
+        if (!name || !pw || !body) return alert('All fields required');
+        try { await db.collection('posts').doc(currentPostId).collection('comments').add({ name, pw, body, date: new Date().toLocaleString(), timestamp: firebase.firestore.FieldValue.serverTimestamp() }); document.getElementById('comment-name').value = ''; document.getElementById('comment-pw').value = ''; document.getElementById('comment-body').value = ''; } catch (e) { alert(e.message); }
+    };
 
     syncPosts();
 });

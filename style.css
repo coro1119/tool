@@ -145,19 +145,6 @@ body { top: 0px !important; }
 .footer-right a:hover { color: var(--accent); }
 .footer-sep { color: var(--border); font-size: 0.8rem; }
 
-/* Mobile Fixes */
-@media (max-width: 768px) {
-    .nav-wrapper { flex-direction: column; height: auto; padding: 15px 0; gap: 15px; }
-    .nav-right { flex-direction: column; gap: 10px; }
-    .post-item { flex-direction: column; padding: 16px; gap: 16px; }
-    .post-item-thumb { width: 100%; height: 200px; }
-    .post-detail-header h2 { font-size: 2.2rem; }
-    .post-content-body img { width: calc(100% + 32px); margin-left: -16px; border-radius: 0; }
-    .editor-grid { grid-template-columns: 1fr; }
-    .premium-contact-card { padding: 24px; }
-    .footer-content-wrapper { flex-direction: column; gap: 20px; text-align: center; }
-}
-
 .view { display: none; }
 .view.active { display: block; animation: fadeIn 0.4s ease-out; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -247,8 +234,61 @@ body { top: 0px !important; }
     border: 1px dashed var(--border);
 }
 
+/* --- Global Language Switcher --- */
+.global-language-switcher {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    padding: 4px 12px;
+    border-radius: 50px;
+    transition: 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+
+.global-language-switcher:hover {
+    border-color: var(--accent);
+}
+
+.custom-lang-status {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--accent);
+    padding-left: 8px;
+    border-left: 1px solid var(--border);
+}
+
+#google_translate_element {
+    height: 26px;
+    overflow: hidden;
+}
+
+.goog-te-gadget-simple {
+    background-color: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+}
+
+.goog-te-gadget-simple span {
+    font-size: 0.8rem !important;
+    text-transform: uppercase;
+    color: var(--text-muted) !important;
+}
+
+/* Mobile Fixes */
 @media (max-width: 768px) {
+    .nav-wrapper { flex-direction: column; height: auto; padding: 15px 0; gap: 15px; }
+    .nav-right { flex-direction: column; gap: 10px; }
+    .post-item { flex-direction: column; padding: 16px; gap: 16px; }
+    .post-item-thumb { width: 100%; height: 200px; }
+    .post-detail-header h2 { font-size: 2.2rem; }
+    .post-content-body img { width: calc(100% + 32px); margin-left: -16px; border-radius: 0; }
+    .premium-contact-card { padding: 24px; }
+    .footer-content-wrapper { flex-direction: column; gap: 20px; text-align: center; }
     .related-grid { grid-template-columns: 1fr; }
     .search-container { max-width: 100%; }
     .author-profile-card { flex-direction: column; text-align: center; padding: 24px; }
+    .global-language-switcher { margin-top: 10px; }
 }
