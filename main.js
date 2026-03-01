@@ -289,7 +289,11 @@ document.addEventListener('DOMContentLoaded', function() {
         currentEditingId = id; const p = posts[id]; if (!p) return;
         editorFields.title.value = p.title; editorFields.cat.value = p.category; editorFields.thumb.value = p.thumb || '';
         if (p.thumb) { editorFields.thumbPreview.style.backgroundImage = `url('${p.thumb}')`; editorFields.thumbPreview.innerHTML = ''; }
-        if (quill) quill.root.innerHTML = p.content || '';
+        
+        // Safer way to load HTML into Quill to prevent data loss
+        if (quill) {
+            quill.clipboard.dangerouslyPasteHTML(p.content || '');
+        }
     }
 
     function loadComments(postId) {
