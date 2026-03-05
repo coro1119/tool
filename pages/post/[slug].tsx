@@ -6,9 +6,10 @@ import { useEffect } from "react";
 import { getPostBySlug, getRecentPosts, Post, generateSlug } from "../../lib/posts";
 
 interface PostDetailProps {
-  post: Post;
+  post: Post | null;
   relatedPosts: Post[];
   slug: string;
+  error?: string;
 }
 
 declare global {
@@ -17,10 +18,10 @@ declare global {
   }
 }
 
-export default function PostDetail({ post, relatedPosts, slug }: PostDetailProps) {
+export default function PostDetail({ post, relatedPosts, slug, error }: PostDetailProps) {
   const fullURL = `https://financecalculator.cloud/post/${slug}`;
 
-  // AdSense 안전 실행
+  // AdSense
   useEffect(() => {
     try {
       if (typeof window !== "undefined") {
@@ -31,7 +32,21 @@ export default function PostDetail({ post, relatedPosts, slug }: PostDetailProps
     }
   }, [slug]);
 
-  if (!post) return null;
+  // DB 에러 혹은 글 없음 확인용 (404 대신 이 화면이 떠야 라우팅 성공임)
+  if (!post) {
+    return (
+      <div className="container" style={{ padding: "100px 0", textAlign: "center", color: "#fff" }}>
+        <h2>System Diagnosis Mode</h2>
+        <p>현재 페이지의 라우팅은 정상입니다.</p>
+        <p>하지만 데이터를 불러오지 못했습니다.</p>
+        <div style={{ background: "#333", padding: "20px", margin: "20px auto", maxWidth: "600px", borderRadius: "8px", textAlign: "left" }}>
+          <p><strong>Slug:</strong> {slug}</p>
+          <p><strong>Status:</strong> {error || "Post not found in DB"}</p>
+        </div>
+        <Link href="/" style={{ color: "var(--accent)" }}>Go Home</Link>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -48,11 +63,6 @@ export default function PostDetail({ post, relatedPosts, slug }: PostDetailProps
         <meta property="og:url" content={fullURL} />
         <meta property="og:type" content="article" />
         {post.thumb && <meta property="og:image" content={post.thumb} />}
-        
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={post.title} />
-        <meta name="twitter:description" content={post.summary} />
-        {post.thumb && <meta name="twitter:image" content={post.thumb} />}
       </Head>
 
       <section id="post-view" className="view active">
@@ -71,7 +81,6 @@ export default function PostDetail({ post, relatedPosts, slug }: PostDetailProps
             {parse(post.content)}
           </div>
 
-          {/* AdSense Unit */}
           <div className="post-ad-wrapper" style={{ margin: '40px 0', textAlign: 'center' }}>
             <ins className="adsbygoogle"
                  style={{ display: 'block', textAlign: 'center' }}
@@ -86,13 +95,6 @@ export default function PostDetail({ post, relatedPosts, slug }: PostDetailProps
             <div className="author-bio">
               <h4>Teslaburn</h4>
               <p>혁신 기술과 금융 데이터를 연결하여 새로운 알파를 찾는 독립 리서처입니다. 테슬라와 AI, 에너지 트랜지션을 중점적으로 분석합니다.</p>
-              <div className="author-social">
-                <a href="#" onClick={(e) => {
-                  e.preventDefault();
-                  navigator.clipboard.writeText(window.location.href);
-                  alert("Link copied!");
-                }}>Share Insight</a>
-              </div>
             </div>
           </section>
 
@@ -137,7 +139,14 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
   const slug = params?.slug as string;
   try {
     const post = await getPostBySlug(slug);
-    if (!post) return { notFound: true };
+    
+    // DB에서 못 찾아도 404를 띄우지 않고, 에러 내용을 포함한 페이지를 리턴함 (디버깅용)
+    if (!post) {
+      return { 
+        props: { post: null, relatedPosts: [], slug, error: "Data fetch returned null" },
+        revalidate: 10 
+      };
+    }
 
     const allPosts = await getRecentPosts(50);
     const relatedPosts = allPosts
@@ -146,20 +155,24 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
 
     const plainPost = {
       ...post,
-      updatedAt: post.updatedAt ? (typeof post.updatedAt.toDate === 'function' ? post.updatedAt.toDate().toISOString() : post.updatedAt) : null
+      updatedAt: post.updatedAt ? (typeof post.updatedAt === 'string' ? post.updatedAt : JSON.stringify(post.updatedAt)) : null
     };
     
     const plainRelated = relatedPosts.map(p => ({
       ...p,
-      updatedAt: p.updatedAt ? (typeof p.updatedAt.toDate === 'function' ? p.updatedAt.toDate().toISOString() : p.updatedAt) : null
+      updatedAt: p.updatedAt ? (typeof p.updatedAt === 'string' ? p.updatedAt : JSON.stringify(p.updatedAt)) : null
     }));
 
     return {
       props: { post: plainPost, relatedPosts: plainRelated, slug },
       revalidate: 60,
     };
-  } catch (e) {
+  } catch (e: any) {
     console.error("getStaticProps error for slug:", slug, e);
-    return { notFound: true, revalidate: 10 };
+    // 예외 발생 시에도 404 방지
+    return { 
+      props: { post: null, relatedPosts: [], slug, error: e.toString() },
+      revalidate: 10 
+    };
   }
 };
