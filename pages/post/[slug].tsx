@@ -39,9 +39,9 @@ export default function PostDetail({ post, relatedPosts, slug }: PostDetailProps
         <title>{post.title} — FinanceCalculator</title>
         <meta name="description" content={post.summary} />
         <link rel="canonical" href={fullURL} />
-        <link rel="alternate" hreflang="ko" href={fullURL} />
-        <link rel="alternate" hreflang="en" href={fullURL} />
-        <link rel="alternate" hreflang="x-default" href={fullURL} />
+        <link rel="alternate" hrefLang="ko" href={fullURL} />
+        <link rel="alternate" hrefLang="en" href={fullURL} />
+        <link rel="alternate" hrefLang="x-default" href={fullURL} />
         
         <meta property="og:title" content={post.title} />
         <meta property="og:description" content={post.summary} />
