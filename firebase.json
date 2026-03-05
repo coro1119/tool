@@ -6,6 +6,7 @@
       "**/.*",
       "**/node_modules/**"
     ],
+    "cleanUrls": true,
     "frameworksBackend": {
       "region": "us-central1"
     }
