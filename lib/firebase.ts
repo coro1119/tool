@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBuC3zXrNa69yIX7HJRRG32RD3_OtWw2PE",
@@ -12,6 +12,17 @@ const firebaseConfig = {
 };
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-const db = getFirestore(app);
+
+// 최신 방식의 Firestore 초기화 (서버 사이드와 클라이언트 사이드 구분)
+let db;
+if (typeof window !== "undefined") {
+    // 클라이언트: 멀티 탭 지원 캐시 설정
+    db = initializeFirestore(app, {
+        localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+    });
+} else {
+    // 서버: 기본 설정
+    db = getFirestore(app);
+}
 
 export { db };

@@ -2,6 +2,7 @@ import { GetStaticPaths, GetStaticProps } from "next";
 import Head from "next/head";
 import Link from "next/link";
 import parse from "html-react-parser";
+import { useEffect } from "react";
 import { getPostBySlug, getRecentPosts, Post, generateSlug } from "../../lib/posts";
 
 interface PostDetailProps {
@@ -10,8 +11,27 @@ interface PostDetailProps {
   slug: string;
 }
 
+declare global {
+  interface Window {
+    adsbygoogle: any[];
+  }
+}
+
 export default function PostDetail({ post, relatedPosts, slug }: PostDetailProps) {
   const fullURL = `https://financecalculator.cloud/post/${slug}`;
+
+  // AdSense 안전 실행
+  useEffect(() => {
+    try {
+      if (typeof window !== "undefined") {
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
+      }
+    } catch (e) {
+      console.error("AdSense error:", e);
+    }
+  }, [slug]);
+
+  if (!post) return null;
 
   return (
     <>
@@ -49,6 +69,16 @@ export default function PostDetail({ post, relatedPosts, slug }: PostDetailProps
           
           <div className="post-content-body">
             {parse(post.content)}
+          </div>
+
+          {/* AdSense Unit */}
+          <div className="post-ad-wrapper" style={{ margin: '40px 0', textAlign: 'center' }}>
+            <ins className="adsbygoogle"
+                 style={{ display: 'block', textAlign: 'center' }}
+                 data-ad-layout="in-article"
+                 data-ad-format="fluid"
+                 data-ad-client="ca-pub-1366039516093309"
+                 data-ad-slot="YOUR_AD_SLOT"></ins>
           </div>
 
           <section className="author-profile-card">
@@ -91,47 +121,45 @@ export default function PostDetail({ post, relatedPosts, slug }: PostDetailProps
 }
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  const posts = await getRecentPosts(20);
-  const paths = posts.map(p => ({
-    params: { slug: generateSlug(p.title) }
-  }));
-
-  return {
-    paths,
-    fallback: "blocking", // Generate on-demand if not pre-rendered
-  };
+  try {
+    const posts = await getRecentPosts(20);
+    const paths = posts.map(p => ({
+      params: { slug: generateSlug(p.title) }
+    }));
+    return { paths, fallback: "blocking" };
+  } catch (e) {
+    console.error("getStaticPaths error:", e);
+    return { paths: [], fallback: "blocking" };
+  }
 };
 
 export const getStaticProps: GetStaticProps = async ({ params }) => {
   const slug = params?.slug as string;
-  const post = await getPostBySlug(slug);
+  try {
+    const post = await getPostBySlug(slug);
+    if (!post) return { notFound: true };
 
-  if (!post) {
-    return { notFound: true };
+    const allPosts = await getRecentPosts(50);
+    const relatedPosts = allPosts
+      .filter(p => p.id !== post.id && p.category === post.category)
+      .slice(0, 3);
+
+    const plainPost = {
+      ...post,
+      updatedAt: post.updatedAt ? (typeof post.updatedAt.toDate === 'function' ? post.updatedAt.toDate().toISOString() : post.updatedAt) : null
+    };
+    
+    const plainRelated = relatedPosts.map(p => ({
+      ...p,
+      updatedAt: p.updatedAt ? (typeof p.updatedAt.toDate === 'function' ? p.updatedAt.toDate().toISOString() : p.updatedAt) : null
+    }));
+
+    return {
+      props: { post: plainPost, relatedPosts: plainRelated, slug },
+      revalidate: 60,
+    };
+  } catch (e) {
+    console.error("getStaticProps error for slug:", slug, e);
+    return { notFound: true, revalidate: 10 };
   }
-
-  const allPosts = await getRecentPosts(50);
-  const relatedPosts = allPosts
-    .filter(p => p.id !== post.id && p.category === post.category)
-    .slice(0, 3);
-
-  // Plain objects for props
-  const plainPost = {
-    ...post,
-    updatedAt: post.updatedAt ? post.updatedAt.toDate().toISOString() : null
-  };
-  
-  const plainRelated = relatedPosts.map(p => ({
-    ...p,
-    updatedAt: p.updatedAt ? p.updatedAt.toDate().toISOString() : null
-  }));
-
-  return {
-    props: {
-      post: plainPost,
-      relatedPosts: plainRelated,
-      slug
-    },
-    revalidate: 60,
-  };
 };

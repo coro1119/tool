@@ -93,18 +93,22 @@ export default function Home({ posts }: HomeProps) {
 }
 
 export const getStaticProps: GetStaticProps = async () => {
-  const posts = await getAllPosts();
-  
-  // Convert complex Firebase types to plain objects if needed (like timestamps)
-  const plainPosts = posts.map(p => ({
-    ...p,
-    updatedAt: p.updatedAt ? p.updatedAt.toDate().toISOString() : null
-  }));
+  try {
+    const posts = await getAllPosts();
+    const plainPosts = posts.map(p => ({
+      ...p,
+      updatedAt: p.updatedAt ? (typeof p.updatedAt.toDate === 'function' ? p.updatedAt.toDate().toISOString() : p.updatedAt) : null
+    }));
 
-  return {
-    props: {
-      posts: plainPosts,
-    },
-    revalidate: 60, // ISR: update every 60 seconds
-  };
+    return {
+      props: { posts: plainPosts },
+      revalidate: 60,
+    };
+  } catch (error) {
+    console.error("Error in getStaticProps (Home):", error);
+    return {
+      props: { posts: [] },
+      revalidate: 10,
+    };
+  }
 };
