@@ -1,5 +1,4 @@
-import { db } from "./firebase";
-import { collection, query, orderBy, getDocs, doc, getDoc, limit } from "firebase/firestore";
+import { db } from "./firebaseAdmin"; // Admin SDK 사용
 
 export interface Post {
     id: string;
@@ -22,26 +21,56 @@ export function generateSlug(text: string) {
 }
 
 export async function getAllPosts(): Promise<Post[]> {
-    const q = query(collection(db, "posts"), orderBy("updatedAt", "desc"));
-    const snap = await getDocs(q);
-    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Post));
+    try {
+        const snap = await db.collection("posts").orderBy("updatedAt", "desc").get();
+        return snap.docs.map(doc => {
+            const data = doc.data();
+            return { 
+                id: doc.id, 
+                title: data.title || '',
+                content: data.content || '',
+                summary: data.summary || '',
+                category: data.category || '',
+                thumb: data.thumb || '',
+                date: data.date || '',
+                updatedAt: data.updatedAt 
+            } as Post;
+        });
+    } catch (e) {
+        console.error("Error fetching all posts:", e);
+        return [];
+    }
 }
 
 export async function getRecentPosts(count = 10): Promise<Post[]> {
-    const q = query(collection(db, "posts"), orderBy("updatedAt", "desc"), limit(count));
-    const snap = await getDocs(q);
-    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Post));
-}
-
-export async function getPostById(id: string): Promise<Post | null> {
-    const d = await getDoc(doc(db, "posts", id));
-    if (!d.exists()) return null;
-    return { id: d.id, ...d.data() } as Post;
+    try {
+        const snap = await db.collection("posts").orderBy("updatedAt", "desc").limit(count).get();
+        return snap.docs.map(doc => {
+            const data = doc.data();
+            return { 
+                id: doc.id, 
+                title: data.title || '',
+                content: data.content || '',
+                summary: data.summary || '',
+                category: data.category || '',
+                thumb: data.thumb || '',
+                date: data.date || '',
+                updatedAt: data.updatedAt 
+            } as Post;
+        });
+    } catch (e) {
+        console.error("Error fetching recent posts:", e);
+        return [];
+    }
 }
 
 export async function getPostBySlug(slug: string): Promise<Post | null> {
-    // Note: Since Firestore doesn't store slugs, we fetch all and find the matching one.
-    // In a larger app, you'd store the slug in Firestore.
-    const all = await getAllPosts();
-    return all.find(p => generateSlug(p.title) === slug) || null;
+    try {
+        // Firestore에는 슬러그 필드가 없으므로 전체를 가져와서 찾음 (Admin SDK는 빠름)
+        const posts = await getAllPosts();
+        return posts.find(p => generateSlug(p.title) === slug) || null;
+    } catch (e) {
+        console.error("Error fetching post by slug:", e);
+        return null;
+    }
 }
