@@ -1,0 +1,5 @@
+node_modules
+.next
+*.bak
+firebase-debug.log
+.DS_Store
