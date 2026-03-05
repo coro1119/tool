@@ -1,9 +1,12 @@
 import * as admin from 'firebase-admin';
 
+// 중복 초기화 방지
 if (!admin.apps.length) {
-  admin.initializeApp();
+  try {
+    admin.initializeApp();
+  } catch (error) {
+    console.error('Firebase Admin Init Error:', error);
+  }
 }
 
-const db = admin.firestore();
-
-export { db };
+export const db = admin.firestore();
