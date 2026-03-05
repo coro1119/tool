@@ -1,18 +1,14 @@
 {
   "hosting": {
-    "public": ".",
+    "source": ".",
     "ignore": [
       "firebase-debug.log",
       "**/.*",
       "**/node_modules/**"
     ],
-    "trailingSlash": false,
-    "rewrites": [
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
-    ]
+    "frameworksBackend": {
+      "region": "us-central1"
+    }
   },
   "storage": {
     "rules": "storage.rules"
