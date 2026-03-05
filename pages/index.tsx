@@ -97,18 +97,17 @@ export const getStaticProps: GetStaticProps = async () => {
     const posts = await getAllPosts();
     const plainPosts = posts.map(p => ({
       ...p,
-      updatedAt: p.updatedAt ? (typeof p.updatedAt.toDate === 'function' ? p.updatedAt.toDate().toISOString() : p.updatedAt) : null
+      updatedAt: p.updatedAt ? (typeof p.updatedAt === 'string' ? p.updatedAt : JSON.stringify(p.updatedAt)) : null
     }));
 
     return {
-      props: { posts: plainPosts },
-      revalidate: 60,
+      props: { posts: plainPosts }
+      // revalidate 제거 (정적 모드에서는 사용 불가)
     };
   } catch (error) {
     console.error("Error in getStaticProps (Home):", error);
     return {
-      props: { posts: [] },
-      revalidate: 10,
+      props: { posts: [] }
     };
   }
 };

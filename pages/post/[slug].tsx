@@ -3,13 +3,12 @@ import Head from "next/head";
 import Link from "next/link";
 import parse from "html-react-parser";
 import { useEffect } from "react";
-import { getPostBySlug, getRecentPosts, Post, generateSlug } from "../../lib/posts";
+import { getPostBySlug, getAllPosts, getRecentPosts, Post, generateSlug } from "../../lib/posts";
 
 interface PostDetailProps {
   post: Post | null;
   relatedPosts: Post[];
   slug: string;
-  error?: string;
 }
 
 declare global {
@@ -18,10 +17,9 @@ declare global {
   }
 }
 
-export default function PostDetail({ post, relatedPosts, slug, error }: PostDetailProps) {
+export default function PostDetail({ post, relatedPosts, slug }: PostDetailProps) {
   const fullURL = `https://financecalculator.cloud/post/${slug}`;
 
-  // AdSense
   useEffect(() => {
     try {
       if (typeof window !== "undefined") {
@@ -32,21 +30,7 @@ export default function PostDetail({ post, relatedPosts, slug, error }: PostDeta
     }
   }, [slug]);
 
-  // DB 에러 혹은 글 없음 확인용 (404 대신 이 화면이 떠야 라우팅 성공임)
-  if (!post) {
-    return (
-      <div className="container" style={{ padding: "100px 0", textAlign: "center", color: "#fff" }}>
-        <h2>System Diagnosis Mode</h2>
-        <p>현재 페이지의 라우팅은 정상입니다.</p>
-        <p>하지만 데이터를 불러오지 못했습니다.</p>
-        <div style={{ background: "#333", padding: "20px", margin: "20px auto", maxWidth: "600px", borderRadius: "8px", textAlign: "left" }}>
-          <p><strong>Slug:</strong> {slug}</p>
-          <p><strong>Status:</strong> {error || "Post not found in DB"}</p>
-        </div>
-        <Link href="/" style={{ color: "var(--accent)" }}>Go Home</Link>
-      </div>
-    );
-  }
+  if (!post) return null;
 
   return (
     <>
@@ -124,14 +108,16 @@ export default function PostDetail({ post, relatedPosts, slug, error }: PostDeta
 
 export const getStaticPaths: GetStaticPaths = async () => {
   try {
-    const posts = await getRecentPosts(20);
+    // 모든 포스트를 가져와서 정적 페이지로 생성
+    const posts = await getAllPosts();
     const paths = posts.map(p => ({
       params: { slug: generateSlug(p.title) }
     }));
-    return { paths, fallback: "blocking" };
+    // fallback: false -> 미리 빌드되지 않은 경로는 404 (정적 모드 필수)
+    return { paths, fallback: false };
   } catch (e) {
     console.error("getStaticPaths error:", e);
-    return { paths: [], fallback: "blocking" };
+    return { paths: [], fallback: false };
   }
 };
 
@@ -140,12 +126,8 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
   try {
     const post = await getPostBySlug(slug);
     
-    // DB에서 못 찾아도 404를 띄우지 않고, 에러 내용을 포함한 페이지를 리턴함 (디버깅용)
     if (!post) {
-      return { 
-        props: { post: null, relatedPosts: [], slug, error: "Data fetch returned null" },
-        revalidate: 10 
-      };
+      return { notFound: true };
     }
 
     const allPosts = await getRecentPosts(50);
@@ -164,15 +146,11 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
     }));
 
     return {
-      props: { post: plainPost, relatedPosts: plainRelated, slug },
-      revalidate: 60,
+      props: { post: plainPost, relatedPosts: plainRelated, slug }
+      // revalidate 제거 (정적 모드에서는 사용 불가)
     };
   } catch (e: any) {
     console.error("getStaticProps error for slug:", slug, e);
-    // 예외 발생 시에도 404 방지
-    return { 
-      props: { post: null, relatedPosts: [], slug, error: e.toString() },
-      revalidate: 10 
-    };
+    return { notFound: true };
   }
 };
